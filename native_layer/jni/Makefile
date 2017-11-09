@@ -6,8 +6,8 @@ LINK=${CXX}
 TOPDIR=`pwd`/..
 LIBPATH=${TOPDIR}/cppwrapper/libs
 #-static-libstdc++ 
-LDFLAGS= -static-libgcc -std=c++11
-CXXFLAGS  = -pipe -std=c++0x -shared -fPIC -g -fno-omit-frame-pointer \
+LDFLAGS= -shared-libgcc -std=c++11
+CXXFLAGS  = -pipe -std=c++0x -fPIC -g -fno-omit-frame-pointer \
 			-DNDEBUG=1 -Wconversion -O3 -Wall -W -fvisibility=hidden -I /usr/lib/jvm/java-9-openjdk-amd64/include/ -I /usr/lib/jvm/java-9-openjdk-amd64/include/linux/
 					
 LIB	   = -pthread -lpthread -L$(LIBPATH) -lrecorder -lrt

@@ -9,7 +9,8 @@ SRC =$(wildcard ./src/*.cpp) #$(wildcard *.cpp)
 LIBPATH=${TOPDIR}/.libs
 OUTDIR = .libs_
 LIB    = -L./.libs -lshared
-target=exe
+#target=exe
+target = libshared.so
 .PHONY: all clean
 
 all: $(target)
@@ -19,7 +20,7 @@ $(OUTDIR):
 
 $(target): shared
 	#g++ main.cpp -L. -lshared -o $@
-	$(LINK) main.cpp $(LIB) -o "$@"
+	#$(LINK) main.cpp $(LIB) -o "$@"
 shared: lib
 	g++ -c -fPIC shared.cpp -L$(INCPATH)
 	mv shared.o .libs

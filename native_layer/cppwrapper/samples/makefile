@@ -13,7 +13,7 @@ CXXFLAGS  = -pipe -std=c++0x -fPIC -g -fno-omit-frame-pointer \
 			-DNDEBUG=1 -Wconversion -O3 -Wall -W -fvisibility=hidden
 					
 LIB	   = -pthread -lpthread -L$(LIBPATH) -lRecordEngine -lrt
-INCPATH =-I. -I${TOPDIR}/include -I${TOPDIR}/include/base -I${TOPDIR}/samples/base
+INCPATH =-I. -I${TOPDIR}/include -I${TOPDIR}/include/base -I${TOPDIR}/samples/base -I${TOPDIR}/samples/agorasdk
 
 OBJ = opt_parser.o
 
@@ -23,11 +23,11 @@ TARGET=libWrapper.so
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	g++ -c $(FPIC) $(CPP11) cppwrapper.cpp $(INCPATH)
-	g++ cppwrapper.o $(LDFLAGS) $^ -o "$@" $(LIB)
+	g++ -c $(FPIC) $(CPP11) ./agorasdk/AgoraSdk.cpp $(INCPATH)
+	g++ AgoraSdk.o $(LDFLAGS) $^ -o "$@" $(LIB)
 
 $(OBJ):
-	gcc -c $(FPIC) $(CPP11) opt_parser.cpp $(INCPATH)
+	gcc -c $(FPIC) $(CPP11) ./base/opt_parser.cpp $(INCPATH)
 	
 #%.o: %.cpp
 #	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o "$@" "$<"

@@ -1,17 +1,3 @@
-#include <csignal>
-#include <cstdint>
-#include <iostream>
-#include <sstream> 
-#include <string>
-#include <vector>
-#include <algorithm>
-
-#include "IAgoraLinuxSdkCommon.h"
-#include "IAgoraRecordingEngine.h"
-
-#include "base/atomic.h"
-#include "base/log.h" 
-#include "base/opt_parser.h" 
 #include "agorasdk/AgoraSdk.h"
 
 using std::string;

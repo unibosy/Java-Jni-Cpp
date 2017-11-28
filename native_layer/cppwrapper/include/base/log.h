@@ -118,6 +118,7 @@ void log_dir(const char* logdir, log_levels level, const char* format, ...);
 void log(log_levels level, const char* format, ...);
 
 
+
 }
 }
 
@@ -144,46 +145,3 @@ void log(log_levels level, const char* format, ...);
     if (++count % N == 0) \
     LOG(level, __VA_ARGS__); \
 }
-
-
-
-//#define DEBUG_MODE
-
-#ifdef DEBUG_MODE
-#define SPLIT_ARR 50
-#define DEBUG_LOG_RAW_DATA(logdir, level, STR, msg, size, ...) do { \
-    uint32_t i;    \
-    std::string output(#STR);    \
-    output.reserve(size*3);    \
-    output.append(" "); \
-    for (uint32_t i = 0; i < size/SPLIT_ARR+1; i++) {    \
-        uint32_t end = size > (i+1) * SPLIT_ARR?  SPLIT_ARR:(size - (i * SPLIT_ARR)); \
-        for(uint32_t j = 0;j < end;j++)    \
-        {    \
-            uint32_t index = i * SPLIT_ARR + j;    \
-            output.append(std::to_string(msg[index])+"_"); \
-        }    \
-        output.append("@"); \
-    }    \
-    output.append("\n"); \
-    log_dir(logdir, agora::base::level ## _LOG, \
-            "(%d) %s:%d: %s" , getpid(), __FILE__, __LINE__,output.c_str(), ##__VA_ARGS__); \
-}while(0)
-
-
-#define DEBUG_RAW_DATA(STR, msg, size) do {  \
-    unsigned int i;  \
-    printf("%s", #STR); \
-    for (i = 0; i < size; i++) {  \
-        if(i % 50 == 0)  \
-            printf("\n");\
-        else \
-            printf("%x", msg[i]); \
-    }    \
-     \
-}while(0)
-#else
-#define DEBUG_RAW_DATA(STR, msg, size)
-#define DEBUG_LOG_RAW_DATA(logdir, level, STR, msg, size, ...)
-#endif
-

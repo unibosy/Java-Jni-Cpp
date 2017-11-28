@@ -1,4 +1,27 @@
-#include "cppwrapper.h"
+#include <csignal>
+#include <cstdint>
+#include <iostream>
+#include <sstream> 
+#include <string>
+#include <vector>
+#include <algorithm>
+
+#include "IAgoraLinuxSdkCommon.h"
+#include "IAgoraRecordingEngine.h"
+
+#include "base/atomic.h"
+#include "base/log.h" 
+#include "base/opt_parser.h" 
+#include "agorasdk/AgoraSdk.h"
+
+using std::string;
+using std::cout;
+using std::cerr;
+using std::endl;
+
+using agora::base::opt_parser;
+using agora::linuxsdk::VideoFrame;
+using agora::linuxsdk::AudioFrame;
 
 atomic_bool_t g_bSignalStop;
 
@@ -35,9 +58,9 @@ int main(int argc, char * const argv[]) {
   bool isMixingEnabled=0;
   bool mixedVideoAudio=0;
 
-  uint32_t getAudioFrame = agora::recording::AUDIO_FORMAT_DEFAULT_TYPE;
-  uint32_t getVideoFrame = agora::recording::VIDEO_FORMAT_DEFAULT_TYPE;
-  uint32_t streamType = agora::recording::REMOTE_VIDEO_STREAM_HIGH;
+  uint32_t getAudioFrame = agora::linuxsdk::AUDIO_FORMAT_DEFAULT_TYPE;
+  uint32_t getVideoFrame = agora::linuxsdk::VIDEO_FORMAT_DEFAULT_TYPE;
+  uint32_t streamType = agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH;
   int captureInterval = 5;
   int width = 0;
   int height = 0;
@@ -61,7 +84,7 @@ int main(int argc, char * const argv[]) {
   parser.add_long_opt("uid", &uid, "User Id default is 0/must", agora::base::opt_parser::require_argu);
 
   parser.add_long_opt("channel", &name, "Channel Id/must", agora::base::opt_parser::require_argu);
-  parser.add_long_opt("appliteDir", &applitePath, "directory of app lite 'video_recorder', Must pointer to 'Agora_Recording_SDK_for_Linux_FULL/bin/' folder/must",
+  parser.add_long_opt("appliteDir", &applitePath, "directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Recording_SDK_for_Linux_FULL/bin/' folder/must",
           agora::base::opt_parser::require_argu);
 
   parser.add_long_opt("channelKey", &channelKey, "channelKey/option");
@@ -115,10 +138,10 @@ int main(int argc, char * const argv[]) {
   LOG(INFO, "uid %" PRIu32 " from vendor %s is joining channel %s",
           uid, appId.c_str(), name.c_str());
 
-  AgoraRecorder recorder;
+  agora::AgoraSdk recorder;
   agora::recording::RecordingConfig config;
   config.idleLimitSec = idleLimitSec;
-  config.channelProfile = static_cast<agora::recording::CHANNEL_PROFILE_TYPE>(channelProfile);
+  config.channelProfile = static_cast<agora::linuxsdk::CHANNEL_PROFILE_TYPE>(channelProfile);
 
   config.isVideoOnly = isVideoOnly;
   config.isAudioOnly = isAudioOnly;
@@ -137,9 +160,9 @@ int main(int argc, char * const argv[]) {
   config.highUdpPort = highUdpPort;
   config.captureInterval = captureInterval;
 
-  config.decodeAudio = static_cast<agora::recording::AUDIO_FORMAT_TYPE>(getAudioFrame);
-  config.decodeVideo = static_cast<agora::recording::VIDEO_FORMAT_TYPE>(getVideoFrame);
-  config.streamType = static_cast<agora::recording::REMOTE_VIDEO_STREAM_TYPE>(streamType);
+  config.decodeAudio = static_cast<agora::linuxsdk::AUDIO_FORMAT_TYPE>(getAudioFrame);
+  config.decodeVideo = static_cast<agora::linuxsdk::VIDEO_FORMAT_TYPE>(getVideoFrame);
+  config.streamType = static_cast<agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE>(streamType);
   recorder.updateMixModeSetting(width, height, isMixingEnabled ? !isAudioOnly:false);
 
   if (!recorder.createChannel(appId, channelKey, name, uid, config)) {
@@ -147,7 +170,7 @@ int main(int argc, char * const argv[]) {
     return -1;
   }
 
-  cout << "Recording directory is " << recorder.getRecorderProperties()->recordingDir << endl;
+  cout << "Recording directory is " << recorder.getRecorderProperties()->storageDir << endl;
   
   while (!recorder.stopped() && !g_bSignalStop) {
     sleep(1);

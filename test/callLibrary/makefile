@@ -8,7 +8,7 @@ INCPATH =-I. -I${TOPDIR}/include
 SRC =$(wildcard ./src/*.cpp) #$(wildcard *.cpp)
 LIBPATH=${TOPDIR}/.libs
 OUTDIR = .libs_
-
+LIB    = -L./.libs -lshared
 target=exe
 .PHONY: all clean
 
@@ -18,12 +18,12 @@ $(OUTDIR):
 	mkdir $@
 
 $(target): shared
-	g++ main.cpp -L. -lshared -o $@
-#	$(LINK) $(LDFLAGS) $(INCPATH) $^ -o "$@" $(LIB)
+	#g++ main.cpp -L. -lshared -o $@
+	$(LINK) main.cpp $(LIB) -o "$@"
 shared: lib
 	g++ -c -fPIC shared.cpp -L$(INCPATH)
 	mv shared.o .libs
-	g++ -shared ./.libs/shared.o -L./.libs -lcompute -o libshared.so
+	g++ -shared ./.libs/shared.o -L./.libs -lcompute -o ./.libs/libshared.so
 
 lib:
 	gcc -c -fPIC $(SRC)

@@ -44,10 +44,16 @@ bool AgoraSdk::createChannel(const string &appid, const string &channelKey, cons
     uint32_t uid, 
     agora::recording::RecordingConfig &config) 
 {
+	std::cout<<"AgoraSdk::createChannel appid:"<<appid<<",channelKey:"<<channelKey<<",name:"<<name
+		<<",uid:"<<uid<<std::endl;
   if ((m_engine = agora::recording::IRecordingEngine::createAgoraRecordingEngine(appid.c_str(), this)) == NULL)
+	{
+		std::cout<<"IRecordingEngine::createAgoraRecordingEngine return null"<<std::endl;
     return false;
+	}
 
   
+	std::cout<<"IRecordingEngine joinChannel"<<std::endl;
   return 0 == m_engine->joinChannel(channelKey.c_str(), name.c_str(), uid, config);
 }
 

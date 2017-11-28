@@ -4,13 +4,13 @@
 using namespace std;
 
 #include "../cppwrapper/agorasdk/AgoraSdk.h"
-
+using namespace agora;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-  class agoraEventHandler : public  {
+  class agoraEventHandler {
   
   };
 
@@ -18,11 +18,11 @@ extern "C" {
       jstring jni_channelName, jint jni_uid, jobject jni_recordingConfig)
   {
     cout<<"enter Java_AgoraJavaRecording_createChannel"<<endl;
-    const char* appid = NULL;
-    appid = env->GetStringUTFChars(jni_appid,false);
-    cout <<"appid:"<<appid<<endl;
-    if(!appid)
-      cerr<<"get appid is NULL"<<endl;
+    const char* appId = NULL;
+    appId = env->GetStringUTFChars(jni_appid,false);
+    cout <<"appId:"<<appId<<endl;
+    if(!appId)
+      cerr<<"get appId is NULL"<<endl;
     const char* channelKey = NULL;
     channelKey = env->GetStringUTFChars(jni_channelKey,false);
     cout<<"channelKey:"<<channelKey<<endl;
@@ -32,7 +32,12 @@ extern "C" {
     cout<<"channelName:"<<channelName<<endl;
     if(!channelName)
       cerr<<"channel name is empty!"<<endl;
-
+    int uid = 0;
+    recording::RecordingConfig config;
+    AgoraSdk recorder;
+    int ret = recorder.createChannel(appId, channelKey, channelName, uid, config);
+		
+    cout<<"agora sdk createChannel ret:"<<ret<<endl;
     cout<<"end Java_AgoraJavaRecording_createChannel"<<endl;
     
   }

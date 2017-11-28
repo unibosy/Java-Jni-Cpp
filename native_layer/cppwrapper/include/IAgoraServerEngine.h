@@ -13,7 +13,9 @@ public:
 
 typedef struct ServerConfig : public agora::recording::RecordingConfig {
 public:
-    virtual ~ServerConfig() {}
+    char *upstreamResolution;
+    ServerConfig() : upstreamResolution(NULL) {}
+
 } ServerConfig;
 
 typedef struct ServerEngineProperties: public agora::recording::RecordingEngineProperties{

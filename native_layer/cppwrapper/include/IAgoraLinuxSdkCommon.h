@@ -34,6 +34,7 @@ enum STAT_CODE_TYPE {
     STAT_ERR_ARS_JOIN_CHANNEL = 2,
     STAT_ERR_CREATE_PROCESS = 3,
     STAT_ERR_MIXED_INVALID_VIDEO_PARAM = 4,
+    STAT_ERR_NULL_POINTER = 5,
 
     STAT_POLL_ERR = 0x8,
     STAT_POLL_HANG_UP = 0x10,
@@ -95,13 +96,22 @@ enum AUDIO_FRAME_TYPE {
     AUDIO_FRAME_AAC = 1
 };
 
+enum MEMORY_TYPE {
+    STACK_MEM_TYPE = 0,
+    HEAP_MEM_TYPE = 1
+};
+
 enum VIDEO_FRAME_TYPE {
     VIDEO_FRAME_RAW_YUV = 0,
     VIDEO_FRAME_H264 = 1,
     VIDEO_FRAME_JPG = 2,
 };
 
-
+enum SERVICE_MODE {
+    RECORDING_MODE = 0,//down stream
+    SERVER_MODE = 1,//up-down stream
+    IOT_MODE = 2,//up-down stream
+};
 class AudioPcmFrame {
     friend class IEngine;
     public:
@@ -140,6 +150,11 @@ struct AudioFrame {
         AudioPcmFrame *pcm;
         AudioAacFrame *aac;
     } frame;
+
+    AudioFrame();
+    ~AudioFrame();
+
+    MEMORY_TYPE mType;
 };
 
 class VideoYuvFrame {
@@ -173,6 +188,14 @@ class VideoYuvFrame {
 struct VideoH264Frame {
     friend class IEngine;
     public:
+    VideoH264Frame():
+        frame_ms_(0),
+        frame_num_(0),
+        buf_(NULL),
+        bufSize_(0)
+    {}
+
+    ~VideoH264Frame(){}
     uint_t frame_ms_;
     uint_t frame_num_;
 
@@ -186,7 +209,14 @@ struct VideoH264Frame {
 
 struct VideoJpgFrame {
     friend class IEngine;
+
     public:
+    VideoJpgFrame():
+        frame_ms_(0),
+        buf_(NULL),
+        bufSize_(0){}
+
+   ~VideoJpgFrame() {}
     uint_t frame_ms_;
 
     //all
@@ -206,6 +236,10 @@ struct VideoFrame {
     } frame;
 
     int rotation_; // 0, 90, 180, 270
+    VideoFrame();
+    ~VideoFrame();
+
+    MEMORY_TYPE mType;
 };
 
 typedef struct VideoMixingLayout

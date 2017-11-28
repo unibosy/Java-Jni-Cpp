@@ -27,6 +27,7 @@ class AgoraJavaRecording{
     String name = "arsjava";
     int uid = 0;
     RecordingConfig config=new RecordingConfig();
+		
     System.out.println("to create channel");
     ars.createChannel(appid, channelKey,name,uid,config);
     System.out.println("create channel end");

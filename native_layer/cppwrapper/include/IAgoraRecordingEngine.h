@@ -129,6 +129,8 @@ typedef struct RecordingConfig {
         mixedVideoAudio(false),
         streamType(agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH)
     {}
+
+    virtual ~RecordingConfig() {}
 } RecordingConfig;
 
 typedef struct RecordingEngineProperties {

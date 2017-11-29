@@ -23,22 +23,22 @@ class MixModeSettings{
 }
 
 class RecordingConfig {
-  boolean isAudioOnly;
-  boolean isVideoOnly;
-  boolean isMixingEnabled;
-  boolean mixedVideoAudio;
-  String mixResolution;
-  String decryptionMode;
-  String secret;
-  String appliteDir;
-  String recordFileRootDir;
-  String cfgFilePath;
+  public boolean isAudioOnly;
+  public boolean isVideoOnly;
+ 	public boolean isMixingEnabled;
+  public boolean mixedVideoAudio;
+  public String mixResolution;
+  public String decryptionMode;
+  public String secret;
+  public String appliteDir;
+  public String recordFileRootDir;
+  public String cfgFilePath;
   //VIDEO_FORMAT_TYPE decodeVideo;
   //AUDIO_FORMAT_TYPE decodeAudio;
-  int lowUdpPort;
-  int highUdpPort;
-  int idleLimitSec;
-  int captureInterval;
+  public int lowUdpPort;
+  public int highUdpPort;
+  public int idleLimitSec;
+  public int captureInterval;
   //CHANNEL_PROFILE_TYPE channelProfile;
   //REMOTE_VIDEO_STREAM_TYPE streamType;
 }

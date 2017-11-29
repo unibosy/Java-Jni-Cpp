@@ -1,4 +1,18 @@
-#include "cppwrapper.h"
+#include "../agorasdk/AgoraSdk.h"
+
+#include "../cppwrapper.h"
+
+#include "AgoraJavaRecording.h"
+
+using std::string;
+using std::cout;
+using std::cerr;
+using std::endl;
+
+using agora::base::opt_parser;
+using agora::base::log;
+using agora::linuxsdk::VideoFrame;
+using agora::linuxsdk::AudioFrame;
 
 atomic_bool_t g_bSignalStop;
 
@@ -9,7 +23,85 @@ void signal_handler(int signo) {
   g_bSignalStop = true;
 }
 
-int main(int argc, char * const argv[]) {
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, jobject jobject1, jstring jni_appid, jstring jni_channelKey, 
+      jstring jni_channelName, jint jni_uid, jobject jni_recordingConfig)
+{
+	  cout<<"enter Java_AgoraJavaRecording_createChannel"<<endl;
+
+		g_bSignalStop = false;
+	  signal(SIGQUIT, signal_handler);
+  	signal(SIGABRT, signal_handler);
+  	signal(SIGINT, signal_handler);
+  	signal(SIGPIPE, SIG_IGN);
+
+    const char* appId = NULL;
+    appId = env->GetStringUTFChars(jni_appid,false);
+    cout <<"appId:"<<appId<<endl;
+    if(!appId)
+      cerr<<"get appId is NULL"<<endl;
+    const char* channelKey = NULL;
+    channelKey = env->GetStringUTFChars(jni_channelKey,false);
+    cout<<"channelKey:"<<channelKey<<endl;
+    if(!channelKey)
+      cerr<<"no channel key"<<endl;
+    const char* channelName = env->GetStringUTFChars(jni_channelName,false);
+    cout<<"channelName:"<<channelName<<endl;
+    if(!channelName)
+      cerr<<"channel name is empty!"<<endl;
+    int uid = (int)jni_uid;
+		if(uid < 0){
+			cout<<"jni uid is smaller than 0, set 0!"<<endl;
+			uid = 0;
+		}
+    agora::recording::RecordingConfig config;
+		agora::AgoraSdk recorder;
+
+		jclass jRecordingConfig =env->GetObjectClass(jni_recordingConfig); 
+		if(jRecordingConfig == NULL){
+			cout<<"jni_recordingConfig is NULL"<<endl;
+			return JNI_FALSE;
+		}
+
+		jfieldID idleLimitSecFieldID = env->GetFieldID(jRecordingConfig, "idleLimitSec", "I");
+		jfieldID appliteDirFieldID = env->GetFieldID(jRecordingConfig, "appliteDir", "Ljava/lang/String;");
+
+		if (idleLimitSecFieldID == 0 ||appliteDirFieldID ==NULL){ cout <<"get fieldID failed!"<<endl;return JNI_FALSE;}
+		
+		jint idleValue = env->GetIntField(jni_recordingConfig, idleLimitSecFieldID); 
+		cout<<"idleLimitSec:"<<idleValue<<endl;
+		
+		jstring appliteDir = (jstring)env->GetObjectField(jni_recordingConfig, appliteDirFieldID);
+		const char * c_appliteDir = env->GetStringUTFChars(appliteDir ,NULL);
+		cout<<"c_appliteDir:"<<c_appliteDir<<endl;
+		
+		config.appliteDir = const_cast<char*>(c_appliteDir);	
+		config.idleLimitSec = (int)idleValue;
+    int ret = recorder.createChannel(appId, channelKey, channelName, uid, config);
+
+    cout<<"agora sdk createChannel ret:"<<ret<<endl;
+ 		while (!recorder.stopped() && !g_bSignalStop) {
+			sleep(1);
+  	}
+
+  	if (g_bSignalStop) {
+    	recorder.leaveChannel();
+    	recorder.release();
+  	}
+    cout<<"end Java_AgoraJavaRecording__recordingConfigcreateChannel"<<endl;
+ 
+}
+#ifdef __cplusplus
+}
+#endif
+int doSomething2()
+{
+	return 0;
+}
+int totalFunc(int argc, char * const argv[]) {
   uint32_t uid = 0;
   string appId;
   string channelKey;
@@ -35,15 +127,14 @@ int main(int argc, char * const argv[]) {
   bool isMixingEnabled=0;
   bool mixedVideoAudio=0;
 
-  uint32_t getAudioFrame = agora::recording::AUDIO_FORMAT_DEFAULT_TYPE;
-  uint32_t getVideoFrame = agora::recording::VIDEO_FORMAT_DEFAULT_TYPE;
-  uint32_t streamType = agora::recording::REMOTE_VIDEO_STREAM_HIGH;
+  uint32_t getAudioFrame = agora::linuxsdk::AUDIO_FORMAT_DEFAULT_TYPE;
+  uint32_t getVideoFrame = agora::linuxsdk::VIDEO_FORMAT_DEFAULT_TYPE;
+  uint32_t streamType = agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH;
   int captureInterval = 5;
   int width = 0;
   int height = 0;
   int fps = 0;
   int kbps = 0;
-
   /**
    * change log_config Facility per your specific purpose like agora::base::LOCAL5_LOG_FCLT
    * Default:USER_LOG_FCLT. 
@@ -55,13 +146,13 @@ int main(int argc, char * const argv[]) {
   signal(SIGINT, signal_handler);
   signal(SIGPIPE, SIG_IGN);
 
-  opt_parser parser;
-
+  agora::base::opt_parser parser;
+#if 1
   parser.add_long_opt("appId", &appId, "App Id/must", agora::base::opt_parser::require_argu);
   parser.add_long_opt("uid", &uid, "User Id default is 0/must", agora::base::opt_parser::require_argu);
 
   parser.add_long_opt("channel", &name, "Channel Id/must", agora::base::opt_parser::require_argu);
-  parser.add_long_opt("appliteDir", &applitePath, "directory of app lite 'video_recorder', Must pointer to 'Agora_Recording_SDK_for_Linux_FULL/bin/' folder/must",
+  parser.add_long_opt("appliteDir", &applitePath, "directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Recording_SDK_for_Linux_FULL/bin/' folder/must",
           agora::base::opt_parser::require_argu);
 
   parser.add_long_opt("channelKey", &channelKey, "channelKey/option");
@@ -96,7 +187,7 @@ int main(int argc, char * const argv[]) {
  
   
   if(!recordFileRootDir.empty() && !cfgFilePath.empty()){
-    LOG(ERROR,"Client can't set both recordFileRootDir and cfgFilePath");
+    //LOG(ERROR,"Client can't set both recordFileRootDir and cfgFilePath");
     return -1;
   }
 
@@ -107,18 +198,18 @@ int main(int argc, char * const argv[]) {
   if(isMixingEnabled && !isAudioOnly) {
      if(4 != sscanf(mixResolution.c_str(), "%d,%d,%d,%d", &width,
                   &height, &fps, &kbps)) {
-        LOG(ERROR, "Illegal resolution: %s", mixResolution.c_str());
+        //LOG(ERROR, "Illegal resolution: %s", mixResolution.c_str());
         return -1;
      }
   }
 
-  LOG(INFO, "uid %" PRIu32 " from vendor %s is joining channel %s",
-          uid, appId.c_str(), name.c_str());
+ // LOG(INFO, "uid %" PRIu32 " from vendor %s is joining channel %s",
+   //       uid, appId.c_str(), name.c_str());
 
-  AgoraRecorder recorder;
+  agora::AgoraSdk recorder;
   agora::recording::RecordingConfig config;
   config.idleLimitSec = idleLimitSec;
-  config.channelProfile = static_cast<agora::recording::CHANNEL_PROFILE_TYPE>(channelProfile);
+  config.channelProfile = static_cast<agora::linuxsdk::CHANNEL_PROFILE_TYPE>(channelProfile);
 
   config.isVideoOnly = isVideoOnly;
   config.isAudioOnly = isAudioOnly;
@@ -137,17 +228,17 @@ int main(int argc, char * const argv[]) {
   config.highUdpPort = highUdpPort;
   config.captureInterval = captureInterval;
 
-  config.decodeAudio = static_cast<agora::recording::AUDIO_FORMAT_TYPE>(getAudioFrame);
-  config.decodeVideo = static_cast<agora::recording::VIDEO_FORMAT_TYPE>(getVideoFrame);
-  config.streamType = static_cast<agora::recording::REMOTE_VIDEO_STREAM_TYPE>(streamType);
+  config.decodeAudio = static_cast<agora::linuxsdk::AUDIO_FORMAT_TYPE>(getAudioFrame);
+  config.decodeVideo = static_cast<agora::linuxsdk::VIDEO_FORMAT_TYPE>(getVideoFrame);
+  config.streamType = static_cast<agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE>(streamType);
   recorder.updateMixModeSetting(width, height, isMixingEnabled ? !isAudioOnly:false);
-
+	cout<<"appid:"<<appId<<",name:"<<name<<",uid:"<<uid<<",config.idleLimitSec:"<<config.idleLimitSec<<endl;
   if (!recorder.createChannel(appId, channelKey, name, uid, config)) {
     cerr << "Failed to create agora channel: " << name << endl;
     return -1;
   }
 
-  cout << "Recording directory is " << recorder.getRecorderProperties()->recordingDir << endl;
+  cout << "Recording directory is " << recorder.getRecorderProperties()->storageDir << endl;
   
   while (!recorder.stopped() && !g_bSignalStop) {
     sleep(1);
@@ -157,8 +248,7 @@ int main(int argc, char * const argv[]) {
     recorder.leaveChannel();
     recorder.release();
   }
-
+#endif
   cerr << "Stopped \n";
   return 0;
 }
-

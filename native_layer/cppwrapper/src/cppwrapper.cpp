@@ -1,6 +1,10 @@
 #include "agorasdk/AgoraSdk.h"
+
+#if 0
 #include "base/opt_parser.h"
 #include "base/log.h"
+#endif
+
 #include "cppwrapper.h"
 
 using std::string;

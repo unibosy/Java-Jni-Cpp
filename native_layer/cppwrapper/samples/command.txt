@@ -1,0 +1,1 @@
+g++ testCallLibrary.cpp -L. -lWrapper -o exe

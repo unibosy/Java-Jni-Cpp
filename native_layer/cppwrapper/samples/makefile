@@ -16,22 +16,22 @@ INCPATH =-I. -I${TOPDIR}/include -I${TOPDIR}/include/base -I${TOPDIR}/samples/ba
 
 OBJ = opt_parser.o
 
-REALTARGET = exe
+REALTARGET = libjni.so
 TARGET=libWrapper.so
 
 .PHONY: all clean
 #all: $(REALTARGET)
-all: $(TARGET)
+all: $(TARGET) $(REALTARGET)
 #$(REALTARGET): $(TARGET)
 #	g++ cppwrapper.cpp -o $@ $(LDFLAGS) $(INCPATH) $(CPP11) $(CXXFLAGS) AgoraSdk.o opt_parser.o $(LIB)
 
-#$(REALTARGET): $(TARGET)
-#	g++ main.cpp -L. -lWrapper -o exe
+$(REALTARGET): $(TARGET)
+	g++ $(LDFLAGS) cppwrapper.cpp -L. -lWrapper -o $@ $(LIB) $(CPP11) $(INCPATH) $(CXXFLAGS)
 
 $(TARGET): $(OBJ)
 	g++ -c $(CXXFLAGS) $(INCPATH) ./agorasdk/AgoraSdk.cpp
-	g++ cppwrapper.cpp -o $@ $(LDFLAGS) $(INCPATH) $(CPP11) $(CXXFLAGS) AgoraSdk.o opt_parser.o $(LIB)
-	#g++ $(CXXFLAGS) $(LDFLAGS) AgoraSdk.o $^ -o "$@" $(LIB)
+	#g++ cppwrapper.cpp -o $@ $(LDFLAGS) $(INCPATH) $(CPP11) $(CXXFLAGS) AgoraSdk.o opt_parser.o $(LIB)
+	g++ $(CXXFLAGS) $(LDFLAGS) AgoraSdk.o $^ -o "$@" $(LIB)
 
 $(OBJ):
 	g++ -c $(CXXFLAGS) $(INCPATH) ./base/opt_parser.cpp
@@ -44,3 +44,4 @@ clean:
 	rm -f ${OBJ}
 	rm -f *.o
 	rm -f WrapperARS
+	rm -f libjni.so

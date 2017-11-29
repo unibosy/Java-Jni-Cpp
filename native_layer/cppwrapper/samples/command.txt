@@ -1,1 +1,1 @@
-g++ testCallLibrary.cpp -L. -lWrapper -o exe
+g++ testCallLibrary.cpp -L. -ljni -o WrapperARS

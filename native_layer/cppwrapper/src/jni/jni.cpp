@@ -68,18 +68,30 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 
 		jfieldID idleLimitSecFieldID = env->GetFieldID(jRecordingConfig, "idleLimitSec", "I");
 		jfieldID appliteDirFieldID = env->GetFieldID(jRecordingConfig, "appliteDir", "Ljava/lang/String;");
+		//TODO
+		//jfieldID channelProfileFieldID = env->GetFieldID(jRecordingConfig, "valueEnum", "Lheaders/EnumIndex$CHANNEL_PROFILE_TYPE;");
 
-		if (idleLimitSecFieldID == 0 ||appliteDirFieldID ==NULL){ cout <<"get fieldID failed!"<<endl;return JNI_FALSE;}
+
+		if (idleLimitSecFieldID == 0 ||appliteDirFieldID ==NULL /*|| channelProfileFieldID == NULL*/){ cout <<"get fieldID failed!"<<endl;return JNI_FALSE;}
 		
 		jint idleValue = env->GetIntField(jni_recordingConfig, idleLimitSecFieldID); 
 		cout<<"idleLimitSec:"<<idleValue<<endl;
 		
 		jstring appliteDir = (jstring)env->GetObjectField(jni_recordingConfig, appliteDirFieldID);
 		const char * c_appliteDir = env->GetStringUTFChars(appliteDir ,NULL);
+		std::string str_appliteDir = c_appliteDir;
+		env->ReleaseStringUTFChars(appliteDir,c_appliteDir);
+
+		//CHANNEL_PROFILE_TYPE
+		jint profileClass =1;//(jint)env->GetIntField(jni_recordingConfig, channelProfileFieldID);
+		//jmethodID getVal = env->GetMethodID(profileClass, "getValue", "()I");
+		//jint value = env->CallIntMethod(obj2, getVal);
+		cout <<"profile:"<<(int)profileClass<<endl;
 		cout<<"c_appliteDir:"<<c_appliteDir<<endl;
 		
-		config.appliteDir = const_cast<char*>(c_appliteDir);	
+		config.appliteDir = const_cast<char*>(str_appliteDir.c_str());	
 		config.idleLimitSec = (int)idleValue;
+
     int ret = recorder.createChannel(appId, channelKey, channelName, uid, config);
 
     cout<<"agora sdk createChannel ret:"<<ret<<endl;
@@ -218,7 +230,7 @@ int totalFunc(int argc, char * const argv[]) {
   config.mixedVideoAudio = mixedVideoAudio;
 
   config.appliteDir = const_cast<char*>(applitePath.c_str());
-  config.recordFileRootDir = const_cast<char*>(recordFileRootDir.c_str());
+		config.recordFileRootDir = const_cast<char*>(recordFileRootDir.c_str());
   config.cfgFilePath = const_cast<char*>(cfgFilePath.c_str());
 
   config.secret = secret.empty()? NULL:const_cast<char*>(secret.c_str());

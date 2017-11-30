@@ -1,5 +1,5 @@
-//import headers.*;
-//
+import headers.*;
+import headers.EnumIndex.CHANNEL_PROFILE_TYPE;
 class AgoraJavaRecording{
 
   class AgoraJavaEventHandler{
@@ -28,6 +28,8 @@ class AgoraJavaRecording{
     String name = "video";
     int uid = 0;
     RecordingConfig config=new RecordingConfig();
+		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_LIVE_BROADCASTING;
+		config.channelProfile = profile;
 		config.idleLimitSec = 20;
 		config.isMixingEnabled = false;
 		config.appliteDir="./../native_layer/cppwrapper/bin";//contain Chines path????

@@ -1,5 +1,6 @@
 import headers.*;
-import headers.EnumIndex.CHANNEL_PROFILE_TYPE;
+import headers.EnumIndex.*;
+
 class AgoraJavaRecording{
 
   class AgoraJavaEventHandler{
@@ -11,7 +12,6 @@ class AgoraJavaRecording{
   }
 
   static{
-    //System.loadLibrary("/home/wangshiwei/ars/code_ars/javaDemo/bin/librecording.so");
     System.loadLibrary("recording");
   }
 
@@ -26,15 +26,18 @@ class AgoraJavaRecording{
     String appid = "0c0b4b61adf94de1befd7cdd78a50444";
     String channelKey = "";
     String name = "video";
-    int uid = 0;
-    RecordingConfig config=new RecordingConfig();
+    int uid = 3333;
+    RecordingConfig config= new RecordingConfig();
 		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_LIVE_BROADCASTING;
+		REMOTE_VIDEO_STREAM_TYPE streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
 		config.channelProfile = profile;
+		config.streamType = streamType;
 		config.idleLimitSec = 20;
 		config.isMixingEnabled = false;
 		config.appliteDir="./../native_layer/cppwrapper/bin";//contain Chines path????
     config.recordFileRootDir = ".";
-		System.out.println("to create channel");
+		System.out.println("to create channel,profile:"+profile);
+		System.out.println("to create channel,profile value:"+profile.getValue());
     ars.createChannel(appid, channelKey,name,uid,config);
 
     System.out.println("create channel end");

@@ -1,4 +1,6 @@
 import headers.*;
+import headers.EnumIndex.*;
+
 import headers.EnumIndex.CHANNEL_PROFILE_TYPE;
 class MixModeSettings{
   public int m_height;
@@ -29,5 +31,5 @@ class RecordingConfig {
   public int idleLimitSec;
   public int captureInterval;
 	public CHANNEL_PROFILE_TYPE channelProfile;
-  //REMOTE_VIDEO_STREAM_TYPE streamType;
+  public REMOTE_VIDEO_STREAM_TYPE streamType;
 }

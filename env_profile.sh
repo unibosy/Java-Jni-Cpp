@@ -1,2 +1,2 @@
-LD_LIBRARY_PATH=/home/wangshiwei/ars/code_ars/javaDemo/bin
+LD_LIBRARY_PATH=`pwd`/bin
 export LD_LIBRARY_PATH

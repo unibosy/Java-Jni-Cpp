@@ -68,26 +68,49 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 
 		jfieldID idleLimitSecFieldID = env->GetFieldID(jRecordingConfig, "idleLimitSec", "I");
 		jfieldID appliteDirFieldID = env->GetFieldID(jRecordingConfig, "appliteDir", "Ljava/lang/String;");
-		//TODO
-		//jfieldID channelProfileFieldID = env->GetFieldID(jRecordingConfig, "valueEnum", "Lheaders/EnumIndex$CHANNEL_PROFILE_TYPE;");
+		jfieldID channelProfileFieldID = env->GetFieldID(jRecordingConfig, "channelProfile", "Lheaders/EnumIndex$CHANNEL_PROFILE_TYPE;");
+		jfieldID streamTypeFieldID = env->GetFieldID(jRecordingConfig, "streamType", "Lheaders/EnumIndex$REMOTE_VIDEO_STREAM_TYPE;");
 
-
-		if (idleLimitSecFieldID == 0 ||appliteDirFieldID ==NULL /*|| channelProfileFieldID == NULL*/){ cout <<"get fieldID failed!"<<endl;return JNI_FALSE;}
-		
+		if (idleLimitSecFieldID == NULL ||appliteDirFieldID == NULL || channelProfileFieldID == NULL 
+						|| streamTypeFieldID == NULL ){ cout <<"get fieldID failed!"<<endl;return JNI_FALSE;}
+		//idle
 		jint idleValue = env->GetIntField(jni_recordingConfig, idleLimitSecFieldID); 
 		cout<<"idleLimitSec:"<<idleValue<<endl;
-		
+		//appliteDir
 		jstring appliteDir = (jstring)env->GetObjectField(jni_recordingConfig, appliteDirFieldID);
 		const char * c_appliteDir = env->GetStringUTFChars(appliteDir ,NULL);
 		std::string str_appliteDir = c_appliteDir;
 		env->ReleaseStringUTFChars(appliteDir,c_appliteDir);
-
 		//CHANNEL_PROFILE_TYPE
-		jint profileClass =1;//(jint)env->GetIntField(jni_recordingConfig, channelProfileFieldID);
-		//jmethodID getVal = env->GetMethodID(profileClass, "getValue", "()I");
-		//jint value = env->CallIntMethod(obj2, getVal);
-		cout <<"profile:"<<(int)profileClass<<endl;
-		cout<<"c_appliteDir:"<<c_appliteDir<<endl;
+#if 1
+		jobject channelProfileObject = (env)->GetObjectField(jni_recordingConfig, channelProfileFieldID);
+		//assert(channelProfileObject);
+		jclass enumClass = env->GetObjectClass(channelProfileObject);
+		if(enumClass == NULL)
+		{
+			cout <<"enumClass is null"<<endl;
+		}
+		jmethodID getValue = env->GetMethodID(enumClass, "getValue", "()I");
+		if (getValue == NULL) {
+			cout <<"method not found"<<endl;
+			return JNI_FALSE; /* method not found */
+		}
+		jint value = env->CallIntMethod(channelProfileObject, getValue);
+		cout <<"value is:"<<value<<endl;
+		//assert(enumClass != NULL);
+#endif
+		//streamType
+		jobject streamTypeObject = (env)->GetObjectField(jni_recordingConfig, streamTypeFieldID);
+		jclass streamTypeClass = env->GetObjectClass(streamTypeObject);
+		assert(streamTypeObject);
+		if(streamTypeObject == NULL){cout <<"streamTypeEnum is NULL"; return JNI_FALSE;}
+		jmethodID getValue2 = env->GetMethodID(streamTypeClass, "getValue", "()I");
+		jint value2 = env->CallIntMethod(streamTypeObject, getValue2);
+		cout << "value2:"<<value2<<endl;
+	
+
+
+		cout<<"c_appliteDir:"<<c_appliteDir<<",str_appliteDir:"<<str_appliteDir<<endl;
 		
 		config.appliteDir = const_cast<char*>(str_appliteDir.c_str());	
 		config.idleLimitSec = (int)idleValue;

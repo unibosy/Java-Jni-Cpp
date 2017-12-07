@@ -17,6 +17,12 @@ class AgoraJavaRecording{
 
   public native boolean createChannel(String appid, String channelKey, String name,  int uid,
                 RecordingConfig config);
+	public native boolean leaveChannel();
+	
+	//callback from C++
+	public native void onLeaveChannel(){
+		System.out.println("onLeaveChannel");
+	}
 
   public static void main(String[] args) 
   {
@@ -32,7 +38,7 @@ class AgoraJavaRecording{
 		REMOTE_VIDEO_STREAM_TYPE streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
 		config.channelProfile = profile;
 		config.streamType = streamType;
-		config.idleLimitSec = 20;
+		config.idleLimitSec = 3;
 		config.isMixingEnabled = false;
 		config.appliteDir="./../native_layer/cppwrapper/bin";//contain Chines path????
     config.recordFileRootDir = ".";

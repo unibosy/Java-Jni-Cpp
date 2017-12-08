@@ -3,7 +3,11 @@
 //#include "../cppwrapper.h"
 #include "../jni_headers/AgoraJavaRecording.h"
 
-#include "jniEventHandler.h"
+#include "eventhandler.h"
+
+#include <pthread.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 using std::string;
 using std::cout;
@@ -11,6 +15,7 @@ using std::cerr;
 using std::endl;
 
 using agora::base::log;
+using namespace jniproxy;
 
 atomic_bool_t g_bSignalStop;
 
@@ -25,16 +30,75 @@ void signal_handler(int signo) {
 extern "C" {
 #endif
 
+
+JavaVM* g_jvm = NULL;
+
+//static JNIEnv* g_env = NULL;
+void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
+	cout<<"AgoraJniProxySdk onLeaveChannel"<<endl;
+
+	JNIEnv* jni_env = NULL;
+	if(g_jvm)
+	{
+		cout <<"g_jvm is not null"<<endl;
+	}
+	else
+	{
+		cout <<"g_jvm is null"<<endl;
+	}
+	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
+	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_6) != JNI_OK)
+	{
+		cout <<"GetEnv failed"<<endl;
+		return;
+	}
+	if(jni_env)
+	{
+		cout<<"jni_env is not null"<<endl;
+	}
+	else
+	{
+		cout << "jni_env is null"<<endl;
+	}
+	jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
+	if(javaClass != NULL)
+		cout<<"find AgoraJavaRecording class"<<endl;
+	else
+		cout <<"not found AgoraJavaRecording class"<<endl;
+	//int tid = GetCurrentThreadId();
+	pid_t tid = getpid();
+
+	cout << "this thread id is:"<<tid<<endl;
+	//return;
+	//jmethodID mid =  jni_env->GetMethodID(javaClass,"leaveChannel","()Z");
+	//jmethodID mid =  jni_env->GetStaticMethodID(javaClass,"onLeaveChannel","Lheaders/EnumIndex$LEAVE_PATH_CODE;");
+	jmethodID mid =  jni_env->GetStaticMethodID(javaClass,"onLeaveChannel","(I)V");
+	cout <<"mid"<<endl;
+	jni_env->CallStaticVoidMethod(javaClass, mid, 1);
+	cout<<"find onLeaveChannel method"<<endl;
+	((JavaVM*)g_jvm)->DetachCurrentThread();
+}
+
 //TODO
 #if 0
   convert jobject jni_recordingConfig to c++ recordingConfig
 #endif
+#if 1
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
+{
+	g_jvm = vm;
+	assert(g_jvm);
+	cout<<"jint JNI_OnLoad enter"<<endl;
+	return JNI_VERSION_1_6;
+}
+#endif
+
 
 JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, jobject jobject1, jstring jni_appid, jstring jni_channelKey, 
       jstring jni_channelName, jint jni_uid, jobject jni_recordingConfig)
 {
-	  cout<<"enter Java_AgoraJavaRecording_createChannel"<<endl;
-
+		pid_t tid = getpid();
+	  cout<<"enter Java_AgoraJavaRecording_createChannel,pid:"<<tid<<endl;
 		g_bSignalStop = false;
 	  signal(SIGQUIT, signal_handler);
   	signal(SIGABRT, signal_handler);
@@ -129,6 +193,31 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
     	jniRecorder.release();
   	}
     cout<<"Java_AgoraJavaRecording__recordingConfigcreateChannel end"<<endl;
+#if 0		
+		//Lheaders/EnumIndex$LEAVE_PATH_CODE;
+		jclass clazz = NULL; 
+		jstring str_arg = NULL;
+		jmethodID mid_static_method;
+		(*env)->FindClass(env,"AgoraJavaRecording");
+		if(clazz == NULL)
+		{
+			cout<<"can not find AgoraJavaRecordingClass"<<endl;
+			return JNI_FALSE;
+		}
+		mid_static_method = (env)->GetStaticMethodID(env,clazz,"onLeaveChannel", "(Lheaders/EnumIndex$LEAVE_PATH_CODE;)V");  
+    if (mid_static_method == NULL) {  
+        printf("找不到callStaticMethod这个静态方法。");  
+        return JNI_FALSE;  
+    }  
+
+    // 3、调用clazz类的callStaticMethod静态方法  
+    //str_arg = (*env)->NewStringUTF(env,"我是静态方法");  
+    //(*env)->CallStaticVoidMethod(env,clazz,mid_static_method, str_arg, 100);  
+
+    // 删除局部引用  
+    //(env)->DeleteLocalRef(env,clazz);  
+    //(env)->DeleteLocalRef(env,str_arg); 
+#endif
  
 }
 #ifdef __cplusplus

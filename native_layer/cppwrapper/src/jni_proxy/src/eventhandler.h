@@ -23,11 +23,12 @@ public:
     virtual void onJoinChannelSuccess(const char * channelId, agora::linuxsdk::uid_t uid) {
         cout<<"AgoraJniProxySdk onJoinChannelSuccess"<<endl;
     }
-    virtual void onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
+    virtual void onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code);
+		/*{
         cout<<"AgoraJniProxySdk onLeaveChannel"<<endl;
 				//call java code via jni
 				onLeaveChannelImpl(code);
-    }
+    }*/
 
     virtual void onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk::UserJoinInfos &infos) {
         cout<<"AgoraJniProxySdk onUserJoined"<<endl;

@@ -30,7 +30,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	g++ -c $(CXXFLAGS) $(INCPATH) ./agorasdk/AgoraSdk.cpp
-	g++ ./jni_proxy/src/proxy.cpp -o $@ $(LDFLAGS) $(INCPATH) $(JNIPATH) $(CPP11) $(CXXFLAGS) AgoraSdk.o opt_parser.o $(LIB)
+	g++ ./jni_proxy/src/proxy.cpp -o $@ $(LDFLAGS) $(INCPATH) $(JNIPATH) $(CPP11) $(CXXFLAGS) AgoraSdk.o opt_parser.o $(LIB) -I.
 	mv $@ ../../../bin
 	#g++ $(CXXFLAGS) $(LDFLAGS) AgoraSdk.o $^ -o "$@" $(LIB)
 

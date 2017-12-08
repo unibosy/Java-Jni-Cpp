@@ -23,14 +23,6 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel
 JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_leaveChannel
   (JNIEnv *, jobject);
 
-/*
- * Class:     AgoraJavaRecording
- * Method:    onLeaveChannel
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_AgoraJavaRecording_onLeaveChannel
-  (JNIEnv *, jobject);
-
 #ifdef __cplusplus
 }
 #endif

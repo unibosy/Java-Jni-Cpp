@@ -9,7 +9,7 @@ mkdir "$binDir"
 #jni layer
 jniLayer="./native_layer/cppwrapper/src/jni_proxy/jni_headers"
 
-javac src/headers/*.java -d bin
-javac src/*.java -d bin
+javac java/headers/*.java -d bin
+javac java/*.java -d bin
 javah -d $jniLayer -classpath ./bin AgoraJavaRecording
 

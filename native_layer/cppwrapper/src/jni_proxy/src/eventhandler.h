@@ -19,22 +19,10 @@ public:
         cout<<"AgoraJniProxySdk onJoinChannelSuccess"<<endl;
     }
     virtual void onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code);
-		/*{
-        cout<<"AgoraJniProxySdk onLeaveChannel"<<endl;
-				//call java code via jni
-				onLeaveChannelImpl(code);
-    }*/
-
     virtual void onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk::UserJoinInfos &infos);
     virtual void onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk::USER_OFFLINE_REASON_TYPE reason);
-
     virtual void audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const;
-    //{
-    //    cout<<"AgoraJniProxySdk audioFrameReceived"<<endl;
-    //}
-    virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
-        cout<<"AgoraJniProxySdk videoFrameReceived"<<endl;
-    }
+    virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
 private:
 
 };

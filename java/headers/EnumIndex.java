@@ -99,17 +99,30 @@ public class EnumIndex{
     VIDEO_FORMAT_YUV_FRAME_TYPE(2),
     VIDEO_FORMAT_JPG_FRAME_TYPE(3),
     VIDEO_FORMAT_JPG_FILE_TYPE(4);
-        private VIDEO_FORMAT_TYPE(int value){}
+    private int value;
+    private VIDEO_FORMAT_TYPE(int value) {
+        this.value = value;
+      }
+      public int getValue() {
+        return value;
+      }
+
     }
+
 
     
     public enum AUDIO_FORMAT_TYPE {
     AUDIO_FORMAT_DEFAULT_TYPE(0),
     AUDIO_FORMAT_AAC_FRAME_TYPE(1),
     AUDIO_FORMAT_PCM_FRAME_TYPE(2);
-        private AUDIO_FORMAT_TYPE(int value){}
+      private int value;
+      private AUDIO_FORMAT_TYPE(int value) {
+        this.value = value;
+      }
+      public int getValue() {
+        return value;
+      }
     }
-
     public enum AUDIO_FRAME_TYPE {
     AUDIO_FRAME_RAW_PCM(0),
     AUDIO_FRAME_AAC(1);

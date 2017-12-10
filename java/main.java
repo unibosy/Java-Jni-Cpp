@@ -71,12 +71,16 @@ class AgoraJavaRecording{
     RecordingConfig config= new RecordingConfig();
 		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION;
 		REMOTE_VIDEO_STREAM_TYPE streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
+    AUDIO_FORMAT_TYPE decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_PCM_FRAME_TYPE;
+    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_H264_FRAME_TYPE;
 		config.channelProfile = profile;
 		config.streamType = streamType;
 		config.idleLimitSec = 3;
 		config.isMixingEnabled = false;
 		config.appliteDir="./../native_layer/cppwrapper/bin";//contain Chines path????
     config.recordFileRootDir = ".";
+    config.decodeAudio = decodeAudio;
+    config.decodeVideo = decodeVideo;
 		System.out.println("to create channel,profile value:"+profile.getValue());
     ars.createChannel(appid, channelKey,name,uid,config);
 		

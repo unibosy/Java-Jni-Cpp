@@ -24,8 +24,8 @@ class RecordingConfig {
   public String appliteDir;
   public String recordFileRootDir;
   public String cfgFilePath;
-  //VIDEO_FORMAT_TYPE decodeVideo;
-  //AUDIO_FORMAT_TYPE decodeAudio;
+  public VIDEO_FORMAT_TYPE decodeVideo;
+  public AUDIO_FORMAT_TYPE decodeAudio;
   public int lowUdpPort;
   public int highUdpPort;
   public int idleLimitSec;

@@ -2,7 +2,7 @@ import headers.*;
 import headers.EnumIndex.*;
 
 import headers.EnumIndex.CHANNEL_PROFILE_TYPE;
-class MixModeSettings{
+/*class MixModeSettings{
   public int m_height;
   public int m_width;
   public boolean m_videoMix;
@@ -12,8 +12,15 @@ class MixModeSettings{
     m_videoMix = false;
   }
 }
-
+*/
 class RecordingConfig {
+     /*public enum AUDIO_FRAME_TYPE2 {
+    AUDIO_FRAME_RAW_PCM2(0),
+    AUDIO_FRAME_AAC2(1);
+        private AUDIO_FRAME_TYPE2(int value){}
+    }*/
+
+ 
   public boolean isAudioOnly;
   public boolean isVideoOnly;
  	public boolean isMixingEnabled;

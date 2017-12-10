@@ -12,11 +12,25 @@ class AgoraJavaRecording{
 	public native boolean leaveChannel();
 
 	//Called by C++
-	public static void onLeaveChannel(/*LEAVE_PATH_CODE*/ int reason){
-		System.out.println("onLeaveChannel,code:"+reason);
+	public static void onLeaveChannel(LEAVE_PATH_CODE reason){
+		System.out.println("AgoraJavaRecording onLeaveChannel,code:"+reason.getValue());
 		stopped = true;
 	}
+  public void onError(int error, STAT_CODE_TYPE stat_code) {
+    System.out.println("AgoraJavaRecording onLeaveChannel,code:"+error+",stat code:"+stat_code);
+    stopped = true;
+  }
+	public void audioPcmFrameReceived(int uid, AudioPcmFrame pcmFrame)
+  {
+    System.out.println("java demo audioFrameReceived ");
+  }
+	public void audioAacFrameReceived(int uid, AudioPcmFrame pcmFrame)
+  {
+    System.out.println("java demo audioAacFrameReceived ");
+  }
 
+
+  
 	//stop java process flag
 	private static boolean stopped = false;
 	public static boolean stopped()
@@ -27,7 +41,7 @@ class AgoraJavaRecording{
   public static void main(String[] args) 
   {
 		System.out.println(System.getProperty("java.library.path"));
-    MixModeSettings settings;
+    //MixModeSettings settings;
     AgoraJavaRecording ars = new AgoraJavaRecording();
     String appid = "0c0b4b61adf94de1befd7cdd78a50444";
     String channelKey = "";

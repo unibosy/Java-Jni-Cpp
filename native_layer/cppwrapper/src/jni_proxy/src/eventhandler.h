@@ -12,10 +12,7 @@ public:
     AgoraJniProxySdk():AgoraSdk(){cout<<"AgoraJniProxySdk constructor"<<endl;}
     ~AgoraJniProxySdk() {cout<<"AgoraJniProxySdk destructor"<<endl;}
 
-    virtual void onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code) {
-    	cout<<endl<<"AgoraJniProxySdk onError"<<endl;
-			onErrorImpl(error, stat_code);
-		}
+    virtual void onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code);
     virtual void onWarning(int warn) {
         cout<<"AgoraJniProxySdk onWarning"<<endl;
     }
@@ -37,9 +34,10 @@ public:
         cout<<"AgoraJniProxySdk onUserOffline"<<endl;
     }
 
-    virtual void audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const {
-        cout<<"AgoraJniProxySdk audioFrameReceived"<<endl;
-    }
+    virtual void audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const;
+    //{
+    //    cout<<"AgoraJniProxySdk audioFrameReceived"<<endl;
+    //}
     virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
         cout<<"AgoraJniProxySdk videoFrameReceived"<<endl;
     }

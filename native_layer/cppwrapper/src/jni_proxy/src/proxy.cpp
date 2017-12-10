@@ -30,55 +30,125 @@ void signal_handler(int signo) {
 extern "C" {
 #endif
 
-
 JavaVM* g_jvm = NULL;
 
-//static JNIEnv* g_env = NULL;
-void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
-	cout<<"AgoraJniProxySdk onLeaveChannel"<<endl;
-
+void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const
+{
+	cout<<"AgoraJniProxySdk::audioFrameReceived enter uid:"<<uid<<endl;
+	//
 	JNIEnv* jni_env = NULL;
-	if(g_jvm)
-	{
-		cout <<"g_jvm is not null"<<endl;
-	}
-	else
-	{
-		cout <<"g_jvm is null"<<endl;
-	}
+  assert(jni_env);
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
-	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_6) != JNI_OK)
+	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK)
 	{
 		cout <<"GetEnv failed"<<endl;
 		return;
 	}
-	if(jni_env)
-	{
-		cout<<"jni_env is not null"<<endl;
-	}
-	else
-	{
-		cout << "jni_env is null"<<endl;
-	}
+	assert(jni_env);
 	jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
-	if(javaClass != NULL)
-		cout<<"find AgoraJavaRecording class"<<endl;
-	else
-		cout <<"not found AgoraJavaRecording class"<<endl;
+  assert(javaClass);
+	pid_t tid = getpid();
+	cout << "this thread id is:"<<tid<<endl;
+  //findClass -> constructor method ->NewObject->GetFieldID-> setXXXField
+  if (frame->type == agora::linuxsdk::AUDIO_FRAME_RAW_PCM) {
+    cout <<"jni receive raw data is pcm!"<<endl;
+    jclass objectClass = (jni_env)->FindClass("headers.EnumIndex$AudioPcmFrame"); 
+    //jobject  objectNewEng = (env)->NewObject();
+  }else if (frame->type == agora::linuxsdk::AUDIO_FRAME_AAC) {
+    
+  }
+  jmethodID mid = jni_env->GetMethodID(javaClass, "audioPcmFrameReceived", "(ILheaders/EnumIndex$AudioPcmFrame;)V");
+
+  assert(mid);
+  cout <<"mid"<<endl;
+  //jni_env->CallVoidMethod(javaClass, mid, );
+
+
+
+  jni_env->DeleteLocalRef(javaClass);
+  ((JavaVM*)g_jvm)->DetachCurrentThread();
+}
+void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
+	cout<<"AgoraJniProxySdk onLeaveChannel"<<endl;
+
+	JNIEnv* jni_env = NULL;
+  assert(jni_env);
+	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
+	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK)
+	{
+		cout <<"GetEnv failed"<<endl;
+		return;
+	}
+  assert(jni_env);
+	jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
+  assert(javaClass);
 	//int tid = GetCurrentThreadId();
 	pid_t tid = getpid();
-
 	cout << "this thread id is:"<<tid<<endl;
-	//return;
-	//jmethodID mid =  jni_env->GetMethodID(javaClass,"leaveChannel","()Z");
-	//jmethodID mid =  jni_env->GetStaticMethodID(javaClass,"onLeaveChannel","Lheaders/EnumIndex$LEAVE_PATH_CODE;");
-	jmethodID mid =  jni_env->GetStaticMethodID(javaClass,"onLeaveChannel","(I)V");
-	cout <<"mid"<<endl;
-	jni_env->CallStaticVoidMethod(javaClass, mid, 1);
-	cout<<"find onLeaveChannel method"<<endl;
+
+  //step 1:find class
+  jclass jcLeave = (jni_env)->FindClass("headers/EnumIndex$LEAVE_PATH_CODE");
+  cout << "jcleave ..."<<endl;
+  if(jcLeave){
+    cout << "find jcleave"<<endl;
+  }else {
+    cout <<"no jcleave???"<<endl;
+  }
+  assert(jcLeave);
+  //step 2: create constructor
+  jmethodID jconstructMid = NULL;
+  jconstructMid = jni_env->GetMethodID(jcLeave, "<init>", "(Ljava/lang/String;II)V");
+  assert(jconstructMid);
+  if(jconstructMid){
+  cout<<"jconstructMid"<<endl;}
+  else{cout<<"jconstructMid -1"<<endl;}
+  //step 3: new object
+  jobject jobLeave = NULL;
+  cout <<"NewObject..."<<endl;
+  jint jLeaveValue = (int)(code);
+  cout <<"jLeaveValue:"<<jLeaveValue<<endl;
+  jint temp = 1;
+  jobLeave = jni_env->NewObject(jcLeave, jconstructMid, temp,jLeaveValue);
+  //jobLeave = (jni_env)->AllocObject(jcLeave,jint(1));
+  cout << "jobleave ..."<<endl;
+  //(jni_env)->SetIntField(jobLeave, (jni_env)->GetFieldID(jcLeave, "value", "()I"), (jint)(int(code)));
+
+  //setp 4: get special method
+	jmethodID jLeaveMid =  jni_env->GetStaticMethodID(javaClass,"onLeaveChannel","(I)V");
+  assert(jcLeaveMid);
+	cout <<"jLeaveMid"<<endl; 
+  jni_env->CallStaticVoidMethod(javaClass, jLeaveMid, jobLeave);
+  //jni_env->CallObjectMethod(javvaClassaClass, mid,jobLeave);
+	//jni_env->CallStaticVoidMethod(javaClass, mid, jobLeave);
+  cout<<"CallStaticVoidMethod end"<<endl;
+  jni_env->DeleteLocalRef(javaClass);
 	((JavaVM*)g_jvm)->DetachCurrentThread();
 }
+void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code)
+{
+ 	cout<<"AgoraJniProxySdk onError"<<endl;
+	JNIEnv* jni_env = NULL;
+  assert(jni_env);
+	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
+	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
+		cout <<"GetEnv failed"<<endl;
+		return;
+	}
+  assert(jni_env);
+	jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
+  assert(javaClass);
+	//int tid = GetCurrentThreadId();
+	pid_t tid = getpid();
+	cout << "this thread id is:"<<tid<<endl;
 
+	jmethodID mid =  jni_env->GetMethodID(javaClass,"onError","(I)V");
+  assert(mid);
+	cout <<"mid"<<endl;
+	jni_env->CallStaticVoidMethod(javaClass, mid, 2, jint((int)(stat_code)));
+	cout<<"find onLeaveChannel method"<<endl;
+  jni_env->DeleteLocalRef(javaClass);
+	((JavaVM*)g_jvm)->DetachCurrentThread();
+}
 //TODO
 #if 0
   convert jobject jni_recordingConfig to c++ recordingConfig
@@ -89,7 +159,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	g_jvm = vm;
 	assert(g_jvm);
 	cout<<"jint JNI_OnLoad enter"<<endl;
-	return JNI_VERSION_1_6;
+	return JNI_VERSION_1_4;
 }
 #endif
 
@@ -193,31 +263,6 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
     	jniRecorder.release();
   	}
     cout<<"Java_AgoraJavaRecording__recordingConfigcreateChannel end"<<endl;
-#if 0		
-		//Lheaders/EnumIndex$LEAVE_PATH_CODE;
-		jclass clazz = NULL; 
-		jstring str_arg = NULL;
-		jmethodID mid_static_method;
-		(*env)->FindClass(env,"AgoraJavaRecording");
-		if(clazz == NULL)
-		{
-			cout<<"can not find AgoraJavaRecordingClass"<<endl;
-			return JNI_FALSE;
-		}
-		mid_static_method = (env)->GetStaticMethodID(env,clazz,"onLeaveChannel", "(Lheaders/EnumIndex$LEAVE_PATH_CODE;)V");  
-    if (mid_static_method == NULL) {  
-        printf("找不到callStaticMethod这个静态方法。");  
-        return JNI_FALSE;  
-    }  
-
-    // 3、调用clazz类的callStaticMethod静态方法  
-    //str_arg = (*env)->NewStringUTF(env,"我是静态方法");  
-    //(*env)->CallStaticVoidMethod(env,clazz,mid_static_method, str_arg, 100);  
-
-    // 删除局部引用  
-    //(env)->DeleteLocalRef(env,clazz);  
-    //(env)->DeleteLocalRef(env,str_arg); 
-#endif
  
 }
 #ifdef __cplusplus

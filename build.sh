@@ -1,4 +1,5 @@
 #!/bin/sh
+
 CLASSPATH=`pwd`/bin
 export CLASSPATH
 

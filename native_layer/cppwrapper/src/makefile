@@ -5,6 +5,8 @@ LINK=${CXX}
 
 TOPDIR=`pwd`/..
 LIBPATH=${TOPDIR}/libs
+#set your jvm path!!!
+JNIINCLUDE = /usr/lib/jvm/java-9-openjdk-amd64/include/
 CPP11 = -std=c++11
 LDFLAGS= -shared
 FPIC = -fPIC
@@ -13,7 +15,7 @@ CXXFLAGS  = -pipe -std=c++0x -fPIC -g -fno-omit-frame-pointer \
 					
 LIB	   = -pthread -lpthread -L$(LIBPATH) -lrecorder -lrt
 INCPATH =-I. -I${TOPDIR}/include -I${TOPDIR}/include/base -I${TOPDIR}/src/base -I${TOPDIR}/src/agorasdk -I${TOPDIR}/src/jni
-JNIPATH = -I. -I/usr/lib/jvm/java-9-openjdk-amd64/include/ -I/usr/lib/jvm/java-9-openjdk-amd64/include/linux/
+JNIPATH = -I. -I/$(JNIINCLUDE) -I/$(JNIINCLUDE)/linux/
 OBJ = opt_parser.o
 
 REALTARGET = exe

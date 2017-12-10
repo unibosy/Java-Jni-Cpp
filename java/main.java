@@ -12,13 +12,30 @@ class AgoraJavaRecording{
 	public native boolean leaveChannel();
 
 	//Called by C++
-	public static void onLeaveChannel(LEAVE_PATH_CODE reason){
-		System.out.println("AgoraJavaRecording onLeaveChannel,code:"+reason.getValue());
-		stopped = true;
+	public static void onLeaveChannel(int reason){
+    EnumIndex ei = new EnumIndex();
+    EnumIndex.LEAVE_PATH_CODE lpc = ei.new LEAVE_PATH_CODE(reason);
+		System.out.println("AgoraJavaRecording onLeaveChannel,code:"+lpc.getValue());
+		//stopped = true;
+    System.out.println("AgoraJavaRecording onLeaveChannel,stopped"+stopped);
 	}
-  public void onError(int error, STAT_CODE_TYPE stat_code) {
-    System.out.println("AgoraJavaRecording onLeaveChannel,code:"+error+",stat code:"+stat_code);
+  public static void onError(int error, int stat_code) {
+    System.out.println("AgoraJavaRecording onError,error:"+error+",stat code:"+stat_code);
     stopped = true;
+  }
+  public static void onWarning(int warn) {
+    //refer to "WARN_CODE_TYPE"
+    System.out.println("AgoraJavaRecording onWarning,warn:"+warn);
+  }
+  public static void onUserOffline(int uid, int reason) {
+    System.out.println("onUserJoined uid:"+uid+",offline reason:"+reason);
+    EnumIndex ei = new EnumIndex();
+    EnumIndex.USER_OFFLINE_REASON_TYPE offline = ei.new USER_OFFLINE_REASON_TYPE(reason);
+    System.out.println("AgoraJavaRecording onLeaveChannel,code:"+offline.getValue());
+  }
+  public static void onUserJoined(int uid, String recordingDir){
+    //recordingDir:recording file directory
+    System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
   }
 	public void audioPcmFrameReceived(int uid, AudioPcmFrame pcmFrame)
   {
@@ -28,7 +45,10 @@ class AgoraJavaRecording{
   {
     System.out.println("java demo audioAacFrameReceived ");
   }
-
+  public static void stopCallBack() {
+    System.out.println("java demo receive stop from JNI ");
+    stopped = true;
+  }
 
   
 	//stop java process flag
@@ -48,7 +68,7 @@ class AgoraJavaRecording{
     String name = "video";
     int uid = 3333;
     RecordingConfig config= new RecordingConfig();
-		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_LIVE_BROADCASTING;
+		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION;
 		REMOTE_VIDEO_STREAM_TYPE streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
 		config.channelProfile = profile;
 		config.streamType = streamType;
@@ -70,10 +90,6 @@ class AgoraJavaRecording{
 				System.out.println("exception throwed!");
 			}
 		}
-
     System.out.println("jni layer has been exited");
-		
-
-
   }
 }

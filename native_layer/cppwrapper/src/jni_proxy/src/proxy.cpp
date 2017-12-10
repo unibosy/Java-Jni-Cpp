@@ -127,6 +127,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
     return;
   }
   //5.set object all fields
+  //if this is a static parameter,then shoud set field to jclass
   jni_env->SetIntField(jobAudioFrame, typeFieldID, jint(1));
 #if 0
   //5.1 get object function

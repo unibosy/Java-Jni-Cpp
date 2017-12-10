@@ -124,9 +124,15 @@ public class EnumIndex{
       }
     }
     public enum AUDIO_FRAME_TYPE {
-    AUDIO_FRAME_RAW_PCM(0),
-    AUDIO_FRAME_AAC(1);
-        private AUDIO_FRAME_TYPE(int value){}
+      AUDIO_FRAME_RAW_PCM(0),
+      AUDIO_FRAME_AAC(1);
+      private int value;
+      private AUDIO_FRAME_TYPE(int value) {
+        this.value = value;
+      }
+      public int getValue() {
+        return value;
+      }
     }
 
     public enum MEMORY_TYPE {
@@ -149,12 +155,22 @@ public class EnumIndex{
         private SERVICE_MODE(int value){}
     }
     public class AudioFrameOfPcm {
-      public AUDIO_FRAME_TYPE type;
-      public AudioPcmFrame apf;
-      public MEMORY_TYPE mType;
+      public final int AUDIO_FRAME_RAW_PCM = 0;
+      public final int AUDIO_FRAME_AAC = 1;
+      public int Type;
+      public AudioPcmFrame pcm;
+      //public MEMORY_TYPE mType;
+      public void setType(int type){
+        Type = type;
+      }
+      public int getType()
+      {
+        return Type;
+      }
     }
 		public class AudioFrameOfAac {
     	public AUDIO_FRAME_TYPE type;
+      public AudioPcmFrame aac;
     	public MEMORY_TYPE mType;
 		}
     public class AudioPcmFrame {

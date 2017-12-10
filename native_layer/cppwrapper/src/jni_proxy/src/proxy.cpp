@@ -127,7 +127,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
     return;
   }
   //5.set object all fields
-  jni_env->SetIntField(jcAudioFrame, typeFieldID, jint(1));
+  jni_env->SetIntField(jobAudioFrame, typeFieldID, jint(1));
 #if 0
   //5.1 get object function
   cout<<"----------5"<<endl;
@@ -144,7 +144,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
 #endif 
   cout<<"----------7"<<endl;
   //6.call method
-  mid = jni_env->GetStaticMethodID(javaClass, "audioPcmFrameReceived", "(JLheaders/EnumIndex$AudioPcmFrame;)V");
+  mid = jni_env->GetStaticMethodID(javaClass, "audioPcmFrameReceived", "(JLheaders/EnumIndex$AudioFrameOfPcm;)V");
   cout<<"----------8"<<endl;
   if(mid == NULL){
     cout<<"audioPcmFrameReceived get method failed!"<<endl;

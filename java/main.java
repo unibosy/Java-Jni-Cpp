@@ -38,9 +38,9 @@ class AgoraJavaRecording{
     //recordingDir:recording file directory
     System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
   }
-	public static void audioPcmFrameReceived(long uid, AudioPcmFrame pcmFrame)
+	public static void audioPcmFrameReceived(long uid, AudioFrameOfPcm pcmFrame)
   {
-    System.out.println("java demo audioFrameReceived,uid:"+uid);
+    System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+pcmFrame.getType());
   }
 	public static void audioAacFrameReceived(long uid, AudioPcmFrame pcmFrame)
   {

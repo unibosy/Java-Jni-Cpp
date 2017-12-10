@@ -23,7 +23,7 @@ $(target): shared
 shared: lib
 	g++ -c -fPIC shared.cpp -L$(INCPATH)
 	mv shared.o .libs
-	g++ -shared ./.libs/shared.o -L./.libs -lcompute -o ./.libs/libshared.so
+	g++ -shared ./.libs/shared.o -L./.libs ./.libs/mul.o ./.libs/add.o -o ./.libs/libshared.so
 
 lib:
 	gcc -c -fPIC $(SRC)
@@ -32,7 +32,7 @@ lib:
 	#gcc -c -fPIC add.cpp mul.pp
 	#mv $(TOPDIR)/src/*.o .
 #	gcc -c -fPIC mul.cpp
-	ar -rc ./.libs/libcompute.a ./.libs/*.o
+	#ar -rc ./.libs/libcompute.a ./.libs/*.o
 
 clean:
 	rm -f *.o *.a *.so main exe target

@@ -23,6 +23,14 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel
 JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_leaveChannel
   (JNIEnv *, jobject);
 
+/*
+ * Class:     AgoraJavaRecording
+ * Method:    setVideoMixingLayout
+ * Signature: (Lheaders/EnumIndex/VideoMixingLayout;)I
+ */
+JNIEXPORT jint JNICALL Java_AgoraJavaRecording_setVideoMixingLayout
+  (JNIEnv *, jobject, jobject);
+
 #ifdef __cplusplus
 }
 #endif

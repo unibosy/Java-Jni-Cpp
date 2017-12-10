@@ -10,6 +10,7 @@ class AgoraJavaRecording{
   public native boolean createChannel(String appid, String channelKey, String name,  int uid,
                 RecordingConfig config);
 	public native boolean leaveChannel();
+  public native int setVideoMixingLayout(VideoMixingLayout layout);
 
 	//Called by C++
 	public static void onLeaveChannel(int reason){
@@ -27,21 +28,21 @@ class AgoraJavaRecording{
     //refer to "WARN_CODE_TYPE"
     System.out.println("AgoraJavaRecording onWarning,warn:"+warn);
   }
-  public static void onUserOffline(int uid, int reason) {
-    System.out.println("onUserJoined uid:"+uid+",offline reason:"+reason);
+  public static void onUserOffline(long uid, int reason) {
+    System.out.println("AgoraJavaRecording onUserOffline uid:"+uid+",offline reason:"+reason);
     EnumIndex ei = new EnumIndex();
     EnumIndex.USER_OFFLINE_REASON_TYPE offline = ei.new USER_OFFLINE_REASON_TYPE(reason);
-    System.out.println("AgoraJavaRecording onLeaveChannel,code:"+offline.getValue());
+    System.out.println("AgoraJavaRecording onUserOffline,code:"+offline.getValue());
   }
-  public static void onUserJoined(int uid, String recordingDir){
+  public static void onUserJoined(long uid, String recordingDir){
     //recordingDir:recording file directory
     System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
   }
-	public void audioPcmFrameReceived(int uid, AudioPcmFrame pcmFrame)
+	public void audioPcmFrameReceived(long uid, AudioPcmFrame pcmFrame)
   {
     System.out.println("java demo audioFrameReceived ");
   }
-	public void audioAacFrameReceived(int uid, AudioPcmFrame pcmFrame)
+	public void audioAacFrameReceived(long uid, AudioPcmFrame pcmFrame)
   {
     System.out.println("java demo audioAacFrameReceived ");
   }
@@ -76,7 +77,6 @@ class AgoraJavaRecording{
 		config.isMixingEnabled = false;
 		config.appliteDir="./../native_layer/cppwrapper/bin";//contain Chines path????
     config.recordFileRootDir = ".";
-		System.out.println("to create channel,profile:"+profile);
 		System.out.println("to create channel,profile value:"+profile.getValue());
     ars.createChannel(appid, channelKey,name,uid,config);
 		

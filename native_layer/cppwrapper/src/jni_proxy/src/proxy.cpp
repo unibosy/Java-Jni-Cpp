@@ -36,8 +36,8 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
 {
 	cout<<"AgoraJniProxySdk::audioFrameReceived enter uid:"<<uid<<endl;
 	//
+#if 0
 	JNIEnv* jni_env = NULL;
-  assert(jni_env);
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
 	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK)
 	{
@@ -52,7 +52,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   //findClass -> constructor method ->NewObject->GetFieldID-> setXXXField
   if (frame->type == agora::linuxsdk::AUDIO_FRAME_RAW_PCM) {
     cout <<"jni receive raw data is pcm!"<<endl;
-    jclass objectClass = (jni_env)->FindClass("headers.EnumIndex$AudioPcmFrame"); 
+    jclass objectClass = (jni_env)->FindClass("headers/EnumIndex$AudioPcmFrame"); 
     //jobject  objectNewEng = (env)->NewObject();
   }else if (frame->type == agora::linuxsdk::AUDIO_FRAME_AAC) {
     
@@ -62,18 +62,15 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   assert(mid);
   cout <<"mid"<<endl;
   //jni_env->CallVoidMethod(javaClass, mid, );
-
-
-
   jni_env->DeleteLocalRef(javaClass);
   ((JavaVM*)g_jvm)->DetachCurrentThread();
+#endif
 }
 
 void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk::UserJoinInfos &infos) {
   cout << "AgoraJniProxySdk User " << uid << " joined, RecordingDir:" << (infos.storageDir? infos.storageDir:"NULL") <<endl;
   std::string store_dir = std::string(infos.storageDir);
 	JNIEnv* jni_env = NULL;
-  assert(jni_env);
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
 	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
 		cout <<"GetEnv failed"<<endl;
@@ -85,21 +82,42 @@ void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk:
 	//int tid = GetCurrentThreadId();
 	pid_t tid = getpid();
 	cout << "this thread id is:"<<tid<<endl;
-  jmethodID jUserJoinedMid =  jni_env->GetStaticMethodID(javaClass,"onUserJoined","(ILjava/lang/String;)V");
+  jmethodID jUserJoinedMid =  jni_env->GetStaticMethodID(javaClass,"onUserJoined","(JLjava/lang/String;)V");
   assert(jUserJoinedMid);
 
   jstring jstrRecordingDir = jni_env->NewStringUTF(store_dir.c_str());
-  jni_env->CallStaticVoidMethod(javaClass, jUserJoinedMid, jint((int)(uid)),jstrRecordingDir);
+  jni_env->CallStaticVoidMethod(javaClass, jUserJoinedMid, jlong((long)(uid)),jstrRecordingDir);
   cout << "AgoraJniProxySdk::onUserJoined call end"<<endl;
 
   jni_env->DeleteLocalRef(javaClass);
 	((JavaVM*)g_jvm)->DetachCurrentThread();
 }
+void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk::USER_OFFLINE_REASON_TYPE reason)
+{
+  cout << "AgoraJniProxySdk onUserOffline User:" << uid << ",reason" << reason<<endl;
+	JNIEnv* jni_env = NULL;
+	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
+	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
+		cout <<"GetEnv failed"<<endl;
+		return;
+	}
+  assert(jni_env);
+	jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
+  assert(javaClass);
+	//int tid = GetCurrentThreadId();
+	pid_t tid = getpid();
+	cout << "this thread id is:"<<tid<<endl;
+  jmethodID jUserOfflineMid =  jni_env->GetStaticMethodID(javaClass,"onUserOffline","(JI)V");
+  assert(jUserOfflineMid);
+  jni_env->CallStaticVoidMethod(javaClass, jUserOfflineMid, jlong((long)(uid)),jint(int(reason)));
+  cout << "AgoraJniProxySdk::onUserOffline call end"<<endl;
 
+  jni_env->DeleteLocalRef(javaClass);
+	((JavaVM*)g_jvm)->DetachCurrentThread();
+}
 void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
 	cout<<"AgoraJniProxySdk onLeaveChannel"<<endl;
 	JNIEnv* jni_env = NULL;
-  assert(jni_env);
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
 	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK)
 	{
@@ -124,7 +142,6 @@ void AgoraJniProxySdk::onWarning(int warn)
 {
  	cout<<"AgoraJniProxySdk onWarning,warn:"<<warn<<endl;
 	JNIEnv* jni_env = NULL;
-  assert(jni_env);
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
 	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
 		cout <<"GetEnv failed"<<endl;
@@ -147,7 +164,6 @@ void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_c
 {
  	cout<<"AgoraJniProxySdk onError"<<endl;
 	JNIEnv* jni_env = NULL;
-  assert(jni_env);
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
   if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
 		cout <<"GetEnv failed"<<endl;
@@ -199,7 +215,6 @@ void stopJavaProc()
 {
   cout<<"AgoraJniProxySdk stopJavaProc"<<endl;
 	JNIEnv* jni_env = NULL;
-  assert(jni_env);
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
   if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
 		cout <<"GetEnv failed"<<endl;
@@ -232,16 +247,13 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 
     const char* appId = NULL;
     appId = env->GetStringUTFChars(jni_appid,false);
-    cout <<"appId:"<<appId<<endl;
     if(!appId)
       cerr<<"get appId is NULL"<<endl;
     const char* channelKey = NULL;
     channelKey = env->GetStringUTFChars(jni_channelKey,false);
-    cout<<"channelKey:"<<channelKey<<endl;
     if(!channelKey)
       cerr<<"no channel key"<<endl;
     const char* channelName = env->GetStringUTFChars(jni_channelName,false);
-    cout<<"channelName:"<<channelName<<endl;
     if(!channelName)
       cerr<<"channel name is empty!"<<endl;
     int uid = (int)jni_uid;
@@ -264,19 +276,16 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 						|| streamTypeFieldID == NULL ){ cout <<"get fieldID failed!"<<endl;return JNI_FALSE;}
 		//idle
 		jint idleValue = env->GetIntField(jni_recordingConfig, idleLimitSecFieldID); 
-		cout<<"idleLimitSec:"<<idleValue<<endl;
 		//appliteDir
 		jstring appliteDir = (jstring)env->GetObjectField(jni_recordingConfig, appliteDirFieldID);
 		const char * c_appliteDir = env->GetStringUTFChars(appliteDir ,NULL);
 		std::string str_appliteDir = c_appliteDir;
 		env->ReleaseStringUTFChars(appliteDir,c_appliteDir);
 		//CHANNEL_PROFILE_TYPE
-#if 1
 		jobject channelProfileObject = (env)->GetObjectField(jni_recordingConfig, channelProfileFieldID);
 		//assert(channelProfileObject);
 		jclass enumClass = env->GetObjectClass(channelProfileObject);
-		if(enumClass == NULL)
-		{
+		if(enumClass == NULL) {
 			cout <<"enumClass is null"<<endl;
 		}
 		jmethodID getValue = env->GetMethodID(enumClass, "getValue", "()I");
@@ -285,24 +294,19 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 			return JNI_FALSE; /* method not found */
 		}
 		jint channelProfileValue = env->CallIntMethod(channelProfileObject, getValue);
-		cout <<"channelProfileValue is:"<<channelProfileValue<<endl;
-		//assert(enumClass != NULL);
-#endif
-		//streamType
 		jobject streamTypeObject = (env)->GetObjectField(jni_recordingConfig, streamTypeFieldID);
 		jclass streamTypeClass = env->GetObjectClass(streamTypeObject);
 		assert(streamTypeObject);
 		if(streamTypeObject == NULL){cout <<"streamTypeEnum is NULL"; return JNI_FALSE;}
 		jmethodID getValue2 = env->GetMethodID(streamTypeClass, "getValue", "()I");
 		jint streamTypeValue = env->CallIntMethod(streamTypeObject, getValue2);
-		cout << "streamTypeValue:"<<streamTypeValue<<endl;
-		
-		cout<<"c_appliteDir:"<<c_appliteDir<<",str_appliteDir:"<<str_appliteDir<<endl;
 		
 		agora::recording::RecordingConfig config;
 		jniproxy::AgoraJniProxySdk jniRecorder;
 		config.appliteDir = const_cast<char*>(str_appliteDir.c_str());	
 		config.idleLimitSec = (int)idleValue;
+    cout <<"appId:"<<appId<<",uid:"<<uid<<",channelKey:"<<channelKey<<",channelName:"<<channelName<<",str_appliteDir:"
+          <<str_appliteDir<<",channelProfileValue:"<<channelProfileValue<<endl;
 	
 		config.streamType = static_cast<agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE>(streamTypeValue);
     int ret = jniRecorder.createChannel(appId, channelKey, channelName, uid, config);

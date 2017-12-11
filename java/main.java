@@ -40,7 +40,8 @@ class AgoraJavaRecording{
   }
 	public static void audioPcmFrameReceived(long uid, AudioFrameOfPcm pcmFrame)
   {
-    System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+pcmFrame.getType());
+    System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+pcmFrame.getType()+",AUDIO_FRAME_TYPE:"+pcmFrame.type.getValue());
+
   }
 	public static void audioAacFrameReceived(long uid, AudioPcmFrame pcmFrame)
   {

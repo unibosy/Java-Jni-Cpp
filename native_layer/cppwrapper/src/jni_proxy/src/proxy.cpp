@@ -70,7 +70,9 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
 	cout<<"AgoraJniProxySdk::audioFrameReceived enter uid:"<<uid<<",count:"<<++count<<endl;
   jfieldID fid;
   jmethodID mid;
-
+  jclass jc = NULL;
+  jmethodID initMid  = NULL;
+  jobject job = NULL;
 	JNIEnv* jni_env = NULL;
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
 	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
@@ -78,19 +80,16 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
 		return;
 	}
 	assert(jni_env);
-	jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
-  assert(javaClass);
-	pid_t tid = getpid();
+		pid_t tid = getpid();
 	cout << "this thread id is:"<<tid<<endl;
   jclass jcAudioFrame = NULL;
-  //1.find class
+  //1.find main class
   if (frame->type == agora::linuxsdk::AUDIO_FRAME_RAW_PCM) {
     cout <<"jni receive raw data is pcm!"<<endl;
     jcAudioFrame = (jni_env)->FindClass("headers/EnumIndex$AudioFrameOfPcm");
     cout<<"----------1"<<endl;
     if(jcAudioFrame == NULL){
       cout<<"not find audioPcmFramne"<<endl;
-      jni_env->DeleteLocalRef(javaClass);
       ((JavaVM*)g_jvm)->DetachCurrentThread();
       return ;
     }
@@ -98,44 +97,123 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
     
   }
   cout<<"----------2"<<endl;
-  //2.get init methodid
-  jmethodID initMid = jni_env->GetMethodID(jcAudioFrame,"<init>","(Lheaders/EnumIndex;)V");
+  //2.get main class init methodid
+  initMid = jni_env->GetMethodID(jcAudioFrame,"<init>","(Lheaders/EnumIndex;)V");
   if(initMid == NULL){
     cout <<"not find AudioFrameOfPcm initMid!"<<endl;
-    jni_env->DeleteLocalRef(javaClass);
     ((JavaVM*)g_jvm)->DetachCurrentThread();
     return;
   }
   cout<<"----------3"<<endl;
-  //3.new EnumIndex$AudioFrameOfPcm object
+  //3.new main class object
   jobject jobAudioFrame = jni_env->NewObject(jcAudioFrame, initMid);
   if(jobAudioFrame == NULL){
     cout<<"new audio frame object failed!"<<endl;
-    jni_env->DeleteLocalRef(javaClass);
     ((JavaVM*)g_jvm)->DetachCurrentThread();
     return;
   }
   cout<<"----------4"<<endl;
-  //4.get object field
+  //4.get main class field
   //jfieldID typeFieldID = jni_env->GetFieldID(jcAudioFrame, "type", "Lheaders/EnumIndex$AUDIO_FRAME_TYPE;");
-  //try to do this way
-  jfieldID typeFieldID = jni_env->GetFieldID(jcAudioFrame, "Type", "I");
-  if(typeFieldID == NULL){
+  //TODO try to do this way
+#if 0
+  fid = jni_env->GetFieldID(jcAudioFrame, "type", "Lheaders/EnumIndex$AUDIO_FRAME_TYPE;");
+  if(fid == NULL) {
+    cout <<"cannot get field of audio type!"<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  jni_env->SetIntField(jobAudioFrame, fid, jint(1));
+  cout<<"----------4.1"<<endl;
+#endif 
+#if 1
+  //4.1.find subclass in main class
+  //set type of AUDIO_FRAME_TYPE by FindClass
+  jc = jni_env->FindClass("Lheaders/EnumIndex$AUDIO_FRAME_TYPE;");
+  if(jc == NULL) {
+    cout<<"cannot get AUDIO_FRAME_TYPE class"<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  cout <<"get AUDIO_FORMAT_TYPE ok!"<<endl;
+  //4.1.1
+  initMid = jni_env->GetMethodID(jc,"<init>","(Lheaders/EnumIndex;)V");
+  if(initMid == NULL) {
+    cout <<"get init methid failed!"<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  //4.1.2
+  job = jni_env->NewObject(jc, initMid);
+  //4.1.3 get field of this class
+  fid = jni_env->GetFieldID(jc, "type", "I");
+  if(fid == NULL) {
+    cout <<"cannot get value of AUDIO_FRAME_TYPE class"<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  cout<<"get value of AUDIO_FRAME_TYPE ok"<<endl;
+  //4.1.4 fill this field
+  jni_env->SetIntField(job, fid, jint(1));
+  //4.2
+  //set this object into jobAudioFrame!
+  //step 1:get this object field
+  fid = jni_env->GetFieldID(jcAudioFrame, "type", "Lheaders/EnumIndex$AUDIO_FRAME_TYPE;");
+  if(fid == NULL) {
+    cout <<"cannot get AUDIO_FRAME_TYPE field"<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  //4.3
+  jni_env->SetObjectField(jobAudioFrame, fid, job);
+  cout<<"set GetObjectField ok"<<endl;
+#endif 
+#if 1
+  fid = jni_env->GetFieldID(jcAudioFrame, "Type", "I");
+  if(fid == NULL){
     cout <<"cannot get field of type "<<endl;
-    jni_env->DeleteLocalRef(javaClass);
     ((JavaVM*)g_jvm)->DetachCurrentThread();
     return;
   }
   //5.set object all fields
   //if this is a static parameter,then shoud set field to jclass
-  jni_env->SetIntField(jobAudioFrame, typeFieldID, jint(1));
+  jni_env->SetIntField(jobAudioFrame, fid, jint(1));
+#endif 
+  //get pcm frame by find class
+  jclass jcPcm = jni_env->FindClass("Lheaders/EnumIndex$AudioPcmFrame;");
+  if(jcPcm == NULL) {
+    cout<<"cannot get AudioPcmFrame jclass"<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  cout << "get pcm jclass ok"<<endl;
+  //fill pcm data
+  
+#if 0
+  //find subclass field, but we still cannot find the subclass!
+  fid = jni_env->GetFieldID(jcAudioFrame, "pcm", "Lheaders/EnumIndex$AudioPcmFrame;");
+  if(fid == NULL){
+    cout << "cannot get pcm frame field " <<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+
+  //not work!!!!
+  //jobject jobPcm = jni_env->GetObjectClass(/*jcAudioFrame,*/ fid);
+  //if(jobPcm == NULL) {
+  //  cout <<"cannot get jobject of pcm frame"<<endl;
+  //  ((JavaVM*)g_jvm)->DetachCurrentThread();
+  //  return;
+  //}
+  //cout <<"get job frame ok"<<endl;
+#endif
+
 #if 0
   //5.1 get object function
   cout<<"----------5"<<endl;
   mid = jni_env->GetMethodID(jcAudioFrame, "setType", "(I)V");
   if(mid == NULL){
     cout << "cannot get setType function"<<endl;
-    jni_env->DeleteLocalRef(javaClass);
     ((JavaVM*)g_jvm)->DetachCurrentThread();
     return;
   }
@@ -144,7 +222,10 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   jni_env->CallVoidMethod(jcAudioFrame, mid , jint(0));
 #endif 
   cout<<"----------7"<<endl;
-  //6.call method
+  //6.find callback method in Java
+  jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
+  assert(javaClass);
+
   mid = jni_env->GetStaticMethodID(javaClass, "audioPcmFrameReceived", "(JLheaders/EnumIndex$AudioFrameOfPcm;)V");
   cout<<"----------8"<<endl;
   if(mid == NULL){
@@ -154,6 +235,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
     return ;
   }
   cout<<"----------9"<<endl;
+  //7. callback java method
   jni_env->CallStaticVoidMethod(javaClass, mid,jlong(long(uid)), jobAudioFrame);
   cout<<"----------10"<<endl;
   jni_env->DeleteLocalRef(javaClass);

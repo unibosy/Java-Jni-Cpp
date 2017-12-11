@@ -1,10 +1,6 @@
-//#include "../agorasdk/AgoraSdk.h"
 #include "IAgoraLinuxSdkCommon.h"
-//#include "../cppwrapper.h"
 #include "../jni_headers/AgoraJavaRecording.h"
-
 #include "eventhandler.h"
-
 #include <pthread.h>
 #include <sys/types.h>
 #include <unistd.h>

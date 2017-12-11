@@ -50,49 +50,14 @@ class AgoraJavaRecording{
     {
       count++;
       System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue()
-      +",frame_ms_:"+aFrame.pcm.frame_ms_+",bufSize:"+ aFrame.pcm.pcmBufSize_);
+                        +",frame_ms_:"+aFrame.pcm.frame_ms_+",bufSize:"+ aFrame.pcm.pcmBufSize_);
       System.out.println(count);
-      String path = "audioaaaa.pcm";
-      try{FileOutputStream stream = new FileOutputStream(path);
-      try {
-          stream.write(aFrame.pcm.pcmBuf_);
-          }catch(IOException io){}
-          finally {
-          try{
-              stream.close();
-              }catch(IOException io){}
-              }
-
-      }catch(FileNotFoundException e){}
-			/*try (FileOutputStream fos = new FileOutputStream(pathName)) {
-				fos.write(aFrame.pcm.pcmBuf_);
-				fos.close();
-			}catch (IOException ioe){
-        System.out.println("java demo audioFrameReceived write file exception!!");
-      }*/
-     /*
-     long length = aFrame.pcm.pcmBufSize_;
-     
-      //write file
-			byte[] buffer = aFrame.pcm.pcmBuf_;
-      File fileInst = new File("audio.pcm");
-      try{
-           FileWriter fw = new FileWriter(fileInst);
-           for (byte i : buffer) {
-              fw.write(String.valueOf((int) i));
-           }
-           fw.flush();
-        } catch (FileNotFoundException e) {
-           e.printStackTrace();
-        } catch (IOException ioe) {
-           ioe.printStackTrace();
-					 System.out.println("java demo audioFrameReceived write file exception!!");
-      	}
+      String path = "javaAudio.pcm";
+			byte[] buf = aFrame.pcm.pcmBuf_;
+			writeBytesToFileClassic(buf, path);
     }else{
-      System.out.println("java demo audioFrameReceived,uid:"+uid);*/
-      
-    }
-
+      System.out.println("java demo audioFrameReceived,uid:"+uid);
+      }
   }
   public static void videoFrameReceived(long uid, VideoFrame frame)
   {
@@ -108,15 +73,30 @@ class AgoraJavaRecording{
     System.out.println("java demo receive stop from JNI ");
     stopped = true;
   }
-
-  
 	//stop java process flag
 	private static boolean stopped = false;
-	public static boolean stopped()
-	{
+	public static boolean stopped() {
 		return stopped;
 	}
+	static void writeBytesToFileClassic(byte[] bFile, String fileDest) {
+		FileOutputStream fileOuputStream = null;
+    System.out.println("java writeBytesToFileClassic buf:"+bFile);
+				try {
+            fileOuputStream = new FileOutputStream(fileDest, true);
+            fileOuputStream.write(bFile);
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fileOuputStream != null) {
+                try {
+                    fileOuputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
   public static void main(String[] args) 
   {
 		System.out.println(System.getProperty("java.library.path"));

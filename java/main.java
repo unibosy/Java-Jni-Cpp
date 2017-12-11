@@ -38,15 +38,21 @@ class AgoraJavaRecording{
     //recordingDir:recording file directory
     System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
   }
-	public static void audioPcmFrameReceived(long uid, AudioFrameOfPcm pcmFrame)
+	public static void audioFrameReceived(long uid, AudioFrame frame)
   {
-    System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+pcmFrame.getType()+",AUDIO_FRAME_TYPE:"+pcmFrame.type.getValue());
+    System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+frame.type.getValue());
 
   }
+  public static void videoFrameReceived(long uid, VideoFrame frame)
+  {
+    System.out.println("java demo videoFrameReceived,uid:"+uid);
+  }
+  /*
+
 	public static void audioAacFrameReceived(long uid, AudioPcmFrame pcmFrame)
   {
     System.out.println("java demo audioAacFrameReceived ");
-  }
+  }*/
   public static void stopCallBack() {
     System.out.println("java demo receive stop from JNI ");
     stopped = true;

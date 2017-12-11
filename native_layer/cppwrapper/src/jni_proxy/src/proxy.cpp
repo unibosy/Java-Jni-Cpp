@@ -73,6 +73,8 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   jclass jc = NULL;
   jmethodID initMid  = NULL;
   jobject job = NULL;
+  int iAudioFrameType = 0; //default pcm?
+
 	JNIEnv* jni_env = NULL;
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
 	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
@@ -80,23 +82,26 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
 		return;
 	}
 	assert(jni_env);
-		pid_t tid = getpid();
+	pid_t tid = getpid();
 	cout << "this thread id is:"<<tid<<endl;
   jclass jcAudioFrame = NULL;
+
+  jcAudioFrame = (jni_env)->FindClass("headers/EnumIndex$AudioFrame");
+  if(jcAudioFrame == NULL){
+    cout<<"not find audioFrame"<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return ;
+  }
   //1.find main class
   if (frame->type == agora::linuxsdk::AUDIO_FRAME_RAW_PCM) {
     cout <<"jni receive raw data is pcm!"<<endl;
-    jcAudioFrame = (jni_env)->FindClass("headers/EnumIndex$AudioFrameOfPcm");
     cout<<"----------1"<<endl;
-    if(jcAudioFrame == NULL){
-      cout<<"not find audioPcmFramne"<<endl;
-      ((JavaVM*)g_jvm)->DetachCurrentThread();
-      return ;
-    }
+    //do thngs here
   }else if (frame->type == agora::linuxsdk::AUDIO_FRAME_AAC) {
-    
+    //do things here
   }
-  cout<<"----------2"<<endl;
+  iAudioFrameType = static_cast<int>(frame->type);
+  cout<<"----------2,iAudioFrameType:"<<iAudioFrameType<<endl;
   //2.get main class init methodid
   initMid = jni_env->GetMethodID(jcAudioFrame,"<init>","(Lheaders/EnumIndex;)V");
   if(initMid == NULL){
@@ -114,18 +119,6 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   }
   cout<<"----------4"<<endl;
   //4.get main class field
-  //jfieldID typeFieldID = jni_env->GetFieldID(jcAudioFrame, "type", "Lheaders/EnumIndex$AUDIO_FRAME_TYPE;");
-  //TODO try to do this way
-#if 0
-  fid = jni_env->GetFieldID(jcAudioFrame, "type", "Lheaders/EnumIndex$AUDIO_FRAME_TYPE;");
-  if(fid == NULL) {
-    cout <<"cannot get field of audio type!"<<endl;
-    ((JavaVM*)g_jvm)->DetachCurrentThread();
-    return;
-  }
-  jni_env->SetIntField(jobAudioFrame, fid, jint(1));
-  cout<<"----------4.1"<<endl;
-#endif 
 #if 1
   //4.1.find subclass in main class
   //set type of AUDIO_FRAME_TYPE by FindClass
@@ -154,7 +147,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   }
   cout<<"get value of AUDIO_FRAME_TYPE ok"<<endl;
   //4.1.4 fill this field
-  jni_env->SetIntField(job, fid, jint(1));
+  jni_env->SetIntField(job, fid, jint(iAudioFrameType));
   //4.2
   //set this object into jobAudioFrame!
   //step 1:get this object field
@@ -168,7 +161,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   jni_env->SetObjectField(jobAudioFrame, fid, job);
   cout<<"set GetObjectField ok"<<endl;
 #endif 
-#if 1
+#if 0
   fid = jni_env->GetFieldID(jcAudioFrame, "Type", "I");
   if(fid == NULL){
     cout <<"cannot get field of type "<<endl;
@@ -188,7 +181,6 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   }
   cout << "get pcm jclass ok"<<endl;
   //fill pcm data
-  
 #if 0
   //find subclass field, but we still cannot find the subclass!
   fid = jni_env->GetFieldID(jcAudioFrame, "pcm", "Lheaders/EnumIndex$AudioPcmFrame;");
@@ -226,10 +218,10 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
   assert(javaClass);
 
-  mid = jni_env->GetStaticMethodID(javaClass, "audioPcmFrameReceived", "(JLheaders/EnumIndex$AudioFrameOfPcm;)V");
+  mid = jni_env->GetStaticMethodID(javaClass, "audioFrameReceived", "(JLheaders/EnumIndex$AudioFrame;)V");
   cout<<"----------8"<<endl;
   if(mid == NULL){
-    cout<<"audioPcmFrameReceived get method failed!"<<endl;
+    cout<<"audioFrameReceived get method failed!"<<endl;
     jni_env->DeleteLocalRef(javaClass);
     ((JavaVM*)g_jvm)->DetachCurrentThread();
     return ;

@@ -108,8 +108,6 @@ public class EnumIndex{
       }
 
     }
-
-
     
     public enum AUDIO_FORMAT_TYPE {
     AUDIO_FORMAT_DEFAULT_TYPE(0),
@@ -157,20 +155,11 @@ public class EnumIndex{
     	IOT_MODE(2);//up-down stream
         private SERVICE_MODE(int value){}
     }
-    public class AudioFrameOfPcm {
-      public final int AUDIO_FRAME_RAW_PCM = 0;
-      public final int AUDIO_FRAME_AAC = 1;
+    public class AudioFrame {
       public AUDIO_FRAME_TYPE type;
-      public int Type;
       public AudioPcmFrame pcm;
-      //public MEMORY_TYPE mType;
-      public void setType(int type){
-        Type = type;
-      }
-      public int getType()
-      {
-        return Type;
-      }
+      public AudioAacFrame aac;
+    	public MEMORY_TYPE mType;
     }
 		public class AudioFrameOfAac {
     	public AUDIO_FRAME_TYPE type;
@@ -267,15 +256,13 @@ public class EnumIndex{
     String payload;
 	}
 	public class VideoFrame {
-    /*VIDEO_FRAME_TYPE type;
-        VideoYuvFrame *yuv;
-        VideoH264Frame *h264;
-        VideoJpgFrame *jpg;
+    VIDEO_FRAME_TYPE type;
+    VideoYuvFrame yuv;
+    VideoH264Frame h264;
+    VideoJpgFrame jpg;
 
     int rotation_; // 0, 90, 180, 270
-    VideoFrame();
-    ~VideoFrame();
-		*/
+		
     MEMORY_TYPE mType;
 	}
 	

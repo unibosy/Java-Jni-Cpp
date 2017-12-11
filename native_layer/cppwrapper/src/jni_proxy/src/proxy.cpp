@@ -30,11 +30,175 @@ void signal_handler(int signo) {
 extern "C" {
 #endif
 
-JavaVM* g_jvm = NULL;
+JavaVM* g_jvm = NULL;//one eventhandler vs one?
+//define signatures
+#define LONG_SIGNATURE "J"
+#define INT_SIGNATURE "I"
+#define STRING_SIGNATURE "Ljava/lang/String;"
+#define BYTEARRAY "[B"
+//do common!
+bool AgoraJniProxySdk::fillAllFields(JNIEnv* jni_env, jobject& job, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const
+{
+#if 1
+  if(frame->type != agora::linuxsdk::AUDIO_FRAME_RAW_PCM) return false;
+  jfieldID fid = NULL;
+  jbyteArray jbArr = NULL;
+
+  agora::linuxsdk::AudioPcmFrame *f = frame->frame.pcm;
+  //frame_ms_
+  fid = jni_env->GetFieldID(jc, "frame_ms_", LONG_SIGNATURE);
+  if(fid == NULL) {
+    cout <<"cannot get frame_ms_ value of audioPcmFrame"<<endl;
+    return false;
+  }
+  long frame_ms_ = f->frame_ms_;
+  cout<<"get frame_ms_ value of AUDIO_FRAME_TYPE ok:"<<frame_ms_<<endl;
+  jni_env->SetLongField(job, fid, jlong(frame_ms_));
+#if 1
+  //channels_
+  fid = jni_env->GetFieldID(jc, "channels_", LONG_SIGNATURE);
+  if(fid == NULL) {
+    cout <<"cannot get channels_ value of audioPcmFrame"<<endl;
+    return false;
+  }
+  long channels_ = f->channels_;
+  cout<<"get channels_ value of AUDIO_FRAME_TYPE ok:"<<channels_<<endl;
+  jni_env->SetLongField(job, fid, jlong(channels_));
+  //sample_bits_
+  fid = jni_env->GetFieldID(jc, "sample_bits_", LONG_SIGNATURE);
+  if(fid == NULL) {
+    cout <<"cannot get sample_bits_ value of audioPcmFrame"<<endl;
+    return false;
+  }
+  long sample_bits_ = f->sample_bits_;
+  cout<<"get sample_bits_ value of AUDIO_FRAME_TYPE ok:"<<sample_bits_<<endl;
+  jni_env->SetLongField(job, fid, jlong(sample_bits_));
+  //sample_rates_
+  fid = jni_env->GetFieldID(jc, "sample_rates_", LONG_SIGNATURE);
+  if(fid == NULL) {
+    cout <<"cannot get sample_rates_value of audioPcmFrame"<<endl;
+    return false;
+  }
+  long sample_rates_ = f->sample_rates_;
+  cout<<"get sample_rates_ value of AUDIO_FRAME_TYPE ok:"<<sample_rates_<<endl;
+  jni_env->SetLongField(job, fid, jlong(sample_rates_));
+  //pcmBuf_
+  fid = jni_env->GetFieldID(jc, "pcmBuf_", BYTEARRAY);
+  if(fid == NULL) {
+    cout <<"cannot get frame_ms_ value of audioPcmFrame"<<endl;
+    return false;
+  }
+  unsigned char* pcmBuf_ = f->pcmBuf_;
+  long pcmBufSize_ = f->pcmBufSize_;
+
+  jbArr = jni_env->NewByteArray(pcmBufSize_);
+  jbyte *jby = jni_env->GetByteArrayElements(jbArr,0); 
+  memcpy(jby, pcmBuf_, pcmBufSize_);
+  jni_env->SetByteArrayRegion(jbArr, 0, pcmBufSize_, jby);
+  jni_env->SetObjectField(job, fid, jbArr);
+  cout<<"set pcmBuf_  value of AUDIO_FRAME_TYPE ok:"<<pcmBufSize_<<endl;
+  //pcmBufSize_
+  fid = jni_env->GetFieldID(jc, "pcmBufSize_", LONG_SIGNATURE);
+  if(fid == NULL) {
+    cout <<"cannot get pcmBufSize_ value of audioPcmFrame"<<endl;
+    return false;
+  }
+  cout<<"get pcmBufSize_ value of AUDIO_FRAME_TYPE ok:"<<pcmBufSize_<<endl;
+  jni_env->SetLongField(job, fid, jlong(pcmBufSize_));
+
+  //buf_
+  fid = jni_env->GetFieldID(jc, "buf_", STRING_SIGNATURE);
+  if(fid == NULL) {
+    cout <<"cannot get buf_ value of audioPcmFrame"<<endl;
+    return false;
+  }
+  std::string buf_ = f->buf_;
+  jstring jstrBuf = jni_env->NewStringUTF(buf_.c_str());
+  cout<<"get buf_ value of AUDIO_FRAME_TYPE ok:"<<buf_<<endl;
+  jni_env->SetObjectField(job, fid, jstrBuf);
+#endif 
+  //fill AudioPcmFrame field
+  return true;
+#endif
+}
+bool AgoraJniProxySdk::fillAudioPcmFrame(JNIEnv* jni_env, const agora::linuxsdk::AudioFrame*& frame, \
+            jclass& jcAudioFrame, jobject& jobAudioFrame) const 
+{
+#if 1
+  if(frame->type != agora::linuxsdk::AUDIO_FRAME_RAW_PCM) return false;
+  jmethodID jmid = NULL;
+  jclass jc = NULL;
+  jfieldID fid = NULL;
+  jmethodID initMid = NULL;
+  jobject job = NULL;
+
+  //get pcm frame by find class
+  jc = jni_env->FindClass("Lheaders/EnumIndex$AudioPcmFrame;");
+  if(jc == NULL) {
+    cout<<"cannot get AudioPcmFrame jclass"<<endl;
+    //((JavaVM*)g_jvm)->DetachCurrentThread();
+    return false;
+  }
+  cout << "get pcm jclass ok"<<endl;
+  //new AudioPcmFrame
+  //TODO  place these to one function
+  initMid = jni_env->GetMethodID(jc,"<init>","(Lheaders/EnumIndex;JJJ)V");
+  if(initMid == NULL) {
+    cout <<"get AudioPcmFrame init methid failed!"<<endl;
+    //((JavaVM*)g_jvm)->DetachCurrentThread();
+    return false;
+  }
+  job = jni_env->NewObject(jc, initMid);
+  if(job == NULL){
+    cout<<"new AudioPcmFrame failed! no memory?"<<endl;
+    //((JavaVM*)g_jvm)->DetachCurrentThread();
+    return false;
+  }
+#if 0
+  //get AudioPcmFrame field
+ fid = jni_env->GetFieldID(jc, "frame_ms_", "J");
+  if(fid == NULL) {
+    cout <<"cannot get frame_ms_ value of AUDIO_FRAME_TYPE "<<endl;
+    //((JavaVM*)g_jvm)->DetachCurrentThread();
+    return false;
+  }
+  agora::linuxsdk::AudioPcmFrame *f = frame->frame.pcm;
+  long frame_ms_ = f->frame_ms_;
+  cout<<"get frame_ms_ value of AUDIO_FRAME_TYPE ok:"<<frame_ms_<<endl;
+  //fill AudioPcmFrame field
+  jni_env->SetLongField(job, fid, jlong(frame_ms_));
+  //set 
+  //fill pcm data
+  fid = jni_env->GetFieldID(jcAudioFrame, "pcm", "Lheaders/EnumIndex$AudioPcmFrame;");
+  if(fid == NULL) {
+    cout <<"cannot get pcm AUDIO_FRAME_TYPE field"<<endl;
+    //((JavaVM*)g_jvm)->DetachCurrentThread();
+    return false;
+  }
+ 
+  jni_env->SetObjectField(jobAudioFrame, fid, job);
+#else
+  fid = jni_env->GetFieldID(jcAudioFrame, "pcm", "Lheaders/EnumIndex$AudioPcmFrame;");
+  if(fid == NULL) {
+    cout <<"cannot get pcm AUDIO_FRAME_TYPE field"<<endl;
+    //((JavaVM*)g_jvm)->DetachCurrentThread();
+    return false;
+  }
+  //fill all fields of AudioPcmFrame jobject
+  if(fillAllFields(jni_env, job, jc, frame)){
+    //Fill in the jobAdudioFrame
+    jni_env->SetObjectField(jobAudioFrame, fid, job);
+    return true;
+  }
+  return false;
+#endif
+  return true;
+#endif
+}
 
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
   cout<<"AgoraJniProxySdk::videoFrameReceived enter uid:"<<uid<<endl;
-#if 0
+#if 1
   JNIEnv* jni_env = NULL;
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
 	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
@@ -46,18 +210,14 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
   assert(javaClass);
 	pid_t tid = getpid();
 	cout << "this thread id is:"<<tid<<endl;
-  if (frame->type == agora::linuxsdk::AUDIO_FRAME_RAW_PCM) {
-    cout <<"jni receive raw data is ???!"<<endl;
-    jclass objectClass = (jni_env)->FindClass("headers/EnumIndex$AudioPcmFrame"); 
-    //jobject  objectNewEng = (env)->NewObject();
-  }else if (frame->type == agora::linuxsdk::AUDIO_FRAME_AAC) {
-    
+  if (frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) {
+    cout<<"videoFrameReceived raw yuv!"<<endl;
+  }else if(frame->type == agora::linuxsdk::VIDEO_FRAME_JPG){
+    cout<<"videoFrameReceived raw jpg!"<<endl;
+  }else{
+    cout<<"videoFrameReceived raw h264!"<<endl;
   }
-  cout << "AgoraJniProxySdk::audioFrameReceived wanna getMethodID" <<endl;
-  jmethodID mid = jni_env->GetMethodID(javaClass, "audioPcmFrameReceived", "(ILheaders/EnumIndex$AudioPcmFrame;)V");
-
-  assert(mid);
-  cout <<"mid"<<endl;
+  cout <<"AgoraJniProxySdk::videoFrameReceived end"<<endl;
   //jni_env->CallVoidMethod(javaClass, mid, );
   jni_env->DeleteLocalRef(javaClass);
   ((JavaVM*)g_jvm)->DetachCurrentThread();
@@ -172,47 +332,13 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   //if this is a static parameter,then shoud set field to jclass
   jni_env->SetIntField(jobAudioFrame, fid, jint(1));
 #endif 
-  //get pcm frame by find class
-  jclass jcPcm = jni_env->FindClass("Lheaders/EnumIndex$AudioPcmFrame;");
-  if(jcPcm == NULL) {
-    cout<<"cannot get AudioPcmFrame jclass"<<endl;
+  //call one function
+  if(!fillAudioPcmFrame(jni_env, frame, jcAudioFrame,jobAudioFrame))
+  {
+    cout <<"Warning: fillAudioPcmFrame failed!!!!!"<<endl;
     ((JavaVM*)g_jvm)->DetachCurrentThread();
     return;
   }
-  cout << "get pcm jclass ok"<<endl;
-  //fill pcm data
-#if 0
-  //find subclass field, but we still cannot find the subclass!
-  fid = jni_env->GetFieldID(jcAudioFrame, "pcm", "Lheaders/EnumIndex$AudioPcmFrame;");
-  if(fid == NULL){
-    cout << "cannot get pcm frame field " <<endl;
-    ((JavaVM*)g_jvm)->DetachCurrentThread();
-    return;
-  }
-
-  //not work!!!!
-  //jobject jobPcm = jni_env->GetObjectClass(/*jcAudioFrame,*/ fid);
-  //if(jobPcm == NULL) {
-  //  cout <<"cannot get jobject of pcm frame"<<endl;
-  //  ((JavaVM*)g_jvm)->DetachCurrentThread();
-  //  return;
-  //}
-  //cout <<"get job frame ok"<<endl;
-#endif
-
-#if 0
-  //5.1 get object function
-  cout<<"----------5"<<endl;
-  mid = jni_env->GetMethodID(jcAudioFrame, "setType", "(I)V");
-  if(mid == NULL){
-    cout << "cannot get setType function"<<endl;
-    ((JavaVM*)g_jvm)->DetachCurrentThread();
-    return;
-  }
-  //5.2 call object function to set field
-  cout<<"----------6"<<endl;
-  jni_env->CallVoidMethod(jcAudioFrame, mid , jint(0));
-#endif 
   cout<<"----------7"<<endl;
   //6.find callback method in Java
   jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
@@ -232,6 +358,37 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   cout<<"----------10"<<endl;
   jni_env->DeleteLocalRef(javaClass);
   ((JavaVM*)g_jvm)->DetachCurrentThread();
+#if 1
+  char uidbuf[65];
+  snprintf(uidbuf, sizeof(uidbuf),"%u", uid);
+  std::string info_name = m_storage_dir + std::string(uidbuf) /*+ timestamp_per_join_*/;
+
+  uint8_t* data = NULL; 
+  uint32_t size = 0;
+  if (frame->type == agora::linuxsdk::AUDIO_FRAME_RAW_PCM) {
+    info_name += ".pcm";  
+    
+    cout << "User " << uid << ", received a raw PCM frame" << endl;
+
+    agora::linuxsdk::AudioPcmFrame *f = frame->frame.pcm;
+    long tmp = f->frame_ms_;
+    data = f->pcmBuf_;
+    size = f->pcmBufSize_;
+
+  } else if (frame->type == agora::linuxsdk::AUDIO_FRAME_AAC) {
+    info_name += ".aac";
+
+    cout << "User " << uid << ", received an AAC frame" << endl;
+
+    agora::linuxsdk::AudioAacFrame *f = frame->frame.aac;
+    data = f->aacBuf_;
+    size = f->aacBufSize_;
+  }
+
+  FILE *fp = fopen(info_name.c_str(), "a+b");
+  ::fwrite(data, 1, size, fp);
+  ::fclose(fp); 
+#endif 
 }
 
 void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk::UserJoinInfos &infos) {
@@ -506,6 +663,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
           <<str_appliteDir<<",channelProfileValue:"<<channelProfileValue<<",decodeAudio:"
           <<decodeAudioValue<<",decodeVideoValue:"<<decodeVideoValue<<endl;
 	  config.decodeAudio = static_cast<agora::linuxsdk::AUDIO_FORMAT_TYPE>(decodeAudioValue);
+    config.decodeVideo = static_cast<agora::linuxsdk::VIDEO_FORMAT_TYPE>(decodeVideoValue);
 		config.streamType = static_cast<agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE>(streamTypeValue);
     int ret = jniRecorder.createChannel(appId, channelKey, channelName, uid, config);
 

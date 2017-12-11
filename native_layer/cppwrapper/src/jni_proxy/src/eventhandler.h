@@ -1,6 +1,7 @@
 #include "../../agorasdk/AgoraSdk.h"
 #include "string.h"
 #include "iostream"
+#include "jni.h"
 using namespace std;
 
 namespace jniproxy
@@ -24,7 +25,8 @@ public:
     virtual void audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const;
     virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
 private:
-
+    bool fillAudioPcmFrame(JNIEnv* jni_env, const agora::linuxsdk::AudioFrame*& frame,jclass& jcAudioFrame, jobject& jobAudioFrame) const;
+    bool fillAllFields(JNIEnv* jni_env, jobject& jobAudioPcmFrame, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const;
 };
 
 #if 0 

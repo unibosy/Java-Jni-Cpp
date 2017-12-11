@@ -161,11 +161,6 @@ public class EnumIndex{
       public AudioAacFrame aac;
     	public MEMORY_TYPE mType;
     }
-		public class AudioFrameOfAac {
-    	public AUDIO_FRAME_TYPE type;
-      public AudioPcmFrame aac;
-    	public MEMORY_TYPE mType;
-		}
     public class AudioPcmFrame {
          public AudioPcmFrame(long frame_ms, long sample_rates, long samples) {
         }
@@ -175,7 +170,7 @@ public class EnumIndex{
         public long sample_rates_; // 8k, 16k, 32k
         public long samples_;
 
-        public int pcmBuf_;
+        public byte[] pcmBuf_;
         public long pcmBufSize_;
 
         public String buf_; // samples * sample_bits_ / CHAR_BIT * channels_
@@ -192,34 +187,25 @@ public class EnumIndex{
 		public String buf_;
 	}
   public class VideoYuvFrame {
-    VideoYuvFrame(long frame_ms, long width, long height, long ystride,long ustride, long vstride){
+    VideoYuvFrame(long frame_ms, int width, int height, int ystride,int ustride, int vstride){
          frame_ms_ = frame_ms;
          width_ = width;
          height_ = height;
          ystride_ = ystride;
          ustride_ = ustride;
          vstride_ = vstride;
-         ybuf_ = "";
-         ubuf_ = "";
-         vbuf_ = "";
-         buf_ = "";
-         data_ = "";
     }
     long frame_ms_;
-/*
     byte[] ybuf_;
     byte[] ubuf_;
     byte[] vbuf_;
-*/
-    String ybuf_;
-    String ubuf_;
-    String vbuf_;
-    long width_;
-    long height_;
+    
+    int width_;
+    int height_;
 
-    long ystride_;
-    long ustride_;
-    long vstride_;
+    int ystride_;
+    int ustride_;
+    int vstride_;
     //all
     String buf_;
     long bufSize_;
@@ -229,29 +215,24 @@ public class EnumIndex{
     VideoH264Frame(){
         frame_ms_ = 0;
         frame_num_ = 0;
-        buf_ = "";
         bufSize_ = 0; 
 		}
     long 	frame_ms_;
     long  frame_num_;
     //all
-    //byte[] buf_;
-    String buf_;
+    byte[] buf_;
     long 	bufSize_;
-		//byte[] payload;
-    String payload;
+		String payload;
 	}
 	public class  VideoJpgFrame {
     VideoJpgFrame(){
         frame_ms_ = 0;
-        buf_ = "";
         bufSize_ = 0;
         payload = "";
 		}
     long frame_ms_;
     //all
-		//byte[] buf_;
-    String buf_;
+		byte[] buf_;
     long bufSize_;
     String payload;
 	}
@@ -260,9 +241,7 @@ public class EnumIndex{
     VideoYuvFrame yuv;
     VideoH264Frame h264;
     VideoJpgFrame jpg;
-
     int rotation_; // 0, 90, 180, 270
-		
     MEMORY_TYPE mType;
 	}
 	

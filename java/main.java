@@ -1,6 +1,11 @@
 import headers.*;
 import headers.EnumIndex.*;
 import java.lang.InterruptedException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.File; //File
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream; 
 class AgoraJavaRecording{
 
   static{
@@ -38,9 +43,55 @@ class AgoraJavaRecording{
     //recordingDir:recording file directory
     System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
   }
-	public static void audioFrameReceived(long uid, AudioFrame frame)
-  {
-    System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+frame.type.getValue());
+  public static int count = 0;
+	public static void audioFrameReceived(long uid, AudioFrame aFrame)
+  { 
+    if(aFrame.type.getValue() == 0)//pcm
+    {
+      count++;
+      System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue()
+      +",frame_ms_:"+aFrame.pcm.frame_ms_+",bufSize:"+ aFrame.pcm.pcmBufSize_);
+      System.out.println(count);
+      String path = "audioaaaa.pcm";
+      try{FileOutputStream stream = new FileOutputStream(path);
+      try {
+          stream.write(aFrame.pcm.pcmBuf_);
+          }catch(IOException io){}
+          finally {
+          try{
+              stream.close();
+              }catch(IOException io){}
+              }
+
+      }catch(FileNotFoundException e){}
+			/*try (FileOutputStream fos = new FileOutputStream(pathName)) {
+				fos.write(aFrame.pcm.pcmBuf_);
+				fos.close();
+			}catch (IOException ioe){
+        System.out.println("java demo audioFrameReceived write file exception!!");
+      }*/
+     /*
+     long length = aFrame.pcm.pcmBufSize_;
+     
+      //write file
+			byte[] buffer = aFrame.pcm.pcmBuf_;
+      File fileInst = new File("audio.pcm");
+      try{
+           FileWriter fw = new FileWriter(fileInst);
+           for (byte i : buffer) {
+              fw.write(String.valueOf((int) i));
+           }
+           fw.flush();
+        } catch (FileNotFoundException e) {
+           e.printStackTrace();
+        } catch (IOException ioe) {
+           ioe.printStackTrace();
+					 System.out.println("java demo audioFrameReceived write file exception!!");
+      	}
+    }else{
+      System.out.println("java demo audioFrameReceived,uid:"+uid);*/
+      
+    }
 
   }
   public static void videoFrameReceived(long uid, VideoFrame frame)

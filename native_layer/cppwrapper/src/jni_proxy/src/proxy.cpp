@@ -32,6 +32,8 @@ JavaVM* g_jvm = NULL;//one eventhandler vs one?
 #define INT_SIGNATURE "I"
 #define STRING_SIGNATURE "Ljava/lang/String;"
 #define BYTEARRAY "[B"
+#define VIDEOFRAME_H264_SIGNATURE "Lheaders/EnumIndex$VideoH264Frame;"
+#define VIDEO_FORMAT_TYPE_SIGNATURE "Lheaders/EnumIndex$VIDEO_FRAME_TYPE;"
 //do common!
 bool AgoraJniProxySdk::fillAllFields(JNIEnv* jni_env, jobject& job, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const
 {
@@ -191,10 +193,229 @@ bool AgoraJniProxySdk::fillAudioPcmFrame(JNIEnv* jni_env, const agora::linuxsdk:
   return true;
 #endif
 }
+bool AgoraJniProxySdk::fillJVideoOfYUV(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const {
+  return true;
+}
+bool AgoraJniProxySdk::fillJVideoOfJPG(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const {
+  return true;
+}
+bool AgoraJniProxySdk::fillJVideoOfH264(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const{
+//bool AgoraJniProxySdk::fillJVideoOfH264(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jobject& job) const{
+  if(frame->type == agora::linuxsdk::VIDEO_FRAME_JPG || frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) return false;
+  if(!jni_env || !frame) return false;
+  jclass jc = NULL;
+  jmethodID initMid = NULL;
+  jobject job = NULL;
+  jfieldID fid = NULL;
+  int fieldId = 0; //TODO
+  jbyteArray jbArr = NULL;
 
+  //1.get subclass
+  jc = jni_env->FindClass("Lheaders/EnumIndex$VideoH264Frame;");
+  if(!jc) {
+    cout << "cannot find subclass, type:"<<frame->type <<endl;
+    return false;
+  }
+  //2.get subclass init method
+  initMid = jni_env->GetMethodID(jc,"<init>","(Lheaders/EnumIndex;)V");
+  if(!initMid) {
+    cout<<"cannot get init methodid"<<endl;
+    return false;
+  }
+  //3.new VideoH264Frame object
+  job = jni_env->NewObject(jc, initMid);
+  if(!job){
+    cout<<"new subclass  failed! no memory?"<<endl;
+    return false;
+  }
+  agora::linuxsdk::VideoH264Frame *f = frame->frame.h264;
+  if(!f) return false;
+  //4.fill all fields
+  //4.1 get & set of this subclass object
+  //frame_ms_
+  fid = jni_env->GetFieldID(jc, "frame_ms_", LONG_SIGNATURE);
+  if(!fid) {
+    //TODO add field ID
+    cout <<"cannot get field,field ID:"<<fieldId<<endl;
+    return false;
+  }
+  long frame_ms_ = f->frame_ms_;
+  cout<<"get frame_ms_ value of h264 ok:"<<frame_ms_<<endl;
+  jni_env->SetLongField(job, fid, jlong(frame_ms_));
+  //frame_num_
+  fid = jni_env->GetFieldID(jc, "frame_num_", LONG_SIGNATURE);
+  if(!fid) {
+    //TODO add field ID
+    cout <<"cannot get field,field ID:"<<fieldId<<endl;
+    return false;
+  }
+  long frame_num_ = f->frame_num_;
+  jni_env->SetLongField(job, fid, jlong(frame_num_));
+
+  //buf_
+  fid = jni_env->GetFieldID(jc, "buf_", BYTEARRAY);
+  if(fid == NULL) {
+    cout <<"cannot get field,field ID:"<<fieldId<<endl;
+    return false;
+  }
+  unsigned char* buf_ = f->buf_;
+  long bufSize_ = f->bufSize_;
+
+  jbArr = jni_env->NewByteArray(bufSize_);
+  if(!jbArr) {
+    cout <<"NewByteArray failed, no memory??"<<endl;
+    return false;
+  }
+  jbyte *jby = jni_env->GetByteArrayElements(jbArr,0); 
+  memcpy(jby, buf_, bufSize_);
+  jni_env->SetByteArrayRegion(jbArr, 0, bufSize_, jby);
+  jni_env->SetObjectField(job, fid, jbArr);
+  cout<<"set buf_ value  ok:"<<bufSize_<<endl;
+  //bufSize_
+  fid = jni_env->GetFieldID(jc, "bufSize_", LONG_SIGNATURE);
+  if(!fid) {
+    cout <<"cannot get field,field ID:"<<fieldId<<endl;
+    return false;
+  }
+  cout<<"get bufSize_ value ok:"<<bufSize_<<endl;
+  jni_env->SetLongField(job, fid, jlong(bufSize_));
+  //payload
+  fid = jni_env->GetFieldID(jc, "payload", STRING_SIGNATURE);
+  if(!fid) {
+    cout <<"cannot get field,field ID:"<<endl;
+    return false;
+  }
+  std::string payload = f->payload;
+  jstring jstrPayload = jni_env->NewStringUTF(payload.c_str());
+  cout<<"get payload value ok"<<endl;
+  jni_env->SetObjectField(job, fid, jstrPayload);
+
+  //5.get subclass field
+  fid = jni_env->GetFieldID(jcVideoFrame, "h264", VIDEOFRAME_H264_SIGNATURE);
+  if(fid == NULL) {
+    cout <<"cannot get VIDEOFRAME_H264_SIGNATURE"<<endl;
+    //((JavaVM*)g_jvm)->DetachCurrentThread();
+    return false;
+  }
+  //6.fill jobVideFrame
+  jni_env->SetObjectField(jobVideoFrame, fid, job);
+  return  true;
+}
+bool AgoraJniProxySdk::fillJVideoFrameByFields(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const {
+  bool ret = false;
+  jfieldID jfid = NULL;
+  jclass jc = NULL;
+  jmethodID initMid = NULL;
+  jfieldID fid = NULL;
+
+  if(!jni_env || !frame || !jcVideoFrame || !jobVideoFrame){
+    cout <<"AgoraJniProxySdk::fillJVideoFrameByFields para error!"<<endl;
+    return ret;
+  }
+  cout <<"AgoraJniProxySdk::fillJVideoFrameByFields enter , video type:"<<frame->type<<endl;
+  jobject job = NULL;
+#if 0
+  switch(frame->type) {
+    case agora::linuxsdk::VIDEO_FRAME_RAW_YUV: {
+       
+    }
+    break;
+    case agora::linuxsdk::VIDEO_FRAME_JPG: {
+    }
+    break;
+    default: {
+      cout<<"videoFrameReceived raw h264!"<<endl;
+      if(!fillJVideoOfYUV(jni_env, frame, job)){
+        cout << "fill subclass falied!"<<endl;
+       }
+    }
+    break;
+  }
+  if(job)
+    jni_env->DeleteLocalRef(javaClass);
+  return ret;
+#endif 
+  #if 1
+  if (frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) {
+    //3.1
+    cout<<"videoFrameReceived raw yuv!"<<endl;
+    //3.1.1 
+    if(!fillJVideoOfYUV(jni_env, frame, jcVideoFrame, jobVideoFrame)){
+      cout << "fill subclass falied!"<<endl;
+      if(job)
+        jni_env->DeleteLocalRef(job);
+      return false;
+    }
+  }else if(frame->type == agora::linuxsdk::VIDEO_FRAME_JPG){
+    //3.2
+    cout<<"videoFrameReceived raw jpg!"<<endl;
+    fillJVideoOfJPG(jni_env, frame, jcVideoFrame, jobVideoFrame);
+  }else if(frame->type == agora::linuxsdk::VIDEO_FORMAT_H264_FRAME_TYPE){
+    //3.3
+    cout<<"videoFrameReceived raw h264!"<<endl;
+    if(!fillJVideoOfH264(jni_env, frame, jcVideoFrame, jobVideoFrame))
+    {
+      cout << "fillJVideoOfH264 failed!"<<endl;
+      return false;
+    }
+  }else if(frame->type == agora::linuxsdk::VIDEO_FORMAT_JPG_FRAME_TYPE){
+    cout << "videoFrameReceived VIDEO_FORMAT_JPG_FRAME_TYPE" <<endl;
+  }else if(frame->type == agora::linuxsdk::VIDEO_FORMAT_JPG_FILE_TYPE){
+    cout << "videoFrameReceived VIDEO_FORMAT_JPG_FILE_TYPE" <<endl;
+  }
+  #endif 
+  //fill VIDEO_FRAME_TYPE
+  //set type of VIDEO_FRAME_TYPE by FindClass
+  jc = jni_env->FindClass("Lheaders/EnumIndex$VIDEO_FRAME_TYPE;");
+  if(!jc) {
+    cout<<"cannot get VIDEO_FRAME_TYPE class"<<endl;
+    return false;
+  }
+  cout <<"get AUDIO_FORMAT_TYPE ok!"<<endl;
+  //4.1.1
+  initMid = jni_env->GetMethodID(jc,"<init>","(Lheaders/EnumIndex;)V");
+  if(initMid == NULL) {
+    cout <<"get init methid failed!"<<endl;
+    return false;
+  }
+  //4.1.2
+  job = jni_env->NewObject(jc, initMid);
+  //4.1.3 get field of this class
+  fid = jni_env->GetFieldID(jc, "type", "I");
+  if(fid == NULL) {
+    cout <<"cannot get value of VIDEO_FRAME_TYPE class"<<endl;
+    return false;
+  }
+  cout<<"get value of VIDEO_FRAME_TYPE ok"<<endl;
+  //4.1.4 fill this field
+  int iVideoFrameType = static_cast<int>(frame->type);
+  jni_env->SetIntField(job, fid, jint(iVideoFrameType));
+  //4.2
+  //set this object into jobAudioFrame!
+  //step 1:get this object field
+  fid = jni_env->GetFieldID(jcVideoFrame, "type", VIDEO_FORMAT_TYPE_SIGNATURE);
+  if(!fid) {
+    cout <<"cannot get VIDEO_FORMAT_TYPE field"<<endl;
+    return false;
+  }
+  //4.3
+  jni_env->SetObjectField(jobVideoFrame, fid, job);
+  cout<<"set GetObjectField ok"<<endl;
+
+}
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
-  cout<<"AgoraJniProxySdk::videoFrameReceived enter uid:"<<uid<<endl;
+  static int count = 0;
+  cout<<"AgoraJniProxySdk::videoFrameReceived enter uid:"<<uid<<",count:"<<++count<<endl;
 #if 1
+  jmethodID jmid = NULL;
+  jobject job = NULL; //should be deleted
+  jclass jczz = NULL; //should be deleted,findClass need to free?
+  jfieldID jfid = NULL;
+  jmethodID initMid = NULL;
+  jclass jcVideoFrame = NULL;
+  jobject jobVideoFrame = NULL;
+
+
   JNIEnv* jni_env = NULL;
 	((JavaVM*)g_jvm)->AttachCurrentThread((void**)&jni_env, NULL);
 	if(((JavaVM*)g_jvm)->GetEnv((void**)&jni_env, JNI_VERSION_1_4) != JNI_OK) {
@@ -202,22 +423,130 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
 		return;
 	}
 	assert(jni_env);
-	jclass javaClass = jni_env->FindClass("AgoraJavaRecording");
   assert(javaClass);
 	pid_t tid = getpid();
 	cout << "this thread id is:"<<tid<<endl;
-  if (frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) {
-    cout<<"videoFrameReceived raw yuv!"<<endl;
-  }else if(frame->type == agora::linuxsdk::VIDEO_FRAME_JPG){
-    cout<<"videoFrameReceived raw jpg!"<<endl;
-  }else{
-    cout<<"videoFrameReceived raw h264!"<<endl;
+  //1.find VideoFrame class
+  jcVideoFrame = jni_env->FindClass("headers/EnumIndex$VideoFrame");
+  if(jcVideoFrame == NULL) {
+    cout << "videoFrameReceived cannot find class VideoFrame!"<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
   }
+  //2.get init methodid to new VideoFrame object
+  initMid = jni_env->GetMethodID(jcVideoFrame,"<init>","(Lheaders/EnumIndex;)V");
+  if(initMid == NULL) {
+    cout << "cannot get VideoFrmae init method "<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  //new VideoFrame object
+  jobVideoFrame = jni_env->NewObject(jcVideoFrame, initMid);
+  if(jobVideoFrame == NULL) {
+    cout <<"new video frame object failed!"<<endl;
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  //3.get subclass or enumm details and fill these' fields
+#if 0
+  if (frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) {
+    //3.1
+    cout<<"videoFrameReceived raw yuv!"<<endl;
+    handleRawYUV(jni_env, frame, jcVideoFrame, jobVideoFrame);
+    
+  }else if(frame->type == agora::linuxsdk::VIDEO_FRAME_JPG){
+    //3.2
+    cout<<"videoFrameReceived raw jpg!"<<endl;
+    handleJPG(jni_env, frame, jcVideoFrame, jobVideoFrame);
+  }else{
+    //3.3
+    cout<<"videoFrameReceived raw h264!"<<endl;
+    handleH264(jni_env, frame, jcVideoFrame, jobVideoFrame);
+  }
+#else
+  if(!fillJVideoFrameByFields(jni_env, frame, jcVideoFrame, jobVideoFrame))
+  {
+    cout << "jni fillJVideoFrameByFields failed!" <<endl;
+    //TODO delete ref
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+#endif
+  //4.find class where callback function in
   cout <<"AgoraJniProxySdk::videoFrameReceived end"<<endl;
-  //jni_env->CallVoidMethod(javaClass, mid, );
-  jni_env->DeleteLocalRef(javaClass);
+  jclass jcCallBack = jni_env->FindClass("AgoraJavaRecording");
+  if(jcCallBack == NULL) {
+    cout << "cannot find callback class"<<endl;
+    //TODO delete local ref
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  //5. find callback function
+  jmid = jni_env->GetStaticMethodID(jcCallBack, "videoFrameReceived", "(JLheaders/EnumIndex$VideoFrame;)V");
+  if(jmid == NULL) {
+    cout << "cannot get callback function"<<endl;
+    //TODO memory leak..
+    ((JavaVM*)g_jvm)->DetachCurrentThread();
+    return;
+  }
+  //so far so well
+  //6. call back java method, para is jobVideoFrame
+  jni_env->CallStaticVoidMethod(jcVideoFrame, jmid,jlong(long(uid)), jobVideoFrame);
+  
+  jni_env->DeleteLocalRef(jcVideoFrame);
   ((JavaVM*)g_jvm)->DetachCurrentThread();
 #endif
+#if 0
+ char uidbuf[65];
+  snprintf(uidbuf, sizeof(uidbuf),"%u", uid);
+  const char * suffix=".vtmp";
+  if (frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) {
+    agora::linuxsdk::VideoYuvFrame *f = frame->frame.yuv;
+    suffix=".yuv";
+
+    cout << "User " << uid << ", received a yuv frame, width: "
+        << f->width_ << ", height: " << f->height_ ;
+    cout<<",ystride:"<<f->ystride_<< ",ustride:"<<f->ustride_<<",vstride:"<<f->vstride_;
+    cout<< endl;
+  } else if(frame->type == agora::linuxsdk::VIDEO_FRAME_JPG) {
+    suffix=".jpg";
+    agora::linuxsdk::VideoJpgFrame *f = frame->frame.jpg;
+
+    cout << "User " << uid << ", received an jpg frame, timestamp: "
+    << f->frame_ms_ << endl;
+
+    struct tm date;
+    time_t t = time(NULL);
+    localtime_r(&t, &date);
+    char timebuf[128];
+    sprintf(timebuf, "%04d%02d%02d%02d%02d%02d", date.tm_year + 1900, date.tm_mon + 1, date.tm_mday, date.tm_hour, date.tm_min, date.tm_sec);
+    std::string file_name = m_storage_dir + std::string(uidbuf) + "_" + std::string(timebuf) + suffix;
+    FILE *fp = fopen(file_name.c_str(), "w");
+    ::fwrite(f->buf_, 1, f->bufSize_, fp);
+    ::fclose(fp);
+    return;
+  } else {
+    suffix=".h264";
+    agora::linuxsdk::VideoH264Frame *f = frame->frame.h264;
+
+    cout << "User " << uid << ", received an h264 frame, timestamp: "
+        << f->frame_ms_ << ", frame no: " << f->frame_num_ << endl;
+  }
+
+  std::string info_name = m_storage_dir + std::string(uidbuf) /*+ timestamp_per_join_ */+ std::string(suffix);
+  FILE *fp = fopen(info_name.c_str(), "a+b");
+
+  //store it as file
+  if (frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) {
+      agora::linuxsdk::VideoYuvFrame *f = frame->frame.yuv;
+      ::fwrite(f->buf_, 1, f->bufSize_, fp);
+  }
+  else {
+      agora::linuxsdk::VideoH264Frame *f = frame->frame.h264;
+      ::fwrite(f->buf_, 1, f->bufSize_, fp);
+  }
+  ::fclose(fp);
+#endif 
 }
 //TODO  use the same parameter
 void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const
@@ -354,7 +683,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   cout<<"----------10"<<endl;
   jni_env->DeleteLocalRef(javaClass);
   ((JavaVM*)g_jvm)->DetachCurrentThread();
-#if 1
+#if 0
   char uidbuf[65];
   snprintf(uidbuf, sizeof(uidbuf),"%u", uid);
   std::string info_name = m_storage_dir + std::string(uidbuf) /*+ timestamp_per_join_*/;
@@ -661,14 +990,15 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 	  config.decodeAudio = static_cast<agora::linuxsdk::AUDIO_FORMAT_TYPE>(decodeAudioValue);
     config.decodeVideo = static_cast<agora::linuxsdk::VIDEO_FORMAT_TYPE>(decodeVideoValue);
 		config.streamType = static_cast<agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE>(streamTypeValue);
-    int ret = jniRecorder.createChannel(appId, channelKey, channelName, uid, config);
-
-    cout<<"agora sdk createChannel ret:"<<ret<<endl;
+    if(!jniRecorder.createChannel(appId, channelKey, channelName, uid, config))
+    {
+      cerr << "Failed to create agora channel: " << channelName << endl;
+      return JNI_FALSE;
+    }
+    //sava jni_env,the same thread?
  		while (!jniRecorder.stopped() && !g_bSignalStop) {
   		usleep(10000); //10ms
 		}
-
-
   	if (g_bSignalStop) {
     	jniRecorder.leaveChannel();
       cout << "jni layer stopped!"<<endl;

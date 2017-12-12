@@ -62,6 +62,12 @@ class AgoraJavaRecording{
   public static void videoFrameReceived(long uid, VideoFrame frame)
   {
     System.out.println("java demo videoFrameReceived,uid:"+uid);
+    if(frame.type.getValue() == 1) {//h264
+      System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+frame.type.getValue()+",h264 frame_ms_:"+frame.h264.frame_ms_+",bufSize_:"+frame.h264.bufSize_);
+      String path = "javaH264.h264";
+      byte[] buf = frame.h264.buf_;
+      writeBytesToFileClassic(buf, path);
+    }
   }
   /*
 

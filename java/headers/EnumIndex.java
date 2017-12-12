@@ -142,11 +142,17 @@ public class EnumIndex{
         private MEMORY_TYPE(int value){}
     }
 
-    public enum VIDEO_FRAME_TYPE {
-    VIDEO_FRAME_RAW_YUV(0),
-    VIDEO_FRAME_H264(1),
-    VIDEO_FRAME_JPG(2);
-        private VIDEO_FRAME_TYPE(int value){}
+    public class VIDEO_FRAME_TYPE {
+      public final int VIDEO_FRAME_RAW_YUV = 0;
+      public final int VIDEO_FRAME_H264 = 1;
+      public final int VIDEO_FRAME_JPG = 2;
+      private int type = 2;
+      public void setValue(int value){
+        type = value;
+      }
+      public int getValue() {
+        return type;
+      }
     }
 
     public enum SERVICE_MODE {
@@ -195,21 +201,22 @@ public class EnumIndex{
          ustride_ = ustride;
          vstride_ = vstride;
     }
-    long frame_ms_;
-    byte[] ybuf_;
-    byte[] ubuf_;
-    byte[] vbuf_;
-    
-    int width_;
-    int height_;
+    public long frame_ms_;
 
-    int ystride_;
-    int ustride_;
-    int vstride_;
+    public byte[] ybuf_;
+    public byte[] ubuf_;
+    public byte[] vbuf_;
+    
+    public int width_;
+    public int height_;
+
+    public int ystride_;
+    public int ustride_;
+    public int vstride_;
     //all
-    String buf_;
-    long bufSize_;
-    String data_;
+    public byte[] buf_;
+    public long bufSize_;
+    public String data_;
 	}
 	public class VideoH264Frame {
     VideoH264Frame(){
@@ -217,12 +224,12 @@ public class EnumIndex{
         frame_num_ = 0;
         bufSize_ = 0; 
 		}
-    long 	frame_ms_;
-    long  frame_num_;
+    public long frame_ms_;
+    public long frame_num_;
     //all
-    byte[] buf_;
-    long 	bufSize_;
-		String payload;
+    public byte[] buf_;
+    public long bufSize_;
+		public String payload;
 	}
 	public class  VideoJpgFrame {
     VideoJpgFrame(){
@@ -230,19 +237,19 @@ public class EnumIndex{
         bufSize_ = 0;
         payload = "";
 		}
-    long frame_ms_;
+    public long frame_ms_;
     //all
-		byte[] buf_;
-    long bufSize_;
-    String payload;
+		public byte[] buf_;
+    public long bufSize_;
+    public String payload;
 	}
 	public class VideoFrame {
-    VIDEO_FRAME_TYPE type;
-    VideoYuvFrame yuv;
-    VideoH264Frame h264;
-    VideoJpgFrame jpg;
-    int rotation_; // 0, 90, 180, 270
-    MEMORY_TYPE mType;
+    public VIDEO_FRAME_TYPE type;
+    public VideoYuvFrame yuv;
+    public VideoH264Frame h264;
+    public VideoJpgFrame jpg;
+    public int rotation_; // 0, 90, 180, 270
+    public MEMORY_TYPE mType;
 	}
 	
 	public class UserJoinInfos {

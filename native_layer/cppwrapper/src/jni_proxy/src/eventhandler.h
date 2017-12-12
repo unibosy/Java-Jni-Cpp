@@ -10,7 +10,7 @@ namespace jniproxy
 class AgoraJniProxySdk : public agora::AgoraSdk {
 public:
     typedef void (*callback_t ) (void);
-    AgoraJniProxySdk():AgoraSdk(){cout<<"AgoraJniProxySdk constructor"<<endl;}
+    AgoraJniProxySdk();
     ~AgoraJniProxySdk() {cout<<"AgoraJniProxySdk destructor"<<endl;}
 
     virtual void onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code);
@@ -26,6 +26,10 @@ public:
     virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
 
     virtual int setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout);
+    void setJcAgoraJavaRecording(jclass jc){
+      m_jcAgoraJavaRecording = jc;
+    }
+    void stopJavaProc();
 private:
     //audio
     bool fillAudioPcmFrame(JNIEnv* jni_env, const agora::linuxsdk::AudioFrame*& frame,jclass& jcAudioFrame, jobject& jobAudioFrame) const;
@@ -36,7 +40,9 @@ private:
     bool fillJVideoOfJPG(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
     bool fillJVideoOfH264(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
 private:
+private:
     JNIEnv* m_jni_env;
+    jclass m_jcAgoraJavaRecording;
 
 
 };

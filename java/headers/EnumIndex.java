@@ -220,9 +220,9 @@ public class EnumIndex{
 	}
 	public class VideoH264Frame {
     VideoH264Frame(){
-        frame_ms_ = 0;
-        frame_num_ = 0;
-        bufSize_ = 0; 
+    frame_ms_ = 0;
+    frame_num_ = 0;
+    bufSize_ = 0; 
 		}
     public long frame_ms_;
     public long frame_num_;
@@ -233,9 +233,9 @@ public class EnumIndex{
 	}
 	public class  VideoJpgFrame {
     VideoJpgFrame(){
-        frame_ms_ = 0;
-        bufSize_ = 0;
-        payload = "";
+    frame_ms_ = 0;
+    bufSize_ = 0;
+    payload = "";
 		}
     public long frame_ms_;
     //all
@@ -262,46 +262,43 @@ public class EnumIndex{
 	public class VideoMixingLayout
 	{
     public class Region {
-        long uid;
-        double x;//[0,1]
-        double y;//[0,1]
-        double width;//[0,1]
-        double height;//[0,1]
-        int zOrder; //optional, [0, 100] //0 (default): bottom most, 100: top most
-
-        //  Optional
-        //  [0, 1.0] where 0 denotes throughly transparent, 1.0 opaque
-        double alpha;
-
-        int renderMode;//RENDER_MODE_HIDDEN: Crop, RENDER_MODE_FIT: Zoom to fit
-        Region(){
-					uid = 0;
-          x = 0;
-          y = 0;
-					width = 0;
-					height = 0;
-					zOrder = 0;
-					alpha = 1.0;
-					renderMode = 0;
+      public long uid;
+      public double x;//[0,1]
+      public double y;//[0,1]
+      public double width;//[0,1]
+      public double height;//[0,1]
+      public int zOrder; //optional, [0, 100] //0 (default): bottom most, 100: top most
+      //Optional
+      //[0, 1.0] where 0 denotes throughly transparent, 1.0 opaque
+      public double alpha;
+      public int renderMode;//RENDER_MODE_HIDDEN: Crop, RENDER_MODE_FIT: Zoom to fit
+      Region(){
+        uid = 0;
+        x = 0;
+        y = 0;
+        width = 0;
+        height = 0;
+        zOrder = 0;
+        alpha = 1.0;
+        renderMode = 0;
         }
-
-    };
-    int canvasWidth;
-    int canvasHeight;
-    String backgroundColor;//e.g. "#C0C0C0" in RGB
-    long regionCount;
-    Region regions;
-    String appData;
-    int appDataLength;
-    VideoMixingLayout() {
+      };
+      public int canvasWidth;
+      public int canvasHeight;
+      public String backgroundColor;//e.g. "#C0C0C0" in RGB
+      public long regionCount;
+      public Region regions;
+      public String appData;
+      public int appDataLength;
+      public VideoMixingLayout() {
         canvasWidth = 0;
-				canvasHeight = 0;
+        canvasHeight = 0;
         backgroundColor = "";
         regionCount = 0;
         //regions = 0;
         appData = "";
         appDataLength = 0;
-    }
+      }
 	} 
 
 

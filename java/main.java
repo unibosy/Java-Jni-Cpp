@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.File; //File
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream; 
+import java.util.*; //vector
 
 class AgoraJavaRecording{
 
@@ -17,37 +18,37 @@ class AgoraJavaRecording{
                 RecordingConfig config);
 	public native boolean leaveChannel();
   public native int setVideoMixingLayout(VideoMixingLayout layout);
+  //public native boolean checkJniStatus();
 
 	//Called by C++
-	public static void onLeaveChannel(int reason){
+	public void onLeaveChannel(int reason){
     EnumIndex ei = new EnumIndex();
     EnumIndex.LEAVE_PATH_CODE lpc = ei.new LEAVE_PATH_CODE(reason);
 		System.out.println("AgoraJavaRecording onLeaveChannel,code:"+lpc.getValue());
-		//stopped = true;
-    System.out.println("AgoraJavaRecording onLeaveChannel,stopped"+stopped);
 	}
-  public static void onError(int error, int stat_code) {
+  public void onError(int error, int stat_code) {
     System.out.println("AgoraJavaRecording onError,error:"+error+",stat code:"+stat_code);
-    stopped = true;
   }
-  public static void onWarning(int warn) {
+  public void onWarning(int warn) {
     //refer to "WARN_CODE_TYPE"
     System.out.println("AgoraJavaRecording onWarning,warn:"+warn);
   }
-  public static String storageDir = "./";
-  public static void onUserOffline(long uid, int reason) {
+  public String storageDir = "./";
+  public void onUserOffline(long uid, int reason) {
     System.out.println("AgoraJavaRecording onUserOffline uid:"+uid+",offline reason:"+reason);
     EnumIndex ei = new EnumIndex();
     EnumIndex.USER_OFFLINE_REASON_TYPE offline = ei.new USER_OFFLINE_REASON_TYPE(reason);
     System.out.println("AgoraJavaRecording onUserOffline,code:"+offline.getValue());
+
   }
-  public static void onUserJoined(long uid, String recordingDir){
+  public void onUserJoined(long uid, String recordingDir){
+    SetVideoMixingLayout();
     //recordingDir:recording file directory
     System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
     storageDir = recordingDir;
   }
   public static int count = 0;
-	public static void audioFrameReceived(long uid, AudioFrame aFrame)
+	public void audioFrameReceived(long uid, AudioFrame aFrame)
   { 
     if(aFrame.type.getValue() == 0)//pcm
     {
@@ -63,7 +64,7 @@ class AgoraJavaRecording{
       System.out.println("java demo audioFrameReceived,uid:"+uid);
       }
   }
-  public static void videoFrameReceived(long uid, VideoFrame frame)
+  public void videoFrameReceived(long uid, VideoFrame frame)
   {
     System.out.println("java demo videoFrameReceived,uid:"+uid);
     if(frame.type.getValue() == 1) {//h264
@@ -73,22 +74,18 @@ class AgoraJavaRecording{
       writeBytesToFileClassic(buf, path);
     }
   }
-  /*
 
-	public static void audioAacFrameReceived(long uid, AudioPcmFrame pcmFrame)
-  {
-    System.out.println("java demo audioAacFrameReceived ");
-  }*/
-  public static void stopCallBack() {
-    System.out.println("java demo receive stop from JNI ");
-    stopped = true;
+  private void SetVideoMixingLayout(){
+    System.out.println("setVideoMixingLayout");
+    EnumIndex ei = new EnumIndex();
+    EnumIndex.VideoMixingLayout layout = ei.new VideoMixingLayout();
+    setVideoMixingLayout(layout);
   }
-	//stop java process flag
-	private static boolean stopped = false;
-	public static boolean stopped() {
-		return stopped;
-	}
-	static void writeBytesToFileClassic(byte[] bFile, String fileDest) {
+  
+  public void stopCallBack() {
+    System.out.println("java demo receive stop from JNI ");
+  }
+	private void writeBytesToFileClassic(byte[] bFile, String fileDest) {
 		FileOutputStream fileOuputStream = null;
     System.out.println("java writeBytesToFileClassic buf:"+bFile);
 				try {
@@ -131,8 +128,8 @@ class AgoraJavaRecording{
     config.decodeVideo = decodeVideo;
 		System.out.println("to create channel,profile value:"+profile.getValue());
     ars.createChannel(appid, channelKey,name,uid,config);
-		
-		while(!stopped())
+		/*
+		while(!ars.checkJniStatus())
 		{
 			try{
 				Thread.currentThread().sleep(10);//sleep 10 ms
@@ -141,7 +138,7 @@ class AgoraJavaRecording{
 			catch(InterruptedException ie){
 				System.out.println("exception throwed!");
 			}
-		}
+		}*/
     System.out.println("jni layer has been exited");
   }
 }

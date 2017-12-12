@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.File; //File
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream; 
+
 class AgoraJavaRecording{
 
   static{
@@ -33,6 +34,7 @@ class AgoraJavaRecording{
     //refer to "WARN_CODE_TYPE"
     System.out.println("AgoraJavaRecording onWarning,warn:"+warn);
   }
+  public static String storageDir = "./";
   public static void onUserOffline(long uid, int reason) {
     System.out.println("AgoraJavaRecording onUserOffline uid:"+uid+",offline reason:"+reason);
     EnumIndex ei = new EnumIndex();
@@ -42,6 +44,7 @@ class AgoraJavaRecording{
   public static void onUserJoined(long uid, String recordingDir){
     //recordingDir:recording file directory
     System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
+    storageDir = recordingDir;
   }
   public static int count = 0;
 	public static void audioFrameReceived(long uid, AudioFrame aFrame)
@@ -52,7 +55,8 @@ class AgoraJavaRecording{
       System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue()
                         +",frame_ms_:"+aFrame.pcm.frame_ms_+",bufSize:"+ aFrame.pcm.pcmBufSize_);
       System.out.println(count);
-      String path = "javaAudio.pcm";
+
+      String path = storageDir + Long.toString(uid)+".pcm";
 			byte[] buf = aFrame.pcm.pcmBuf_;
 			writeBytesToFileClassic(buf, path);
     }else{
@@ -64,7 +68,7 @@ class AgoraJavaRecording{
     System.out.println("java demo videoFrameReceived,uid:"+uid);
     if(frame.type.getValue() == 1) {//h264
       System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+frame.type.getValue()+",h264 frame_ms_:"+frame.h264.frame_ms_+",bufSize_:"+frame.h264.bufSize_);
-      String path = "javaH264.h264";
+      String path = storageDir + Long.toString(uid)+  ".h264";
       byte[] buf = frame.h264.buf_;
       writeBytesToFileClassic(buf, path);
     }

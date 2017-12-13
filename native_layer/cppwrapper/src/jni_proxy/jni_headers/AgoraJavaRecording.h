@@ -18,18 +18,18 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel
 /*
  * Class:     AgoraJavaRecording
  * Method:    leaveChannel
- * Signature: ()Z
+ * Signature: (J)Z
  */
 JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_leaveChannel
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jlong);
 
 /*
  * Class:     AgoraJavaRecording
  * Method:    setVideoMixingLayout
- * Signature: (Lheaders/EnumIndex/VideoMixingLayout;)I
+ * Signature: (JLheaders/EnumIndex/VideoMixingLayout;)I
  */
 JNIEXPORT jint JNICALL Java_AgoraJavaRecording_setVideoMixingLayout
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jobject, jlong, jobject);
 
 #ifdef __cplusplus
 }

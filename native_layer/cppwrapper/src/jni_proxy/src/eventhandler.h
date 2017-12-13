@@ -33,6 +33,9 @@ public:
       m_jcAgoraJavaRecording = jc;
     }
     void stopJavaProc();
+    void setVideoMixLayoutTest();
+    void setTmp(const std::string& tmp){ m_tmp = tmp;}
+    std::string getTmp(){return m_tmp;}
 private:
     //audio
     bool fillJAudioFrameByFields(JNIEnv* jni_env, const agora::linuxsdk::AudioFrame*& frame, jclass& jcAudioFrame, jobject& jobAudioFrame) const;
@@ -54,6 +57,8 @@ private:
     JNIEnv* m_jni_env;
     jclass m_jcAgoraJavaRecording;
     jobject m_jobAgoraJavaRecording;
+
+    std::string m_tmp;
 
 
 };

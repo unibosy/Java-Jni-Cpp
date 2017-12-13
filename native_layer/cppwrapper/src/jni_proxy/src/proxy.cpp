@@ -48,6 +48,7 @@ AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk constructor");
   m_jobAgoraJavaRecording = NULL;
   m_jcAgoraJavaRecording = NULL;
+  m_tmp = "";
 }
 
 #define CHECK_PTR_RETURN(PTR) \
@@ -770,7 +771,7 @@ bool AgoraJniProxySdk::fillJVideoFrameByFields(JNIEnv* jni_env, const agora::lin
   //4.3
   jni_env->SetObjectField(jobVideoFrame, fid, job);
   LOG_DIR(m_logdir.c_str(), INFO,"set GetObjectField ok");
-
+  return true;
 }
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
   static int count = 0;
@@ -1169,6 +1170,12 @@ void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_c
   jni_env->DeleteLocalRef(javaClass);
 	((JavaVM*)g_jvm)->DetachCurrentThread();
 }
+void AgoraJniProxySdk::setVideoMixLayoutTest()
+{ 
+  std::string temp = getTmp();
+  cout<<"[mydebug]:"<<temp<<endl;
+}
+
 int AgoraJniProxySdk::setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout) {
   return 0;
 }
@@ -1185,29 +1192,34 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 }
 #endif
 
-
 /*
  * Class:     AgoraJavaRecording
  * Method:    leaveChannel
  * Signature: ()Z
  */
 JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_leaveChannel
-  (JNIEnv *, jobject) {
+  (JNIEnv *, jobject, jlong nativeObjectRef) {
   cout<<"java call leaveChannel"<<endl;
+  jniproxy::AgoraJniProxySdk* ajp = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
+
   g_bSignalStop = true;
   return JNI_TRUE;
 }
+
 /*
  * Class:     AgoraJavaRecording
  * Method:    setVideoMixingLayout
- * Signature: (Lheaders/EnumIndex/VideoMixingLayout;)I
+ * Signature: (JLheaders/EnumIndex/VideoMixingLayout;)I
  */
 JNIEXPORT jint JNICALL Java_AgoraJavaRecording_setVideoMixingLayout
-  (JNIEnv *, jobject, jobject){
-  cout<<"Java_AgoraJavaRecording_setVideoMixingLayout"<<endl; 
-  return (jint(0));
-
+  (JNIEnv * jni, jobject job, jlong nativeObjectRef, jobject jVideoMixLayout)
+{
+  cout<<"Java_AgoraJavaRecording_setVideoMixingLayout ############"<<endl;
+  jniproxy::AgoraJniProxySdk* ajp = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
+  ajp->setVideoMixLayoutTest();
+  return jint(0);
 }
+
 
 
 void AgoraJniProxySdk::stopJavaProc() {
@@ -1328,18 +1340,17 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 
 		agora::recording::RecordingConfig config;
 		jniproxy::AgoraJniProxySdk jniRecorder;
-    
 
 
     //important! Get a reference to this object's class
 
-    jclass thisJcInstanc = NULL;
-    thisJcInstanc = env->GetObjectClass(thisObj);
-    if(!thisJcInstanc) {
+    jclass thisJcInstance = NULL;
+    thisJcInstance = env->GetObjectClass(thisObj);
+    if(!thisJcInstance) {
       cout<<"Jni cannot get java instance, error!!!";
       return JNI_FALSE;
     }
-    jniRecorder.setJcAgoraJavaRecording(thisJcInstanc);
+    jniRecorder.setJcAgoraJavaRecording(thisJcInstance);
     jniRecorder.setJobAgoraJavaRecording(thisObj);
 
 		config.appliteDir = const_cast<char*>(str_appliteDir.c_str());	
@@ -1350,12 +1361,26 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 	  config.decodeAudio = static_cast<agora::linuxsdk::AUDIO_FORMAT_TYPE>(decodeAudioValue);
     config.decodeVideo = static_cast<agora::linuxsdk::VIDEO_FORMAT_TYPE>(decodeVideoValue);
 		config.streamType = static_cast<agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE>(streamTypeValue);
+
+    //testCode
+    jniRecorder.setTmp(std::string("helloJni"));
+
     if(!jniRecorder.createChannel(appId, channelKey, channelName, uid, config))
     {
       cerr << "Failed to create agora channel: " << channelName ;
       return JNI_FALSE;
     }
-    cout<<"Recording directory is "<<jniRecorder.getRecorderProperties()->storageDir;
+    //tell java this para pointer
+    jlong nativeObjectRef = jlong(&jniRecorder);
+    //find java callback function and set this value
+    jmethodID jmid = env->GetMethodID(thisJcInstance, "nativeObjectRef", "(J)V");
+    if(!jmid) {
+      cout << "cannot find nativeObjectRef method " <<endl;
+      return JNI_FALSE;
+    }
+    env->CallIntMethod(thisObj, jmid, nativeObjectRef);
+
+    cout<<"Recording directory is "<<jniRecorder.getRecorderProperties()->storageDir<<endl;
     //sava jni_env,the same thread?
  		while (!jniRecorder.stopped() && !g_bSignalStop) {
   		usleep(10000); //10ms

@@ -52,8 +52,7 @@ class AgoraJavaRecording{
   public static int count = 0;
 	public void audioFrameReceived(long uid, AudioFrame aFrame)
   { 
-    if(aFrame.type.getValue() == 0)//pcm
-    {
+    if(aFrame.type.getValue() == 0) {//pcm
       count++;
       System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue()
                         +",frame_ms_:"+aFrame.pcm.frame_ms_+",bufSize:"+ aFrame.pcm.pcmBufSize_);
@@ -62,16 +61,26 @@ class AgoraJavaRecording{
       String path = storageDir + Long.toString(uid)+".pcm";
 			byte[] buf = aFrame.pcm.pcmBuf_;
 			writeBytesToFileClassic(buf, path);
-    }else{
-      System.out.println("java demo audioFrameReceived,uid:"+uid);
+    }else if(aFrame.type.getValue() == 1){//aac
+      count++;
+      System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue()
+                        +",frame_ms_:"+aFrame.aac.frame_ms_+",bufSize:"+ aFrame.aac.aacBufSize_);
+      System.out.println(count);
+      String path = storageDir + Long.toString(uid)+".aac";
+			byte[] buf = aFrame.aac.aacBuf_;
+			writeBytesToFileClassic(buf, path);
       }
   }
   public void videoFrameReceived(long uid, VideoFrame frame)
   {
-    System.out.println("java demo videoFrameReceived,uid:"+uid);
+    System.out.println("java demo videoFrameReceived,uid:"+uid + "frame.type.getValue():"+frame.type.getValue());
     if(frame.type.getValue() == 1) {//h264
       System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+frame.type.getValue()+",h264 frame_ms_:"+frame.h264.frame_ms_+",bufSize_:"+frame.h264.bufSize_);
       String path = storageDir + Long.toString(uid)+  ".h264";
+      byte[] buf = frame.h264.buf_;
+      writeBytesToFileClassic(buf, path);
+    }else if(frame.type.getValue() == 2){//yuv
+      String path = storageDir + Long.toString(uid)+  ".yuv";
       byte[] buf = frame.h264.buf_;
       writeBytesToFileClassic(buf, path);
     }
@@ -120,8 +129,9 @@ class AgoraJavaRecording{
     RecordingConfig config= new RecordingConfig();
 		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION;
 		REMOTE_VIDEO_STREAM_TYPE streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
-    AUDIO_FORMAT_TYPE decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_PCM_FRAME_TYPE;
-    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_H264_FRAME_TYPE;
+    AUDIO_FORMAT_TYPE decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_AAC_FRAME_TYPE;
+    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_YUV_FRAME_TYPE;
+    //VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_H264_FRAME_TYPE;
 		config.channelProfile = profile;
 		config.streamType = streamType;
 		config.idleLimitSec = 3;

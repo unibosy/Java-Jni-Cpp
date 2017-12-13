@@ -99,7 +99,7 @@ public class EnumIndex{
     VIDEO_FORMAT_YUV_FRAME_TYPE(2),
     VIDEO_FORMAT_JPG_FRAME_TYPE(3),
     VIDEO_FORMAT_JPG_FILE_TYPE(4);
-    private int value;
+    private int value = 0;
     private VIDEO_FORMAT_TYPE(int value) {
         this.value = value;
       }
@@ -183,11 +183,10 @@ public class EnumIndex{
     }
     public class AudioAacFrame {
     public AudioAacFrame(long frame_ms) {
-      aacBuf_ = 0;
       frame_ms_ = frame_ms;
       aacBufSize_ = 0;
     }
-    public int aacBuf_;
+    public byte[] aacBuf_;
     public long frame_ms_;
     public long aacBufSize_;
 		public String buf_;

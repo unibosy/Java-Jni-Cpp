@@ -7,7 +7,8 @@ import java.io.File; //File
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream; 
 import java.util.*; //vector
-
+import java.text.SimpleDateFormat;
+import java.util.Date;//date
 class AgoraJavaRecording{
 
   static{
@@ -41,13 +42,13 @@ class AgoraJavaRecording{
     EnumIndex ei = new EnumIndex();
     EnumIndex.USER_OFFLINE_REASON_TYPE offline = ei.new USER_OFFLINE_REASON_TYPE(reason);
     System.out.println("AgoraJavaRecording onUserOffline,code:"+offline.getValue());
-
+    SetVideoMixingLayout();
   }
   public void onUserJoined(long uid, String recordingDir){
-    SetVideoMixingLayout();
     //recordingDir:recording file directory
     System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
     storageDir = recordingDir;
+    SetVideoMixingLayout();
   }
   public static int count = 0;
 	public void audioFrameReceived(long uid, AudioFrame aFrame)
@@ -60,7 +61,7 @@ class AgoraJavaRecording{
 
       String path = storageDir + Long.toString(uid)+".pcm";
 			byte[] buf = aFrame.pcm.pcmBuf_;
-			writeBytesToFileClassic(buf, path);
+			WriteBytesToFileClassic(buf, path);
     }else if(aFrame.type.getValue() == 1){//aac
       count++;
       System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue()
@@ -68,21 +69,26 @@ class AgoraJavaRecording{
       System.out.println(count);
       String path = storageDir + Long.toString(uid)+".aac";
 			byte[] buf = aFrame.aac.aacBuf_;
-			writeBytesToFileClassic(buf, path);
+			WriteBytesToFileClassic(buf, path);
       }
   }
   public void videoFrameReceived(long uid, VideoFrame frame)
   {
-    System.out.println("java demo videoFrameReceived,uid:"+uid + "frame.type.getValue():"+frame.type.getValue());
-    if(frame.type.getValue() == 1) {//h264
-      System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+frame.type.getValue()+",h264 frame_ms_:"+frame.h264.frame_ms_+",bufSize_:"+frame.h264.bufSize_);
-      String path = storageDir + Long.toString(uid)+  ".h264";
+    String path = storageDir + Long.toString(uid);
+    //byte[] buf ;
+    System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+frame.type.getValue());
+    if(frame.type.getValue() == 0){//yuv
+      path += ".yuv";
+      byte[] buf = frame.yuv.buf_;
+      WriteBytesToFileClassic(buf, path);
+    }else if(frame.type.getValue() == 1) {//h264
+      path +=  ".h264";
       byte[] buf = frame.h264.buf_;
-      writeBytesToFileClassic(buf, path);
-    }else if(frame.type.getValue() == 2){//yuv
-      String path = storageDir + Long.toString(uid)+  ".yuv";
-      byte[] buf = frame.h264.buf_;
-      writeBytesToFileClassic(buf, path);
+      WriteBytesToFileClassic(buf, path);
+    }else if(frame.type.getValue() == 2) { // jpg
+      path += GetNowDate() + ".jpg";
+      byte[] buf = frame.jpg.buf_;
+      WriteBytesToFileClassic(buf, path);
     }
   }
 
@@ -90,6 +96,7 @@ class AgoraJavaRecording{
     System.out.println("setVideoMixingLayout");
     EnumIndex ei = new EnumIndex();
     EnumIndex.VideoMixingLayout layout = ei.new VideoMixingLayout();
+    //layout.
     setVideoMixingLayout(layout);
   }
   
@@ -98,13 +105,12 @@ class AgoraJavaRecording{
   }
   private boolean stopped = false;
 
-	private void writeBytesToFileClassic(byte[] bFile, String fileDest) {
+	private void WriteBytesToFileClassic(byte[] bFile, String fileDest) {
 		FileOutputStream fileOuputStream = null;
     System.out.println("java writeBytesToFileClassic buf:"+bFile);
 				try {
             fileOuputStream = new FileOutputStream(fileDest, true);
             fileOuputStream.write(bFile);
-
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -115,8 +121,16 @@ class AgoraJavaRecording{
                     e.printStackTrace();
                 }
             }
-        }
-    }
+       }
+  }
+	private String GetNowDate(){
+    String temp_str="";   
+    Date dt = new Date();   
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss aa");   
+    temp_str=sdf.format(dt);   
+    return temp_str;   
+	}
+
   public static void main(String[] args) 
   {
 		System.out.println(System.getProperty("java.library.path"));
@@ -130,8 +144,7 @@ class AgoraJavaRecording{
 		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION;
 		REMOTE_VIDEO_STREAM_TYPE streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
     AUDIO_FORMAT_TYPE decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_AAC_FRAME_TYPE;
-    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_YUV_FRAME_TYPE;
-    //VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_H264_FRAME_TYPE;
+    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_JPG_FRAME_TYPE;
 		config.channelProfile = profile;
 		config.streamType = streamType;
 		config.idleLimitSec = 3;

@@ -34,8 +34,11 @@ JavaVM* g_jvm = NULL;//one eventhandler vs one?
 #define BYTEARRAY "[B"
 #define CHANNEL_PROFILE_SIGNATURE "Lheaders/EnumIndex$CHANNEL_PROFILE_TYPE;"
 #define REMOTE_VIDEO_STREAM_SIGNATURE "Lheaders/EnumIndex$REMOTE_VIDEO_STREAM_TYPE;"
+
 #define VIDEOFRAME_H264_SIGNATURE "Lheaders/EnumIndex$VideoH264Frame;"
 #define VIDEOFRAME_YUV_SIGNATURE "Lheaders/EnumIndex$VideoYuvFrame;"
+#define VIDEOFRAME_JPG_SIGNATURE "Lheaders/EnumIndex$VideoJpgFrame;" 
+
 #define VIDEO_FRAME_TYPE_SIGNATURE "Lheaders/EnumIndex$VIDEO_FRAME_TYPE;"
 
 #define AUDIO_FORMAT_TYPE_SIGNATURE "Lheaders/EnumIndex$AUDIO_FORMAT_TYPE;"
@@ -540,17 +543,16 @@ bool AgoraJniProxySdk::fillJVideoOfJPG(JNIEnv* jni_env, const agora::linuxsdk::V
   jni_env->SetObjectField(job, fid, jstrPayload);
 
   //5.get subclass field
-  fid = jni_env->GetFieldID(jcVideoFrame, "yuv", VIDEOFRAME_YUV_SIGNATURE);
-  if(fid == NULL) {
-    cout <<"cannot get VIDEOFRAME_YUV_SIGNATURE"<<endl;
-    //((JavaVM*)g_jvm)->DetachCurrentThread();
+  fid = jni_env->GetFieldID(jcVideoFrame, "jpg", VIDEOFRAME_JPG_SIGNATURE);
+  if(!fid) {
+    cout <<"cannot get VIDEOFRAME_JPG_SIGNATURE"<<endl;
     return false;
   }
+  cout << "illJVideoOfJPG end -0" <<endl;
   //6.fill jobVideFrame
   jni_env->SetObjectField(jobVideoFrame, fid, job);
+  cout << "illJVideoOfJPG end" <<endl;
   return  true;
-
-  return true;
 }
 bool AgoraJniProxySdk::fillJVideoOfH264(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const{
 //bool AgoraJniProxySdk::fillJVideoOfH264(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jobject& job) const{
@@ -706,7 +708,7 @@ bool AgoraJniProxySdk::fillJVideoFrameByFields(JNIEnv* jni_env, const agora::lin
   }else if(frame->type == agora::linuxsdk::VIDEO_FRAME_JPG){
     //3.2
     cout<<"videoFrameReceived raw jpg!"<<endl;
-    if(fillJVideoOfJPG(jni_env, frame, jcVideoFrame, jobVideoFrame)) {
+    if(!fillJVideoOfJPG(jni_env, frame, jcVideoFrame, jobVideoFrame)) {
       cout << "fill subclass falied!"<<endl;
       if(job)
         jni_env->DeleteLocalRef(job);
@@ -1055,16 +1057,11 @@ void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk:
   jmethodID jUserJoinedMid =  jni_env->GetMethodID(m_jcAgoraJavaRecording,"onUserJoined","(JLjava/lang/String;)V");
   cout << "on user joined-----1" <<endl;
   assert(jUserJoinedMid);
-  if(jUserJoinedMid){
-    cout << "jUserJoinedMid is not null"<<endl;
-  }else{
+  if(!jUserJoinedMid){
     cout << "jUserJoinedMid is null"<<endl;
   }
-  cout << "on user joined-----2" <<endl;
   jstring jstrRecordingDir = jni_env->NewStringUTF(store_dir.c_str());
-  cout << "on user joined-----3" <<endl;
   jni_env->CallVoidMethod(m_jobAgoraJavaRecording, jUserJoinedMid, jlong((long)(uid)),jstrRecordingDir);
-  cout << "AgoraJniProxySdk::onUserJoined call end"<<endl;
 	((JavaVM*)g_jvm)->DetachCurrentThread();
 }
 void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk::USER_OFFLINE_REASON_TYPE reason) {
@@ -1081,7 +1078,10 @@ void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk
 	pid_t tid = getpid();
 	cout << "onUserOffline this thread id is:"<<tid<<endl;
   jmethodID jUserOfflineMid =  jni_env->GetMethodID(m_jcAgoraJavaRecording,"onUserOffline","(JI)V");
-  assert(jUserOfflineMid);
+  if(!jUserOfflineMid){
+    cout << "cnnot find jUserOfflineMid" <<endl;
+    return;
+  }
   jni_env->CallVoidMethod(m_jobAgoraJavaRecording, jUserOfflineMid, jlong((long)(uid)),jint(int(reason)));
   cout << "AgoraJniProxySdk::onUserOffline call end"<<endl;
 

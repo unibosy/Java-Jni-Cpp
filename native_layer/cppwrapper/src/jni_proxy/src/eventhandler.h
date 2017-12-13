@@ -26,6 +26,9 @@ public:
     virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
 
     virtual int setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout);
+    void setJobAgoraJavaRecording(jobject job){
+      m_jobAgoraJavaRecording = job;
+    }
     void setJcAgoraJavaRecording(jclass jc){
       m_jcAgoraJavaRecording = jc;
     }
@@ -43,6 +46,7 @@ private:
 private:
     JNIEnv* m_jni_env;
     jclass m_jcAgoraJavaRecording;
+    jobject m_jobAgoraJavaRecording;
 
 
 };

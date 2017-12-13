@@ -25,9 +25,11 @@ class AgoraJavaRecording{
     EnumIndex ei = new EnumIndex();
     EnumIndex.LEAVE_PATH_CODE lpc = ei.new LEAVE_PATH_CODE(reason);
 		System.out.println("AgoraJavaRecording onLeaveChannel,code:"+lpc.getValue());
+    stopped = true;
 	}
   public void onError(int error, int stat_code) {
     System.out.println("AgoraJavaRecording onError,error:"+error+",stat code:"+stat_code);
+    stopped = true;
   }
   public void onWarning(int warn) {
     //refer to "WARN_CODE_TYPE"
@@ -85,6 +87,8 @@ class AgoraJavaRecording{
   public void stopCallBack() {
     System.out.println("java demo receive stop from JNI ");
   }
+  private boolean stopped = false;
+
 	private void writeBytesToFileClassic(byte[] bFile, String fileDest) {
 		FileOutputStream fileOuputStream = null;
     System.out.println("java writeBytesToFileClassic buf:"+bFile);
@@ -128,8 +132,8 @@ class AgoraJavaRecording{
     config.decodeVideo = decodeVideo;
 		System.out.println("to create channel,profile value:"+profile.getValue());
     ars.createChannel(appid, channelKey,name,uid,config);
-		/*
-		while(!ars.checkJniStatus())
+		
+		while(!ars.stopped)
 		{
 			try{
 				Thread.currentThread().sleep(10);//sleep 10 ms
@@ -138,7 +142,7 @@ class AgoraJavaRecording{
 			catch(InterruptedException ie){
 				System.out.println("exception throwed!");
 			}
-		}*/
+		}
     System.out.println("jni layer has been exited");
   }
 }

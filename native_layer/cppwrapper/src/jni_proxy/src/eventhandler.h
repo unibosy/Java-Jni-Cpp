@@ -49,6 +49,7 @@ private:
     bool fillJVideoOfJPG(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
     bool fillJVideoOfH264(JNIEnv* jni_env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
 private:
+    std::string m_logdir;
 private:
     JNIEnv* m_jni_env;
     jclass m_jcAgoraJavaRecording;

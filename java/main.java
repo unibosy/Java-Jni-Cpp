@@ -50,33 +50,26 @@ class AgoraJavaRecording{
     storageDir = recordingDir;
     SetVideoMixingLayout();
   }
-  public static int count = 0;
 	public void audioFrameReceived(long uid, AudioFrame aFrame)
   { 
+    System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue());
     if(aFrame.type.getValue() == 0) {//pcm
-      count++;
-      System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue()
-                        +",frame_ms_:"+aFrame.pcm.frame_ms_+",bufSize:"+ aFrame.pcm.pcmBufSize_);
-      System.out.println(count);
-
       String path = storageDir + Long.toString(uid)+".pcm";
 			byte[] buf = aFrame.pcm.pcmBuf_;
 			WriteBytesToFileClassic(buf, path);
     }else if(aFrame.type.getValue() == 1){//aac
       count++;
-      System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue()
-                        +",frame_ms_:"+aFrame.aac.frame_ms_+",bufSize:"+ aFrame.aac.aacBufSize_);
       System.out.println(count);
       String path = storageDir + Long.toString(uid)+".aac";
 			byte[] buf = aFrame.aac.aacBuf_;
 			WriteBytesToFileClassic(buf, path);
-      }
+    }
   }
   public void videoFrameReceived(long uid, VideoFrame frame)
   {
     String path = storageDir + Long.toString(uid);
     //byte[] buf ;
-    System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+frame.type.getValue());
+    System.out.println("java demo videoFrameReceived,uid:"+uid+",type:"+frame.type.getValue());
     if(frame.type.getValue() == 0){//yuv
       path += ".yuv";
       byte[] buf = frame.yuv.buf_;
@@ -102,6 +95,7 @@ class AgoraJavaRecording{
   
   public void stopCallBack() {
     System.out.println("java demo receive stop from JNI ");
+    stopped = true;
   }
   private boolean stopped = false;
 
@@ -144,7 +138,7 @@ class AgoraJavaRecording{
 		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION;
 		REMOTE_VIDEO_STREAM_TYPE streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
     AUDIO_FORMAT_TYPE decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_AAC_FRAME_TYPE;
-    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_JPG_FRAME_TYPE;
+    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_YUV_FRAME_TYPE;
 		config.channelProfile = profile;
 		config.streamType = streamType;
 		config.idleLimitSec = 3;
@@ -155,7 +149,7 @@ class AgoraJavaRecording{
     config.decodeVideo = decodeVideo;
 		System.out.println("to create channel,profile value:"+profile.getValue());
     ars.createChannel(appid, channelKey,name,uid,config);
-		
+		System.out.println("############ars.createChannel end###########");
 		while(!ars.stopped)
 		{
 			try{

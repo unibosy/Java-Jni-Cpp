@@ -25,7 +25,6 @@ public:
     virtual void audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const;
     virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
 
-    virtual int setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout);
     void setJobAgoraJavaRecording(jobject job){
       m_jobAgoraJavaRecording = job;
     }

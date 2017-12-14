@@ -14,10 +14,13 @@ class AgoraJavaRecording{
   //java run status flag
   private boolean stopped = false;
   private boolean isMixMode = false;
-  private String mixResolution= "360,640,15,500";
+  private int width = 0;
+  private int height = 0;
+  private int fps = 0;
+  private int kbps = 0;
   private String storageDir = "./";
-  private Vector m_peers = new Vector();
-  private MixModeSettings m_mixRes;
+  Vector<Long> m_peers = new Vector<Long>();
+  //private MixModeSettings m_mixRes;
   private long mNativeObjectRef = 0;
   private boolean IsMixMode(){
     return isMixMode;
@@ -55,28 +58,21 @@ class AgoraJavaRecording{
   }
   public void onUserOffline(long uid, int reason) {
     System.out.println("AgoraJavaRecording onUserOffline uid:"+uid+",offline reason:"+reason);
-    EnumIndex ei = new EnumIndex();
-    EnumIndex.USER_OFFLINE_REASON_TYPE offline = ei.new USER_OFFLINE_REASON_TYPE(reason);
-    System.out.println("AgoraJavaRecording onUserOffline,code:"+offline.getValue());
-    //m_peers.erase(std::remove(m_peers.begin(), m_peers.end(), uid), m_peers.end());
+    m_peers.remove(uid);
+    print(m_peers);
     SetVideoMixingLayout();
   }
   public void onUserJoined(long uid, String recordingDir){
     //recordingDir:recording file directory
     System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
     storageDir = recordingDir;
-    /*if(infos.storageDir) {
-        m_storage_dir = std::string(infos.storageDir);
-        m_logdir = m_storage_dir;
-    }
-    m_peers.push_back(uid);
+    m_peers.add(uid);
+    print(m_peers);
     //When the user joined, we can re-layout the canvas
-    setVideoMixLayout();
-    */
     SetVideoMixingLayout();
   }
 	public void audioFrameReceived(long uid, AudioFrame aFrame)
-  { 
+  {
     System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue());
     byte[] buf = null;
     String path = storageDir + Long.toString(uid);
@@ -107,23 +103,26 @@ class AgoraJavaRecording{
     WriteBytesToFileClassic(buf, path);
   }
 
-  private int SetVideoMixingLayout(){
+  public int SetVideoMixingLayout(){
     System.out.println("java setVideoMixingLayout");
     EnumIndex ei = new EnumIndex();
     EnumIndex.VideoMixingLayout layout = ei.new VideoMixingLayout();
 
-   	if(!IsMixMode()) return -1;
-    layout.canvasHeight = m_mixRes.m_height;
+    //EnumIndex.Region regionList = ei.new Region(/*m_peers.size()*/);
+   	
+    if(!IsMixMode()) return -1;
+    
+    System.out.println("java setVideoMixingLayout -0");
+    layout.canvasHeight = height;
     layout.backgroundColor = "#23b9dc";
-
-/*
     layout.regionCount = (int)(m_peers.size());
-/*
-    if (!m_peers.empty()) {
-        LOG_DIR(m_logdir.c_str(), INFO, "setVideoMixLayout: peers not empty");
-        agora::linuxsdk::VideoMixingLayout::Region * regionList = new agora::linuxsdk::VideoMixingLayout::Region[m_peers.size()];
+    System.out.println("java setVideoMixingLayout -1");
 
-        regionList[0].uid = m_peers[0];
+    if (!m_peers.isEmpty()) {
+        System.out.println("java setVideoMixingLayout m_peers is not empty");
+        EnumIndex.VideoMixingLayout.Region[] regionList = new EnumIndex.VideoMixingLayout.Region[m_peers.size()];
+        regionList[0] = layout.new Region();
+        regionList[0].uid = m_peers.get(0);
         regionList[0].x = 0.f;
         regionList[0].y = 0.f;
         regionList[0].width = 1.f;
@@ -132,32 +131,33 @@ class AgoraJavaRecording{
         regionList[0].alpha = 1.f;
         regionList[0].renderMode = 0;
 
-        float canvasWidth = static_cast<float>(m_mixRes.m_width);
-        float canvasHeight = static_cast<float>(m_mixRes.m_height);
+        float canvasWidth = width;
+        float canvasHeight = height;
         float viewWidth = 0.3f;
         float viewHEdge = 0.025f;
         float viewHeight = viewWidth * (canvasWidth / canvasHeight);
         float viewVEdge = viewHEdge * (canvasWidth / canvasHeight);
-        for (size_t i=1; i<m_peers.size(); i++) {
+        for (int i=1; i<m_peers.size(); i++) {
             if (i >= 7)
                 break;
-            regionList[i].uid = m_peers[i];
-            float xIndex = static_cast<float>(i % 3);
-            float yIndex = static_cast<float>(i / 3);
+            regionList[i] = layout.new Region();
+
+            regionList[i].uid = m_peers.get(i);
+            float xIndex = (i % 3);
+            float yIndex = (i / 3);
             regionList[i].x = xIndex * (viewWidth + viewHEdge) + viewHEdge;
             regionList[i].y = 1 - (yIndex + 1) * (viewHeight + viewVEdge);
             regionList[i].width = viewWidth;
             regionList[i].height = viewHeight;
             regionList[i].zOrder = 0;
-            regionList[i].alpha = static_cast<double>(i + 1);
+            regionList[i].alpha = (i + 1);
             regionList[i].renderMode = 0;
         }
         layout.regions = regionList;
     }
     else {
-        layout.regions = NULL;
+        layout.regions = null;
     }
-*/
     return setVideoMixingLayout(mNativeObjectRef, layout); 
   }
   
@@ -191,15 +191,20 @@ class AgoraJavaRecording{
     return temp_str;   
 	}
 
-
+  private void print(Vector vector){
+    System.out.println("print vector size:"+vector.size());
+    for(Long l : m_peers){  
+      System.out.println("iter:"+l);
+    }
+  }
   public static void main(String[] args) 
   {
     int idleLimitSec=5*60;//300s
 
     boolean isAudioOnly=false;
     boolean isVideoOnly=false;
-    boolean isMixingEnabled=false;
-    boolean mixedVideoAudio=false;
+    boolean isMixingEnabled=true;
+    boolean mixedVideoAudio=true;
 
     //MixModeSettings settings;
     AgoraJavaRecording ars = new AgoraJavaRecording();
@@ -208,11 +213,14 @@ class AgoraJavaRecording{
     String appid = "0c0b4b61adf94de1befd7cdd78a50444";
     String channelKey = "";
     String name = "video";
+
+    String mixResolution= "360,640,15,500";
+
     int uid = 0;
 		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION;
 		REMOTE_VIDEO_STREAM_TYPE streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
-    AUDIO_FORMAT_TYPE decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_AAC_FRAME_TYPE;
-    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_YUV_FRAME_TYPE;
+    AUDIO_FORMAT_TYPE decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_DEFAULT_TYPE;
+    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_DEFAULT_TYPE;
     
     config.channelProfile = profile;
 		config.streamType = streamType;
@@ -222,12 +230,25 @@ class AgoraJavaRecording{
     config.recordFileRootDir = ".";
     config.decodeAudio = decodeAudio;
     config.decodeVideo = decodeVideo;
+    config.isMixingEnabled = isMixingEnabled;
 		
     System.out.println(System.getProperty("java.library.path"));
-    
+
+    ars.isMixMode = isMixingEnabled; 
+    if(isMixingEnabled && !isAudioOnly) {
+      String[] sourceStrArray=mixResolution.split(",");
+      if(sourceStrArray.length != 4) {
+		    System.out.println("Illegal resolution:"+mixResolution);
+        return;
+      }
+      ars.width = Integer.valueOf(sourceStrArray[0]).intValue();
+      ars.height = Integer.valueOf(sourceStrArray[1]).intValue();
+      ars.fps = Integer.valueOf(sourceStrArray[2]).intValue();
+      ars.kbps = Integer.valueOf(sourceStrArray[3]).intValue();
+    }
     ars.createChannel(appid, channelKey,name,uid,config);
 		System.out.println("############ars.createChannel end###########");
-		while(!ars.stopped)
+		/*while(!ars.stopped)
 		{
 			try{
 				Thread.currentThread().sleep(10);//sleep 10 ms
@@ -236,7 +257,7 @@ class AgoraJavaRecording{
 			catch(InterruptedException ie){
 				System.out.println("exception throwed!");
 			}
-		}
+		}*/
     System.out.println("jni layer has been exited");
   }
 }

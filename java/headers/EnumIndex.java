@@ -257,9 +257,16 @@ public class EnumIndex{
         storageDir = "";
     }
 	}
-	
+
 	public class VideoMixingLayout
 	{
+    public int canvasWidth;
+    public int canvasHeight;
+    public String backgroundColor;//e.g. "#C0C0C0" in RGB
+    public int regionCount;
+    public Region[] regions;
+    public String appData;
+    public int appDataLength;
     public class Region {
       public long uid;
       public double x;//[0,1]
@@ -271,7 +278,7 @@ public class EnumIndex{
       //[0, 1.0] where 0 denotes throughly transparent, 1.0 opaque
       public double alpha;
       public int renderMode;//RENDER_MODE_HIDDEN: Crop, RENDER_MODE_FIT: Zoom to fit
-      Region(){
+      public Region(){
         uid = 0;
         x = 0;
         y = 0;
@@ -280,24 +287,17 @@ public class EnumIndex{
         zOrder = 0;
         alpha = 1.0;
         renderMode = 0;
-        }
-      };
-      public int canvasWidth;
-      public int canvasHeight;
-      public String backgroundColor;//e.g. "#C0C0C0" in RGB
-      public long regionCount;
-      public Region regions;
-      public String appData;
-      public int appDataLength;
-      public VideoMixingLayout() {
-        canvasWidth = 0;
-        canvasHeight = 0;
-        backgroundColor = "";
-        regionCount = 0;
-        //regions = 0;
-        appData = "";
-        appDataLength = 0;
       }
+    }
+    public VideoMixingLayout() {
+      canvasWidth = 0;
+      canvasHeight = 0;
+      backgroundColor = "";
+      regionCount = 0;
+      //regions = 0;
+      appData = "";
+      appDataLength = 0;
+    }
 	} 
 
 

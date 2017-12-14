@@ -44,6 +44,9 @@ JavaVM* g_jvm = NULL;//one eventhandler vs one?
 #define AUDIO_FORMAT_TYPE_SIGNATURE "Lheaders/EnumIndex$AUDIO_FORMAT_TYPE;"
 #define VIDEO_FORMAT_TYPE_SIGNATURE "Lheaders/EnumIndex$VIDEO_FORMAT_TYPE;"
 
+
+#define VIDEOMIXLAYOUT_SIGNATURE "[Lheaders/EnumIndex$VideoMixingLayout$Region;"
+
 AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk constructor");
   m_jobAgoraJavaRecording = NULL;
@@ -1170,15 +1173,7 @@ void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_c
   jni_env->DeleteLocalRef(javaClass);
 	((JavaVM*)g_jvm)->DetachCurrentThread();
 }
-void AgoraJniProxySdk::setVideoMixLayoutTest()
-{ 
-  std::string temp = getTmp();
-  cout<<"[mydebug]:"<<temp<<endl;
-}
 
-int AgoraJniProxySdk::setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout) {
-  return 0;
-}
 //TODO
 #if 0
   convert jobject jni_recordingConfig to c++ recordingConfig
@@ -1212,11 +1207,57 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_leaveChannel
  * Signature: (JLheaders/EnumIndex/VideoMixingLayout;)I
  */
 JNIEXPORT jint JNICALL Java_AgoraJavaRecording_setVideoMixingLayout
-  (JNIEnv * jni, jobject job, jlong nativeObjectRef, jobject jVideoMixLayout)
+  (JNIEnv * env, jobject job, jlong nativeObjectRef, jobject jVideoMixLayout)
 {
   cout<<"Java_AgoraJavaRecording_setVideoMixingLayout ############"<<endl;
   jniproxy::AgoraJniProxySdk* ajp = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
-  ajp->setVideoMixLayoutTest();
+  //convert jVideoMixLayout to c++ VideoMixLayout
+	jclass jcVideoMixingLayout  = env->GetObjectClass(jVideoMixLayout); 
+  if(!jcVideoMixingLayout){
+    cout<<"jcVideoMixingLayout is NULL";
+    return JNI_FALSE;
+	}
+  jfieldID jCanvasWidthID = env->GetFieldID(jcVideoMixingLayout, "canvasWidth", INT_SIGNATURE);
+  jfieldID jCanvasHeightID = env->GetFieldID(jcVideoMixingLayout, "canvasHeight", INT_SIGNATURE);
+  jfieldID jBackgroundColorID = env->GetFieldID(jcVideoMixingLayout, "backgroundColor", STRING_SIGNATURE);
+  jfieldID jRegionCountID = env->GetFieldID(jcVideoMixingLayout, "regionCount", INT_SIGNATURE);
+  jfieldID jRegionsID = env->GetFieldID(jcVideoMixingLayout, "regions", VIDEOMIXLAYOUT_SIGNATURE);
+  jfieldID jAppDataID = env->GetFieldID(jcVideoMixingLayout, "appData", STRING_SIGNATURE);
+  jfieldID jAppDataLengthID = env->GetFieldID(jcVideoMixingLayout, "appDataLength", INT_SIGNATURE);
+  
+  if(!jCanvasWidthID || !jCanvasHeightID || !jBackgroundColorID || !jRegionCountID || !jRegionsID || !jAppDataID || !jAppDataLengthID){
+    cout<<"Java_AgoraJavaRecording_setVideoMixingLayout get fields failed!"<<endl;
+    return JNI_FALSE;
+  }
+  cout<<"setVideoMixingLayout -1"<<endl;
+  jint canvasWidth = env->GetIntField(jVideoMixLayout,jCanvasWidthID);
+  jint canvasHeight = env->GetIntField(jVideoMixLayout,jCanvasWidthID);
+  
+  jstring jstrBackgroundColor = (jstring)env->GetObjectField(jVideoMixLayout, jBackgroundColorID);
+  const char* c_backgroundColor = env->GetStringUTFChars(jstrBackgroundColor, NULL);
+  
+  jint regionCount = env->GetIntField(jVideoMixLayout,jRegionCountID);
+  
+  cout<<"setVideoMixingLayout -2"<<endl;
+  //regions
+
+  jstring jstrAppData = (jstring)env->GetObjectField(jVideoMixLayout,jAppDataID);
+  const char* c_jstrAppData = env->GetStringUTFChars(jstrAppData, NULL);
+  
+  jint appDataLength = env->GetIntField(jVideoMixLayout,jAppDataLengthID);
+
+  cout<<"setVideoMixingLayout -3"<<endl;
+  agora::linuxsdk::VideoMixingLayout layout;
+  layout.canvasWidth = int(canvasWidth);
+  layout.canvasHeight = int(canvasHeight);
+  layout.backgroundColor = c_backgroundColor;
+  layout.regionCount = int(regionCount);
+  layout.appData = c_jstrAppData;
+  layout.appDataLength = int(appDataLength);
+  
+  cout<<"setVideoMixingLayout -4"<<endl;
+  ajp->setVideoMixingLayout(layout);
+  cout<<"setVideoMixingLayout -end"<<endl;
   return jint(0);
 }
 
@@ -1391,7 +1432,8 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
       jniRecorder.stopJavaProc();
     	jniRecorder.release();
   	}
-    cout<<"Java_AgoraJavaRecording__recordingConfigcreateChannel end";
+    cout<<"Java_AgoraJavaRecording_createChannel  end"<<endl;
+    return JNI_TRUE;
  
 }
 #ifdef __cplusplus

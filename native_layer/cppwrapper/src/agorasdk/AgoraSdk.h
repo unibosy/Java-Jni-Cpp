@@ -54,6 +54,7 @@ class AgoraSdk : public agora::recording::IRecordingEngineEventHandler {
             m_mixRes.m_videoMix = isVideoMix;
         }
         const agora::recording::RecordingEngineProperties* getRecorderProperties();
+        virtual int setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout);
 
     protected:
         virtual void onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code) {
@@ -84,7 +85,6 @@ class AgoraSdk : public agora::recording::IRecordingEngineEventHandler {
             videoFrameReceivedImpl(uid, frame);
         }
 
-        virtual int setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout);
 
     protected:
         void onErrorImpl(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code);

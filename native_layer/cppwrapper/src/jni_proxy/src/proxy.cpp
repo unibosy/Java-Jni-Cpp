@@ -30,6 +30,8 @@ JavaVM* g_jvm = NULL;//one eventhandler vs one?
 //define signatures
 #define LONG_SIGNATURE "J"
 #define INT_SIGNATURE "I"
+#define BOOL_SIGNATURE "Z"
+#define DOUBLE_SIGNATURE "D"
 #define STRING_SIGNATURE "Ljava/lang/String;"
 #define BYTEARRAY "[B"
 #define CHANNEL_PROFILE_SIGNATURE "Lheaders/EnumIndex$CHANNEL_PROFILE_TYPE;"
@@ -1225,10 +1227,11 @@ JNIEXPORT jint JNICALL Java_AgoraJavaRecording_setVideoMixingLayout
   jfieldID jAppDataID = env->GetFieldID(jcVideoMixingLayout, "appData", STRING_SIGNATURE);
   jfieldID jAppDataLengthID = env->GetFieldID(jcVideoMixingLayout, "appDataLength", INT_SIGNATURE);
   
-  if(!jCanvasWidthID || !jCanvasHeightID || !jBackgroundColorID || !jRegionCountID || !jRegionsID || !jAppDataID || !jAppDataLengthID){
+  if(!jCanvasWidthID || !jCanvasHeightID || !jBackgroundColorID || !jRegionCountID || !jRegionsID){
     cout<<"Java_AgoraJavaRecording_setVideoMixingLayout get fields failed!"<<endl;
     return JNI_FALSE;
   }
+  //convert into cpp value
   cout<<"setVideoMixingLayout -1"<<endl;
   jint canvasWidth = env->GetIntField(jVideoMixLayout,jCanvasWidthID);
   jint canvasHeight = env->GetIntField(jVideoMixLayout,jCanvasWidthID);
@@ -1238,23 +1241,110 @@ JNIEXPORT jint JNICALL Java_AgoraJavaRecording_setVideoMixingLayout
   
   jint regionCount = env->GetIntField(jVideoMixLayout,jRegionCountID);
   
-  cout<<"setVideoMixingLayout -2"<<endl;
-  //regions
+  //not used yet?
+  //jstring jstrAppData = (jstring)env->GetObjectField(jVideoMixLayout,jAppDataID);
+  //const char* c_jstrAppData = env->GetStringUTFChars(jstrAppData, NULL);
+  //jint appDataLength = env->GetIntField(jVideoMixLayout,jAppDataLengthID);
 
-  jstring jstrAppData = (jstring)env->GetObjectField(jVideoMixLayout,jAppDataID);
-  const char* c_jstrAppData = env->GetStringUTFChars(jstrAppData, NULL);
-  
-  jint appDataLength = env->GetIntField(jVideoMixLayout,jAppDataLengthID);
+  cout<<"setVideoMixingLayout -2,canvasWidth:"<<canvasWidth<<",canvasHeight:"<<canvasHeight<<",c_backgroundColor:"<<c_backgroundColor
+              <<",regionCount:"<<regionCount<<endl;
 
-  cout<<"setVideoMixingLayout -3"<<endl;
   agora::linuxsdk::VideoMixingLayout layout;
+  //regions begin
+  jobjectArray jobRegions =  (jobjectArray)env->GetObjectField(jVideoMixLayout, jRegionsID);
+  if(!jobRegions) {
+    cout<<"cannot find Regions in jVideoMixLayout!"<<endl;
+    return JNI_FALSE;
+  }
+  jint arrLen = env->GetArrayLength(jobRegions);
+  cout<<"arrLen:"<<int(arrLen)<<endl;
+  if(arrLen != regionCount){
+    cout<<"regionCount is not equal with arrLen"<<endl;
+    return JNI_FALSE;//return ??
+  }
   layout.canvasWidth = int(canvasWidth);
   layout.canvasHeight = int(canvasHeight);
   layout.backgroundColor = c_backgroundColor;
   layout.regionCount = int(regionCount);
-  layout.appData = c_jstrAppData;
-  layout.appDataLength = int(appDataLength);
-  
+
+  //layout.appData = c_jstrAppData;
+  //layout.appDataLength = int(appDataLength);
+  if(0<arrLen)
+  {
+    cout<<"set layout now!"<<endl;
+    agora::linuxsdk::VideoMixingLayout::Region* regionList = new agora::linuxsdk::VideoMixingLayout::Region[arrLen];
+    for(int i=0; i<arrLen;++i){
+      jobject region = env->GetObjectArrayElement(jobRegions, i);
+      jclass jcRegion =env->GetObjectClass(region);
+      if(!jcRegion){
+        cout<<"cannot get jclass Region!"<<endl;
+        break;
+      }
+      jfieldID jfidUid = env->GetFieldID(jcRegion, "uid", LONG_SIGNATURE);
+      if(!jfidUid){
+        cout<<"connot get region uid"<<endl;
+        continue;
+      }
+      //uid
+      jint uidValue = env->GetIntField(region,jfidUid);
+      //C++ uid is uint32
+      cout<<"user id:"<<static_cast<uint32_t>(uidValue)<<endl;
+      regionList[i].uid = static_cast<uint32_t>(uidValue);
+      //x
+      jfieldID jxID = env->GetFieldID(jcRegion, "x", DOUBLE_SIGNATURE);
+      if(!jxID){
+        cout<<"connot get region x,uid:"<<uint32_t(uidValue)<<endl;
+        continue;
+      }
+      jdouble jx = env->GetIntField(region,jxID);
+      cout<<"x:"<<double(jx)<<endl;
+      regionList[i].x = static_cast<double>(jx);
+
+      //y
+      jfieldID jyID = env->GetFieldID(jcRegion, "y", DOUBLE_SIGNATURE);
+      if(!jyID){
+        cout<<"connot get region y,uid:"<<int(uidValue)<<endl;
+        continue;
+      }
+      jdouble jy = env->GetIntField(region,jyID);
+      cout<<"y:"<<double(jy)<<endl;
+      regionList[i].y = static_cast<double>(jy);
+
+      //width
+      jfieldID jwidthID = env->GetFieldID(jcRegion, "width", DOUBLE_SIGNATURE);
+      if(!jwidthID){
+        cout<<"connot get region width, uid:"<<int(uidValue)<<endl;
+        continue;
+      }
+      jdouble jwidth = env->GetIntField(region,jwidthID);
+      cout<<"width:"<<double(jwidth)<<endl;
+      regionList[i].width = static_cast<double>(jwidth);
+
+      //height
+      jfieldID jheightID = env->GetFieldID(jcRegion, "height", DOUBLE_SIGNATURE);
+      if(!jheightID){
+        cout<<"connot get region height, uid:"<<int(uidValue)<<endl;
+        continue;
+      }
+      jdouble jheight = env->GetIntField(region,jheightID);
+      cout<<"height:"<<double(jheight)<<endl;
+      regionList[i].height = static_cast<double>(jheight);
+      cout<<"user id:"<<static_cast<uint32_t>(uidValue)<<",x:"<<double(jx)<<",y:"<<double(jy)<<",width:"<<double(jwidth)<<",height:"<<double(jheight)<<endl;
+      //zOrder
+      regionList[i].zOrder = 0;
+      //alpha
+      regionList[i].alpha = static_cast<double>(i + 1);
+      //renderMode
+      regionList[i].renderMode = 0;
+    }  
+    layout.regions = regionList;
+  }
+  else
+    layout.regions = NULL;
+
+  //regions end
+
+  //layout.regions = ;
   cout<<"setVideoMixingLayout -4"<<endl;
   ajp->setVideoMixingLayout(layout);
   cout<<"setVideoMixingLayout -end"<<endl;
@@ -1285,6 +1375,43 @@ void AgoraJniProxySdk::stopJavaProc() {
 JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, jobject thisObj, jstring jni_appid, jstring jni_channelKey, 
       jstring jni_channelName, jint jni_uid, jobject jni_recordingConfig)
 {
+  uint32_t uid = 0;
+  string appId;
+  string channelKey;
+  string channelName;
+  uint32_t channelProfile = 0;
+
+  string decryptionMode;
+  string secret;
+  string mixResolution("360,640,15,500");
+
+  int idleLimitSec=5*60;//300s
+
+  string applitePath;
+  string appliteLogPath;
+  string recordFileRootDir = "";
+  string cfgFilePath = "";
+
+  int lowUdpPort = 0;//40000;
+  int highUdpPort = 0;//40004;
+
+  bool isAudioOnly=0;
+  bool isVideoOnly=0;
+  bool isMixingEnabled=0;
+  bool mixedVideoAudio=0;
+
+  uint32_t getAudioFrame = agora::linuxsdk::AUDIO_FORMAT_DEFAULT_TYPE;
+  uint32_t getVideoFrame = agora::linuxsdk::VIDEO_FORMAT_DEFAULT_TYPE;
+  uint32_t streamType = agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH;
+  int captureInterval = 5;
+  int width = 0;
+  int height = 0;
+  int fps = 0;
+  int kbps = 0;
+  uint32_t count = 0;
+  string upstreamResolution("640, 360, 15, 400"); 
+
+
 		pid_t tid = getpid();
 	  cout<<"enter Java_AgoraJavaRecording_createChannel,pid:"<<tid;
 		g_bSignalStop = false;
@@ -1293,18 +1420,19 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   	signal(SIGINT, signal_handler);
   	signal(SIGPIPE, SIG_IGN);
 
-    const char* appId = NULL;
+    //const char* appId = NULL;
     appId = env->GetStringUTFChars(jni_appid,false);
-    if(!appId)
+    if(appId.empty())
       cout<<"get appId is NULL";
-    const char* channelKey = NULL;
+    //const char* channelKey = NULL;
     channelKey = env->GetStringUTFChars(jni_channelKey,false);
-    if(!channelKey)
+    if(channelKey.empty())
       cout<<"no channel key";
-    const char* channelName = env->GetStringUTFChars(jni_channelName,false);
-    if(!channelName)
+    //const char* channelName = NULL; 
+		channelName = env->GetStringUTFChars(jni_channelName,false);
+    if(channelName.empty())
       cout<<"channel name is empty!";
-    int uid = (int)jni_uid;
+    uid = (int)jni_uid;
 		if(uid < 0){
 			cout<<"jni uid is smaller than 0, set 0!";
 			uid = 0;
@@ -1321,16 +1449,16 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 		jfieldID streamTypeFieldID = env->GetFieldID(jRecordingConfig, "streamType", REMOTE_VIDEO_STREAM_SIGNATURE);
 		jfieldID decodeAudioFieldID = env->GetFieldID(jRecordingConfig, "decodeAudio", AUDIO_FORMAT_TYPE_SIGNATURE);
 		jfieldID decodeVideoFieldID = env->GetFieldID(jRecordingConfig, "decodeVideo", VIDEO_FORMAT_TYPE_SIGNATURE);
-
+    jfieldID isMixingEnabledFID = env->GetFieldID(jRecordingConfig, "isMixingEnabled",BOOL_SIGNATURE);
     if (idleLimitSecFieldID == NULL ||appliteDirFieldID == NULL || channelProfileFieldID == NULL 
-						|| streamTypeFieldID == NULL ||decodeAudioFieldID ==NULL ||decodeVideoFieldID ==NULL) { 
+						|| streamTypeFieldID == NULL ||decodeAudioFieldID ==NULL ||decodeVideoFieldID ==NULL || !isMixingEnabledFID) { 
             cout<<"get fieldID failed!";return JNI_FALSE;}
 		//idle
-		jint idleValue = env->GetIntField(jni_recordingConfig, idleLimitSecFieldID); 
+		idleLimitSec = (int)env->GetIntField(jni_recordingConfig, idleLimitSecFieldID); 
 		//appliteDir
 		jstring appliteDir = (jstring)env->GetObjectField(jni_recordingConfig, appliteDirFieldID);
 		const char * c_appliteDir = env->GetStringUTFChars(appliteDir ,NULL);
-		std::string str_appliteDir = c_appliteDir;
+		applitePath = c_appliteDir;
 		env->ReleaseStringUTFChars(appliteDir,c_appliteDir);
 		//CHANNEL_PROFILE_TYPE
 		jobject channelProfileObject = (env)->GetObjectField(jni_recordingConfig, channelProfileFieldID);
@@ -1376,7 +1504,8 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 			return JNI_FALSE; /* method not found */
 		}
 		jint decodeVideoValue = env->CallIntMethod(jobDecodeVideo, jmidGetValue);
-    
+    jboolean isMixingEnabledValue = env->GetBooleanField(jni_recordingConfig, isMixingEnabledFID);
+    isMixingEnabled = bool(isMixingEnabledValue);
     //paser parameters end
 
 		agora::recording::RecordingConfig config;
@@ -1393,16 +1522,17 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
     }
     jniRecorder.setJcAgoraJavaRecording(thisJcInstance);
     jniRecorder.setJobAgoraJavaRecording(thisObj);
-
-		config.appliteDir = const_cast<char*>(str_appliteDir.c_str());	
-		config.idleLimitSec = (int)idleValue;
-    cout<<"appId:"<<appId<<",uid:"<<uid<<",channelKey:"<<channelKey<<",channelName:"<<channelName<<",str_appliteDir:"
-          <<str_appliteDir<<",channelProfileValue:"<<channelProfileValue<<",decodeAudio:"
+    
+    
+		config.appliteDir = const_cast<char*>(applitePath.c_str());	
+		config.idleLimitSec = idleLimitSec;
+    cout<<"appId:"<<appId<<",uid:"<<uid<<",channelKey:"<<channelKey<<",channelName:"<<channelName<<",applitePath:"
+          <<applitePath<<",channelProfileValue:"<<channelProfileValue<<",decodeAudio:"
           <<decodeAudioValue<<",decodeVideoValue:"<<decodeVideoValue;
 	  config.decodeAudio = static_cast<agora::linuxsdk::AUDIO_FORMAT_TYPE>(decodeAudioValue);
     config.decodeVideo = static_cast<agora::linuxsdk::VIDEO_FORMAT_TYPE>(decodeVideoValue);
 		config.streamType = static_cast<agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE>(streamTypeValue);
-
+    config.isMixingEnabled = isMixingEnabled;
     //testCode
     jniRecorder.setTmp(std::string("helloJni"));
 

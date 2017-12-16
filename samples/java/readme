@@ -1,1 +1,4 @@
-1.注意bin文件夹是生成java可执行文件和c++ so的地方
+第一步:在build.sh中设置jni的环境变量
+第二步:第一次编译时用source build.sh build的方式进行编译，使得java中的CLASSPATH和LD_LIBRARY_PATH生效，后面在同样窗口编译就不需要加source了
+
+注意bin文件夹是生成java可执行文件和c++ so的地方

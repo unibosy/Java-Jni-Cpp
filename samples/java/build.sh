@@ -1,9 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
-build()
+build_java()
 {
   CLASSPATH=`pwd`/bin
   export CLASSPATH
+  
+  LD_LIBRARY_PATH=`pwd`/bin
+  export LD_LIBRARY_PATH
 
   binDir="bin"
   [ -d "$binDir" ] && rmdir "$binDir"
@@ -15,23 +18,39 @@ build()
   javac java_code/headers/*.java -d bin
   javac java_code/*.java -d bin -Xlint:unchecked
   javah -d $jniLayer -classpath ./bin AgoraJavaRecording
-  #make -f ./jni_code/.makefile
-   
-  echo "build ok!"
 }
-clean()
+
+build_cpp()
 {
-  make clean -f ./jni_code/.makefile
+  make -f ./jni_code/.makefile
+}
+clean_java()
+{
   rm -f bin/*.class
   rm -rf bin/headers
-  echo "clean ok!"
+}
+clean_cpp()
+{
+  make clean -f ./jni_code/.makefile
+}
+build()
+{
+  build_java
+  build_cpp
+  echo "build all done!"
+}
+clean()
+{ 
+  clean_java
+  clean_cpp
+  echo "clean all done!"
 }
 
 cmdhelp()
 {
   echo "Usage:"
-    echo "$1 build"
-    echo "$1 clean"
+  echo "$1 build"
+  echo "$1 clean"
 }
 
 if [ $# -eq "0" ];then

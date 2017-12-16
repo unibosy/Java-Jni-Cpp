@@ -247,7 +247,7 @@ class AgoraJavaRecording{
 		parser.printUsage(System.out);*/
     System.out.println("args length:"+args.length);
     if(args.length % 2 !=0){
-      System.out.println("set parameters error, key-value format!");
+      System.out.println("command line parameters error, should be '--key value' format!");
       return;
     }
     String key = "";
@@ -265,7 +265,7 @@ class AgoraJavaRecording{
     Object Uid = map.get("--uid");
     Object Channel = map.get("--channel");
     Object AppliteDir = map.get("--appliteDir");
-    Object ChannelKey = map.get("----channelKey");
+    Object ChannelKey = map.get("--channelKey");
     Object ChannelProfile = map.get("--channelProfile");
     Object IsAudioOnly = map.get("--isAudioOnly");
     Object IsVideoOnly = map.get("--isVideoOnly");
@@ -311,7 +311,7 @@ class AgoraJavaRecording{
     if(IsAudioOnly != null &&(Integer.parseInt(String.valueOf(IsAudioOnly)) == 1)) isAudioOnly = true;
     if(IsVideoOnly != null &&(Integer.parseInt(String.valueOf(IsVideoOnly)) == 1)) isVideoOnly = true;
     if(IsMixingEnabled != null &&(Integer.parseInt(String.valueOf(IsMixingEnabled))==1)) isMixingEnabled = true;
-    if(MixedVideoAudio != null &&(Integer.parseInt(String.valueOf(IsVideoOnly)) == 1)) mixedVideoAudio = true;
+    if(MixedVideoAudio != null &&(Integer.parseInt(String.valueOf(MixedVideoAudio)) == 1)) mixedVideoAudio = true;
     if(GetAudioFrame != null) getAudioFrame = Integer.parseInt(String.valueOf(GetAudioFrame));
     if(GetVideoFrame != null) getVideoFrame = Integer.parseInt(String.valueOf(GetVideoFrame));
     if(StreamType != null) streamType = Integer.parseInt(String.valueOf(StreamType));

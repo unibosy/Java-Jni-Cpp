@@ -1414,7 +1414,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   string upstreamResolution("640, 360, 15, 400"); 
 
 		pid_t tid = getpid();
-	  cout<<"enter Java_AgoraJavaRecording_createChannel,pid:"<<tid;
+	  cout<<"enter Java_AgoraJavaRecording_createChannel,pid:"<<tid<<endl;
 		g_bSignalStop = false;
 	  signal(SIGQUIT, signal_handler);
   	signal(SIGABRT, signal_handler);
@@ -1615,7 +1615,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 	  
 		cout<<"appId:"<<appId<<",uid:"<<uid<<",channelKey:"<<channelKey<<",channelName:"<<channelName<<",applitePath:"
           <<applitePath<<",channelProfileValue:"<<channelProfileValue<<",decodeAudio:"
-          <<decodeAudioValue<<",decodeVideoValue:"<<decodeVideoValue;
+          <<decodeAudioValue<<",decodeVideoValue:"<<decodeVideoValue<<endl;
 		
 		//testCode
     jniRecorder.setTmp(std::string("helloJni"));

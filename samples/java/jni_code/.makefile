@@ -33,14 +33,14 @@ all: $(TARGET)
 #	g++ main.cpp -L. -lWrapper -o exe
 
 $(TARGET): $(OBJ)
-	g++ -c $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/agorasdk/AgoraSdk.cpp -d .
+	g++ -c ./jni_code $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/agorasdk/AgoraSdk.cpp
 	g++ ./jni_code/proxy.cpp -o $@ $(LDFLAGS) $(INCPATH) $(JNIPATH) $(CPP11) $(CXXFLAGS) AgoraSdk.o opt_parser.o $(LIB) -I.
-	mv $@ ../bin
+	mv $@ ./bin
 
 $(OBJ):
-	g++ -c $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/base/opt_parser.cpp
+	g++ -c -d ./bin $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/base/opt_parser.cpp
 
 clean:
-	rm -f ../bin/$(TARGET)
+	rm -f ./bin/$(TARGET)
 	rm -f ${OBJ}
 	rm -f *.o

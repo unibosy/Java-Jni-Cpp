@@ -129,7 +129,7 @@ class AgoraJavaRecording{
         regionList[0].height = 1.f;
         regionList[0].zOrder = 0;
         regionList[0].alpha = 1.f;
-        regionList[0].renderMode = 9;
+        regionList[0].renderMode = 0;
 
         float canvasWidth = width;
         float canvasHeight = height;

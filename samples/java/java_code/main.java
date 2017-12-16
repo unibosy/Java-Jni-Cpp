@@ -107,7 +107,6 @@ class AgoraJavaRecording{
   }
 
   public int SetVideoMixingLayout(){
-    System.out.println("java setVideoMixingLayout");
     EnumIndex ei = new EnumIndex();
     EnumIndex.VideoMixingLayout layout = ei.new VideoMixingLayout();
 
@@ -115,14 +114,12 @@ class AgoraJavaRecording{
    	
     if(!IsMixMode()) return -1;
     
-    System.out.println("java setVideoMixingLayout -0");
     layout.canvasHeight = height;
     layout.backgroundColor = "#23b9dc";
     layout.regionCount = (int)(m_peers.size());
-    System.out.println("java setVideoMixingLayout -1");
 
     if (!m_peers.isEmpty()) {
-        System.out.println("java setVideoMixingLayout m_peers is not empty");
+        System.out.println("java setVideoMixingLayout m_peers is not empty, start layout");
         EnumIndex.VideoMixingLayout.Region[] regionList = new EnumIndex.VideoMixingLayout.Region[m_peers.size()];
         regionList[0] = layout.new Region();
         regionList[0].uid = m_peers.get(0);
@@ -132,7 +129,7 @@ class AgoraJavaRecording{
         regionList[0].height = 1.f;
         regionList[0].zOrder = 0;
         regionList[0].alpha = 1.f;
-        regionList[0].renderMode = 0;
+        regionList[0].renderMode = 9;
 
         float canvasWidth = width;
         float canvasHeight = height;
@@ -280,7 +277,7 @@ class AgoraJavaRecording{
 
     if( Appid ==null || Uid==null ||Channel==null || AppliteDir == null){
       //print usage
-      String usage = "./server_local --appId STRING --uid UINTEGER32 --channel STRING --appliteDir STRING --channelKey STRING --channelProfile UINTEGER32 --isAudioOnly --isVideoOnly --isMixingEnabled --mixResolution STRING --mixedVideoAudio --decryptionMode STRING --secret STRING --idle INTEGER32 --recordFileRootDir STRING --lowUdpPort INTEGER32 --highUdpPort INTEGER32 --getAudioFrame UINTEGER32 --getVideoFrame UINTEGER32 --captureInterval INTEGER32 --cfgFilePath STRING --streamType UINTEGER32 --triggerMode INTEGER32 \r\n --appId     (App Id/must) \r\n --uid     (User Id default is 0/must)  \r\n--channel     (Channel Id/must) \r\n --appliteDir     (directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Server_SDK_for_Linux_FULL/bin/' folder/must) \r\n --channelKey     (channelKey/option)\r\n --channelProfile     (channel_profile:(0:COMMUNICATION),(1:broadcast) default is 0/option)  \r\n --isAudioOnly     (Default 0:A/V, 1:AudioOnly (0:1)/option) \r\n--isVideoOnly     (Default 0:A/V, 1:VideoOnly (0:1)/option)\r\n --isMixingEnabled     (Mixing Enable? (0:1)/option)\r\n --mixResolution     (change default resolution for vdieo mix mode/option)                 \r\n --mixedVideoAudio     (mixVideoAudio:(0:seperated Audio,Video) (1:mixed Audio & Video), default is 0 /option)                 \r\n --decryptionMode     (decryption Mode, default is NULL/option)                 \r\n --secret     (input secret when enable decryptionMode/option)                 \r\n --idle     (Default 300s, should be above 3s/option)                 \r\n --recordFileRootDir     (recording file root dir/option)                 \r\n --lowUdpPort     (default is random value/option)                 \r\n --highUdpPort     (default is random value/option)                 \r\n --getAudioFrame     (default 0 (0:save as file, 1:aac frame, 2:pcm frame) /option)                 \r\n --getVideoFrame     (default 0 (0:save as file, 1:h.264, 2:yuv, 3.jpg buffer, 4,jpg file) /option)              \r\n --captureInterval     (default 5 (Video snapshot interval (second)))                 \r\n --cfgFilePath     (config file path / option)                 \r\n --streamType     (remote video stream type(0:STREAM_HIGH,1:STREAM_LOW), default is 0/option)  \r\n --triggerMode     (triggerMode:(0: automatically mode, 1: manually mode) default is 0/option)";      
+      String usage = "./server_local --appId STRING --uid UINTEGER32 --channel STRING --appliteDir STRING --channelKey STRING --channelProfile UINTEGER32 --isAudioOnly --isVideoOnly --isMixingEnabled --mixResolution STRING --mixedVideoAudio --decryptionMode STRING --secret STRING --idle INTEGER32 --recordFileRootDir STRING --lowUdpPort INTEGER32 --highUdpPort INTEGER32 --getAudioFrame UINTEGER32 --getVideoFrame UINTEGER32 --captureInterval INTEGER32 --cfgFilePath STRING --streamType UINTEGER32 --triggerMode INTEGER32 \r\n --appId     (App Id/must) \r\n --uid     (User Id default is 0/must)  \r\n --channel     (Channel Id/must) \r\n --appliteDir     (directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Server_SDK_for_Linux_FULL/bin/' folder/must) \r\n --channelKey     (channelKey/option)\r\n --channelProfile     (channel_profile:(0:COMMUNICATION),(1:broadcast) default is 0/option)  \r\n --isAudioOnly     (Default 0:A/V, 1:AudioOnly (0:1)/option) \r\n --isVideoOnly     (Default 0:A/V, 1:VideoOnly (0:1)/option)\r\n --isMixingEnabled     (Mixing Enable? (0:1)/option)\r\n --mixResolution     (change default resolution for vdieo mix mode/option)                 \r\n --mixedVideoAudio     (mixVideoAudio:(0:seperated Audio,Video) (1:mixed Audio & Video), default is 0 /option)                 \r\n --decryptionMode     (decryption Mode, default is NULL/option)                 \r\n --secret     (input secret when enable decryptionMode/option)                 \r\n --idle     (Default 300s, should be above 3s/option)                 \r\n --recordFileRootDir     (recording file root dir/option)                 \r\n --lowUdpPort     (default is random value/option)                 \r\n --highUdpPort     (default is random value/option)                 \r\n --getAudioFrame     (default 0 (0:save as file, 1:aac frame, 2:pcm frame) /option)                 \r\n --getVideoFrame     (default 0 (0:save as file, 1:h.264, 2:yuv, 3.jpg buffer, 4,jpg file) /option)              \r\n --captureInterval     (default 5 (Video snapshot interval (second)))                 \r\n --cfgFilePath     (config file path / option)                 \r\n --streamType     (remote video stream type(0:STREAM_HIGH,1:STREAM_LOW), default is 0/option)  \r\n --triggerMode     (triggerMode:(0: automatically mode, 1: manually mode) default is 0/option)";      
       
       System.out.println("Usage:"+usage);
       return;
@@ -348,7 +345,7 @@ class AgoraJavaRecording{
       ars.fps = Integer.valueOf(sourceStrArray[2]).intValue();
       ars.kbps = Integer.valueOf(sourceStrArray[3]).intValue();
     }
-    System.out.println("############ars.createChannel begin:###########:isMixingEnabled"+isMixingEnabled);
+    System.out.println("############ars.createChannel begin###########");
     ars.createChannel(appId, channelKey,name,uid,config);
 		System.out.println("############ars.createChannel end###########");
 		/*while(!ars.stopped)

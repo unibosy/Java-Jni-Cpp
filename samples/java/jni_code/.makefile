@@ -7,7 +7,7 @@ TOPDIR=`pwd`
 COMMONPATH=`pwd`/../..
 LIBPATH=${COMMONPATH}/libs
 #set your jvm path!!!
-JNIINCLUDE = /usr/lib/jvm/java-9-openjdk-amd64/include/
+#JNIINCLUDE = /usr/lib/jvm/java-9-openjdk-amd64/include/
 CPP11 = -std=c++11
 LDFLAGS= -shared
 FPIC = -fPIC
@@ -16,7 +16,8 @@ CXXFLAGS  = -pipe -std=c++0x -fPIC -g -fno-omit-frame-pointer \
 					
 LIB	   = -pthread -lpthread -L$(LIBPATH) -lrecorder -lrt
 INCPATH =-I. -I${COMMONPATH}/include -I${COMMONPATH}/include/base -I${COMMONPATH}/samples/base -I${COMMONPATH}/samples/agorasdk -I${COMMONPATH}/samples
-JNIPATH = -I. -I/$(JNIINCLUDE) -I/$(JNIINCLUDE)/linux/
+#JNIPATH = -I. -I/$(JNIINCLUDE) -I/$(JNIINCLUDE)/linux/
+JNIPATH=
 OBJ = opt_parser.o
 
 REALTARGET = exe
@@ -27,13 +28,16 @@ all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	g++ -c ./jni_code $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/agorasdk/AgoraSdk.cpp
-	g++ ./jni_code/proxy.cpp -o $@ $(LDFLAGS) $(INCPATH) $(JNIPATH) $(CPP11) $(CXXFLAGS) AgoraSdk.o opt_parser.o $(LIB) -I.
+	mv AgoraSdk.o ./bin
+	
+	g++ ./jni_code/proxy.cpp -o $@ $(LDFLAGS) $(INCPATH) $(JNIPATH) $(CPP11) $(CXXFLAGS) ./bin/AgoraSdk.o ./bin/opt_parser.o $(LIB) -I.
 	mv $@ ./bin
 
 $(OBJ):
 	g++ -c -d ./bin $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/base/opt_parser.cpp
+	mv opt_parser.o ./bin
 
 clean:
 	rm -f ./bin/$(TARGET)
 	rm -f ${OBJ}
-	rm -f *.o
+	rm -f ./bin/*.o

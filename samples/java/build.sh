@@ -2,11 +2,11 @@
 
 build_java()
 {
-  CLASSPATH=`pwd`/bin
-  export CLASSPATH
+  #CLASSPATH=`pwd`/bin
+  #export CLASSPATH
   
-  LD_LIBRARY_PATH=`pwd`/bin
-  export LD_LIBRARY_PATH
+  #LD_LIBRARY_PATH=`pwd`/bin
+  #export LD_LIBRARY_PATH
 
   #binDir="bin"
   #[ -d "$binDir" ] && rmdir "$binDir"
@@ -22,6 +22,7 @@ build_java()
 
 build_cpp()
 {
+  export PATH=$PATH:/usr/lib/jvm/java-9-openjdk-amd64/include:/usr/lib/jvm/java-9-openjdk-amd64/include/linux
   make -f ./jni_code/.makefile
 }
 clean_java()
@@ -51,6 +52,11 @@ cmdhelp()
   echo "Usage:"
   echo "$1 build"
   echo "$1 clean"
+
+  #echo "$1 build_java"
+  #echo "$1 build_cpp"
+  #echo "$1 clean_java"
+  #echo "$1 clean_cpp"
 }
 
 if [ $# -eq "0" ];then
@@ -67,9 +73,21 @@ do
        "clean")
           clean
           ;;
+       "build_java")
+          #build_java
+          ;;
+       "build_cpp")
+          #build_cpp
+          ;;
+        "clean_java")
+          #clean_java
+          ;;
+        "clean_cpp")
+          #clean_cpp
+          ;;
        *)
        cmdhelp $0
-       exit 1
+       exit
        ;;
   esac
 done

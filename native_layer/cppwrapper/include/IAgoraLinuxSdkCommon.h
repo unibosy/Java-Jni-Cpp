@@ -83,12 +83,14 @@ enum VIDEO_FORMAT_TYPE {
     VIDEO_FORMAT_YUV_FRAME_TYPE = 2,
     VIDEO_FORMAT_JPG_FRAME_TYPE = 3,
     VIDEO_FORMAT_JPG_FILE_TYPE = 4,
+    VIDEO_FORMAT_JPG_VIDEO_FILE_TYPE = 5,
 };
 
 enum AUDIO_FORMAT_TYPE {
     AUDIO_FORMAT_DEFAULT_TYPE = 0,
     AUDIO_FORMAT_AAC_FRAME_TYPE = 1,
     AUDIO_FORMAT_PCM_FRAME_TYPE = 2,
+    AUDIO_FORMAT_MIXED_PCM_FRAME_TYPE = 3,
 };
 
 enum AUDIO_FRAME_TYPE {
@@ -112,6 +114,12 @@ enum SERVICE_MODE {
     SERVER_MODE = 1,//up-down stream
     IOT_MODE = 2,//up-down stream
 };
+
+enum TRIGGER_MODE_TYPE {
+    AUTOMATICALLY_MODE = 0,
+    MANUALLY_MODE = 1
+};
+
 class AudioPcmFrame {
     friend class IEngine;
     public:

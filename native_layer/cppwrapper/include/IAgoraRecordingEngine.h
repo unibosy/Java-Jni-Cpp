@@ -6,6 +6,7 @@ namespace agora {
 namespace recording {
 
 class IRecordingEngineEventHandler {
+
 public:
     virtual ~IRecordingEngineEventHandler() {}
     
@@ -109,6 +110,7 @@ typedef struct RecordingConfig {
     int captureInterval;
     agora::linuxsdk::CHANNEL_PROFILE_TYPE channelProfile;
     agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE streamType;
+    agora::linuxsdk::TRIGGER_MODE_TYPE triggerMode;
 
     RecordingConfig(): channelProfile(agora::linuxsdk::CHANNEL_PROFILE_COMMUNICATION),
         isAudioOnly(false),
@@ -127,7 +129,8 @@ typedef struct RecordingConfig {
         decodeAudio(agora::linuxsdk::AUDIO_FORMAT_DEFAULT_TYPE),
         decodeVideo(agora::linuxsdk::VIDEO_FORMAT_DEFAULT_TYPE),
         mixedVideoAudio(false),
-        streamType(agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH)
+        streamType(agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH),
+        triggerMode(agora::linuxsdk::AUTOMATICALLY_MODE)
     {}
 
     virtual ~RecordingConfig() {}
@@ -193,6 +196,20 @@ public:
      * Get recording properties
      */
     virtual const RecordingEngineProperties* getProperties() = 0;
+
+    /**
+     *  start service under manually trigger mode
+     *
+     *  @return 0: Method call succeeded. <0: Method call failed.
+     */
+    virtual int startService() = 0;
+
+    /**
+     *  start service under manually trigger mode
+     *
+     *  @return 0: Method call succeeded. <0: Method call failed.
+     */
+    virtual int stopService() = 0;
 };
 
 }

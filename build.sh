@@ -11,6 +11,6 @@ mkdir "$binDir"
 jniLayer="./native_layer/cppwrapper/src/jni_proxy/jni_headers"
 
 javac java/headers/*.java -d bin
-javac java/*.java -d bin
+javac java/*.java -d bin -Xlint:unchecked
 javah -d $jniLayer -classpath ./bin AgoraJavaRecording
 

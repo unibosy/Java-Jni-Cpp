@@ -34,4 +34,5 @@ class RecordingConfig {
   public int captureInterval;
 	public CHANNEL_PROFILE_TYPE channelProfile;
   public REMOTE_VIDEO_STREAM_TYPE streamType;
+  public int triggerMode;
 }

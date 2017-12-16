@@ -150,6 +150,7 @@ void log(log_levels level, const char* format, ...);
 //#define DEBUG_MODE
 
 #ifdef DEBUG_MODE
+
 #define SPLIT_ARR 50
 #define DEBUG_LOG_RAW_DATA(logdir, level, STR, msg, size, ...) do { \
     uint32_t i;    \

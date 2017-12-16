@@ -10,6 +10,9 @@ import java.util.*; //vector
 import java.text.SimpleDateFormat;
 import java.util.Date;//date
 import java.util.Vector;
+import java.util.HashMap;
+import java.util.Map;
+
 class AgoraJavaRecording{
   //java run status flag
   private boolean stopped = false;
@@ -32,7 +35,7 @@ class AgoraJavaRecording{
   }
 
 	//Native method declaration
-  public native boolean createChannel(String appid, String channelKey, String name,  int uid,
+  public native boolean createChannel(String appId, String channelKey, String name,  int uid,
                 RecordingConfig config);
 	public native boolean leaveChannel(long nativeObject);
   public native int setVideoMixingLayout(long nativeObject, VideoMixingLayout layout);
@@ -199,40 +202,147 @@ class AgoraJavaRecording{
   }
   public static void main(String[] args) 
   {
-    int idleLimitSec=5*60;//300s
+		int uid = 0;
+  	String appId = "";
+  	String channelKey = "";
+  	String name = "";
+  	int channelProfile = 0;
 
-    boolean isAudioOnly=false;
-    boolean isVideoOnly=false;
-    boolean isMixingEnabled=true;
-    boolean mixedVideoAudio=true;
+  	String decryptionMode = "";
+  	String secret = "";
+  	String mixResolution = "360,640,15,500";
 
-    //MixModeSettings settings;
+  	int idleLimitSec=5*60;//300s
+
+  	String applitePath = "./../native_layer/cppwrapper/bin";
+  	String recordFileRootDir = ".";
+  	String cfgFilePath = "";
+
+  	int lowUdpPort = 0;//40000;
+  	int highUdpPort = 0;//40004;
+
+  	boolean isAudioOnly=false;
+  	boolean isVideoOnly=false;
+  	boolean isMixingEnabled=false;
+  	boolean mixedVideoAudio=false;
+
+  	int getAudioFrame = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_DEFAULT_TYPE.ordinal();
+  	int getVideoFrame = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_DEFAULT_TYPE.ordinal();
+  	int streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH.ordinal();
+  	int captureInterval = 5;
+    int triggerMode = 0;
+
+  	int width = 0;
+  	int height = 0;
+  	int fps = 0;
+  	int kbps = 0;
+  	int count = 0;
+    
+    //paser command line parameters
+		/*Args myArgs = new Args();
+		CmdLineParser parser = new CmdLineParser(myArgs);
+    //CommandLineParser parser = new BasicParser();
+    Options options = new Options();
+    parser.parseArgument(myArgs);
+		parser.printUsage(System.out);*/
+    Map map = new HashMap();
+    System.out.println("args length:"+args.length);
+    if(args.length % 2 !=0){
+      System.out.println("set parameters error, key-value format!");
+      return;
+    }
+    String key = "";
+    String value = "";
+
+    if(0 < args.length ){
+      for(int i = 0; i<args.length-1; i++){
+        key = args[i];
+        value = args[i+1];
+        map.put(key, value);
+      }
+    }
+    //prefer to use CmdLineParser or annotation
+    Object Appid = map.get("--appId");
+    Object Uid = map.get("--uid");
+    Object Channel = map.get("--channel");
+    Object AppliteDir = map.get("--appliteDir");
+    Object ChannelKey = map.get("----channelKey");
+    Object ChannelProfile = map.get("--channelProfile");
+    Object IsAudioOnly = map.get("--isAudioOnly");
+    Object IsVideoOnly = map.get("--isVideoOnly");
+    Object IsMixingEnabled = map.get("--isMixingEnabled");
+    Object MixResolution = map.get("--mixResolution");
+    Object MixedVideoAudio = map.get("--mixedVideoAudio");
+    Object DecryptionMode = map.get("--decryptionMode");
+    Object Secret = map.get("--secret");
+    Object Idle = map.get("--idle");
+    Object RecordFileRootDir = map.get("--recordFileRootDir");
+    Object LowUdpPort = map.get("--lowUdpPort");
+    Object HighUdpPort = map.get("--highUdpPort");
+    Object GetAudioFrame = map.get("--getAudioFrame");
+    Object GetVideoFrame = map.get("--getVideoFrame");
+    Object CaptureInterval = map.get("--captureInterval");
+    Object CfgFilePath = map.get("--cfgFilePath");
+    Object StreamType = map.get("--streamType");
+    Object TriggerMode = map.get("--triggerMode");
+
+    if( Appid ==null || Uid==null ||Channel==null || AppliteDir == null){
+      //print usage
+      String usage = "./server_local --appId STRING --uid UINTEGER32 --channel STRING --appliteDir STRING --channelKey STRING --channelProfile UINTEGER32 --isAudioOnly --isVideoOnly --isMixingEnabled --mixResolution STRING --mixedVideoAudio --decryptionMode STRING --secret STRING --idle INTEGER32 --recordFileRootDir STRING --lowUdpPort INTEGER32 --highUdpPort INTEGER32 --getAudioFrame UINTEGER32 --getVideoFrame UINTEGER32 --captureInterval INTEGER32 --cfgFilePath STRING --streamType UINTEGER32 --triggerMode INTEGER32 \r\n --appId     (App Id/must) \r\n --uid     (User Id default is 0/must)  \r\n--channel     (Channel Id/must) \r\n --appliteDir     (directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Server_SDK_for_Linux_FULL/bin/' folder/must) \r\n --channelKey     (channelKey/option)\r\n --channelProfile     (channel_profile:(0:COMMUNICATION),(1:broadcast) default is 0/option)  \r\n --isAudioOnly     (Default 0:A/V, 1:AudioOnly (0:1)/option) \r\n--isVideoOnly     (Default 0:A/V, 1:VideoOnly (0:1)/option)\r\n --isMixingEnabled     (Mixing Enable? (0:1)/option)\r\n --mixResolution     (change default resolution for vdieo mix mode/option)                 \r\n --mixedVideoAudio     (mixVideoAudio:(0:seperated Audio,Video) (1:mixed Audio & Video), default is 0 /option)                 \r\n --decryptionMode     (decryption Mode, default is NULL/option)                 \r\n --secret     (input secret when enable decryptionMode/option)                 \r\n --idle     (Default 300s, should be above 3s/option)                 \r\n --recordFileRootDir     (recording file root dir/option)                 \r\n --lowUdpPort     (default is random value/option)                 \r\n --highUdpPort     (default is random value/option)                 \r\n --getAudioFrame     (default 0 (0:save as file, 1:aac frame, 2:pcm frame) /option)                 \r\n --getVideoFrame     (default 0 (0:save as file, 1:h.264, 2:yuv, 3.jpg buffer, 4,jpg file) /option)              \r\n --captureInterval     (default 5 (Video snapshot interval (second)))                 \r\n --cfgFilePath     (config file path / option)                 \r\n --streamType     (remote video stream type(0:STREAM_HIGH,1:STREAM_LOW), default is 0/option)  \r\n --triggerMode     (triggerMode:(0: automatically mode, 1: manually mode) default is 0/option)";      
+      
+      System.out.println("Usage:"+usage);
+      return;
+    }
+    appId = String.valueOf(Appid);
+    uid = Integer.parseInt(String.valueOf(Uid));
+    appId = String.valueOf(Appid);
+    name = String.valueOf(Channel);
+    applitePath = String.valueOf(AppliteDir);
+
+    if(ChannelKey != null) channelKey = String.valueOf(ChannelKey);
+    if(ChannelProfile != null) channelProfile = Integer.parseInt(String.valueOf(ChannelProfile));
+    if(DecryptionMode != null) decryptionMode = String.valueOf(DecryptionMode);
+    if(Secret != null) secret = String.valueOf(Secret);
+    if(MixResolution != null) mixResolution = String.valueOf(MixResolution);
+    if(Idle != null) idleLimitSec = Integer.parseInt(String.valueOf(Idle));
+    if(RecordFileRootDir != null) recordFileRootDir = String.valueOf(RecordFileRootDir);
+    if(CfgFilePath != null) cfgFilePath = String.valueOf(CfgFilePath);
+    if(LowUdpPort != null) lowUdpPort = Integer.parseInt(String.valueOf(LowUdpPort));
+    if(HighUdpPort != null) highUdpPort = Integer.parseInt(String.valueOf(HighUdpPort));
+    if(IsAudioOnly != null &&(Integer.parseInt(String.valueOf(IsAudioOnly)) == 1)) isAudioOnly = true;
+    if(IsVideoOnly != null &&(Integer.parseInt(String.valueOf(IsVideoOnly)) == 1)) isVideoOnly = true;
+    if(IsMixingEnabled != null &&(Integer.parseInt(String.valueOf(IsMixingEnabled))==1)) isMixingEnabled = true;
+    if(MixedVideoAudio != null &&(Integer.parseInt(String.valueOf(IsVideoOnly)) == 1)) mixedVideoAudio = true;
+    if(GetAudioFrame != null) getAudioFrame = Integer.parseInt(String.valueOf(GetAudioFrame));
+    if(GetVideoFrame != null) getVideoFrame = Integer.parseInt(String.valueOf(GetVideoFrame));
+    if(StreamType != null) streamType = Integer.parseInt(String.valueOf(StreamType));
+    if(CaptureInterval != null) captureInterval = Integer.parseInt(String.valueOf(CaptureInterval));
+    if(TriggerMode != null) triggerMode = Integer.parseInt(String.valueOf(TriggerMode));
+    
     AgoraJavaRecording ars = new AgoraJavaRecording();
     RecordingConfig config= new RecordingConfig();
     
-    String appid = "0c0b4b61adf94de1befd7cdd78a50444";
-    String channelKey = "";
-    String name = "video";
-
-    String mixResolution= "360,640,15,500";
-
-    int uid = 0;
-		CHANNEL_PROFILE_TYPE profile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION;
-		REMOTE_VIDEO_STREAM_TYPE streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
-    AUDIO_FORMAT_TYPE decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_DEFAULT_TYPE;
-    VIDEO_FORMAT_TYPE decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_DEFAULT_TYPE;
-    
-    config.channelProfile = profile;
-		config.streamType = streamType;
-		config.idleLimitSec = 3;
-		config.isMixingEnabled = false;
-		config.appliteDir="./../native_layer/cppwrapper/bin";//contain Chines path????
-    config.recordFileRootDir = ".";
-    config.decodeAudio = decodeAudio;
-    config.decodeVideo = decodeVideo;
+    config.channelProfile = CHANNEL_PROFILE_TYPE.values()[channelProfile];
+		config.idleLimitSec = idleLimitSec;
+    config.isVideoOnly = isVideoOnly;
+    config.isAudioOnly = isAudioOnly;
     config.isMixingEnabled = isMixingEnabled;
+    config.mixResolution = mixResolution;
+    config.mixedVideoAudio = mixedVideoAudio;
+    config.appliteDir = applitePath;
+    config.recordFileRootDir = recordFileRootDir;
+    config.cfgFilePath = cfgFilePath;
+    config.secret = secret;
+    config.decryptionMode = decryptionMode;
+    config.lowUdpPort = lowUdpPort;
+    config.highUdpPort = highUdpPort;
+    config.captureInterval = captureInterval;
+    config.decodeAudio = AUDIO_FORMAT_TYPE.values()[getAudioFrame];
+    config.decodeVideo = VIDEO_FORMAT_TYPE.values()[getVideoFrame];
+		config.streamType = REMOTE_VIDEO_STREAM_TYPE.values()[streamType];
+    config.triggerMode = triggerMode;
 		
-    System.out.println(System.getProperty("java.library.path"));
+    System.out.println(map.get("java.library.path"));
 
     ars.isMixMode = isMixingEnabled; 
     if(isMixingEnabled && !isAudioOnly) {
@@ -246,7 +356,8 @@ class AgoraJavaRecording{
       ars.fps = Integer.valueOf(sourceStrArray[2]).intValue();
       ars.kbps = Integer.valueOf(sourceStrArray[3]).intValue();
     }
-    ars.createChannel(appid, channelKey,name,uid,config);
+    System.out.println("############ars.createChannel begin:###########:isMixingEnabled"+isMixingEnabled);
+    ars.createChannel(appId, channelKey,name,uid,config);
 		System.out.println("############ars.createChannel end###########");
 		/*while(!ars.stopped)
 		{

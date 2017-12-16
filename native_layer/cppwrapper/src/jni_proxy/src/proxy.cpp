@@ -1404,13 +1404,14 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   uint32_t getVideoFrame = agora::linuxsdk::VIDEO_FORMAT_DEFAULT_TYPE;
   uint32_t streamType = agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH;
   int captureInterval = 5;
+  int triggerMode = 0;
+
   int width = 0;
   int height = 0;
   int fps = 0;
   int kbps = 0;
   uint32_t count = 0;
   string upstreamResolution("640, 360, 15, 400"); 
-
 
 		pid_t tid = getpid();
 	  cout<<"enter Java_AgoraJavaRecording_createChannel,pid:"<<tid;
@@ -1423,44 +1424,58 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
     //const char* appId = NULL;
     appId = env->GetStringUTFChars(jni_appid,false);
     if(appId.empty())
-      cout<<"get appId is NULL";
+      cout<<"get appId is NULL"<<endl;
     //const char* channelKey = NULL;
     channelKey = env->GetStringUTFChars(jni_channelKey,false);
     if(channelKey.empty())
-      cout<<"no channel key";
+      cout<<"no channel key"<<endl;
     //const char* channelName = NULL; 
 		channelName = env->GetStringUTFChars(jni_channelName,false);
     if(channelName.empty())
-      cout<<"channel name is empty!";
+      cout<<"channel name is empty!"<<endl;
     uid = (int)jni_uid;
 		if(uid < 0){
-			cout<<"jni uid is smaller than 0, set 0!";
+			cout<<"jni uid is smaller than 0, set 0!"<<endl;
 			uid = 0;
 		}
    	jclass jRecordingConfig =env->GetObjectClass(jni_recordingConfig); 
 		if(jRecordingConfig == NULL){
-			cout<<"jni_recordingConfig is NULL";
+			cout<<"jni_recordingConfig is NULL"<<endl;
 			return JNI_FALSE;
 		}
-        //get parameters field ID
+    //get parameters field ID
 		jfieldID idleLimitSecFieldID = env->GetFieldID(jRecordingConfig, "idleLimitSec", INT_SIGNATURE);
-		jfieldID appliteDirFieldID = env->GetFieldID(jRecordingConfig, "appliteDir", STRING_SIGNATURE);
 		jfieldID channelProfileFieldID = env->GetFieldID(jRecordingConfig, "channelProfile", CHANNEL_PROFILE_SIGNATURE);
+		jfieldID isVideoOnlyFid = env->GetFieldID(jRecordingConfig, "isVideoOnly", BOOL_SIGNATURE);
+		jfieldID isAudioOnlyFid = env->GetFieldID(jRecordingConfig, "isAudioOnly", BOOL_SIGNATURE);
+		jfieldID isMixingEnabledFid = env->GetFieldID(jRecordingConfig, "isMixingEnabled", BOOL_SIGNATURE);
+		
+    jfieldID mixResolutionFid = env->GetFieldID(jRecordingConfig, "mixResolution", STRING_SIGNATURE);
+    jfieldID mixedVideoAudioFid = env->GetFieldID(jRecordingConfig, "mixedVideoAudio", BOOL_SIGNATURE);
+		jfieldID appliteDirFieldID = env->GetFieldID(jRecordingConfig, "appliteDir", STRING_SIGNATURE);
+		jfieldID recordFileRootDirFid = env->GetFieldID(jRecordingConfig, "recordFileRootDir", STRING_SIGNATURE);
+		jfieldID cfgFilePathFid = env->GetFieldID(jRecordingConfig, "cfgFilePath", STRING_SIGNATURE);
+		jfieldID secretFid = env->GetFieldID(jRecordingConfig, "secret", STRING_SIGNATURE);
+		jfieldID decryptionModeFid = env->GetFieldID(jRecordingConfig, "decryptionMode", STRING_SIGNATURE);
+		jfieldID lowUdpPortFid = env->GetFieldID(jRecordingConfig, "lowUdpPort", INT_SIGNATURE);
+		jfieldID highUdpPortFid = env->GetFieldID(jRecordingConfig, "highUdpPort", INT_SIGNATURE);
+		jfieldID captureIntervalFid = env->GetFieldID(jRecordingConfig, "captureInterval", INT_SIGNATURE);
+
 		jfieldID streamTypeFieldID = env->GetFieldID(jRecordingConfig, "streamType", REMOTE_VIDEO_STREAM_SIGNATURE);
 		jfieldID decodeAudioFieldID = env->GetFieldID(jRecordingConfig, "decodeAudio", AUDIO_FORMAT_TYPE_SIGNATURE);
 		jfieldID decodeVideoFieldID = env->GetFieldID(jRecordingConfig, "decodeVideo", VIDEO_FORMAT_TYPE_SIGNATURE);
-    jfieldID isMixingEnabledFID = env->GetFieldID(jRecordingConfig, "isMixingEnabled",BOOL_SIGNATURE);
+		jfieldID triggerModeFid = env->GetFieldID(jRecordingConfig, "triggerMode", INT_SIGNATURE);
     if (idleLimitSecFieldID == NULL ||appliteDirFieldID == NULL || channelProfileFieldID == NULL 
-						|| streamTypeFieldID == NULL ||decodeAudioFieldID ==NULL ||decodeVideoFieldID ==NULL || !isMixingEnabledFID) { 
+						|| streamTypeFieldID == NULL ||decodeAudioFieldID ==NULL ||decodeVideoFieldID ==NULL || !isMixingEnabledFid) { 
             cout<<"get fieldID failed!";return JNI_FALSE;}
-		//idle
+		//1.idle
 		idleLimitSec = (int)env->GetIntField(jni_recordingConfig, idleLimitSecFieldID); 
-		//appliteDir
+		//2.appliteDir
 		jstring appliteDir = (jstring)env->GetObjectField(jni_recordingConfig, appliteDirFieldID);
 		const char * c_appliteDir = env->GetStringUTFChars(appliteDir ,NULL);
 		applitePath = c_appliteDir;
 		env->ReleaseStringUTFChars(appliteDir,c_appliteDir);
-		//CHANNEL_PROFILE_TYPE
+		//3.CHANNEL_PROFILE_TYPE
 		jobject channelProfileObject = (env)->GetObjectField(jni_recordingConfig, channelProfileFieldID);
 		//assert(channelProfileObject);
 		jclass enumClass = env->GetObjectClass(channelProfileObject);
@@ -1473,14 +1488,14 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 			return JNI_FALSE; /* method not found */
 		}
 		jint channelProfileValue = env->CallIntMethod(channelProfileObject, getValue);
-    //streamType
+    //4.streamType
 		jobject streamTypeObject = (env)->GetObjectField(jni_recordingConfig, streamTypeFieldID);
 		jclass streamTypeClass = env->GetObjectClass(streamTypeObject);
 		assert(streamTypeObject);
 		if(streamTypeObject == NULL){cout<<"streamTypeEnum is NULL"; return JNI_FALSE;}
 		jmethodID getValue2 = env->GetMethodID(streamTypeClass, "getValue", "()I");
 		jint streamTypeValue = env->CallIntMethod(streamTypeObject, getValue2);
-		//decodeAudio
+		//5.decodeAudio
 		jobject jobDecodeAudio = (env)->GetObjectField(jni_recordingConfig, decodeAudioFieldID);
 		jclass jcdecodeAudio = env->GetObjectClass(jobDecodeAudio);
 		if(jcdecodeAudio == NULL) {
@@ -1492,7 +1507,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 			return JNI_FALSE; /* method not found */
 		}
 		jint decodeAudioValue = env->CallIntMethod(jobDecodeAudio, jmidGetValue);
-    //decodeVideo
+    //6.decodeVideo
 		jobject jobDecodeVideo = (env)->GetObjectField(jni_recordingConfig, decodeVideoFieldID);
 		jclass jcdecodeVideo = env->GetObjectClass(jobDecodeVideo);
 		if(jcdecodeVideo == NULL) {
@@ -1504,8 +1519,58 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 			return JNI_FALSE; /* method not found */
 		}
 		jint decodeVideoValue = env->CallIntMethod(jobDecodeVideo, jmidGetValue);
-    jboolean isMixingEnabledValue = env->GetBooleanField(jni_recordingConfig, isMixingEnabledFID);
+    //7.isMixingEnabled
+    jboolean isMixingEnabledValue = env->GetBooleanField(jni_recordingConfig, isMixingEnabledFid);
     isMixingEnabled = bool(isMixingEnabledValue);
+    //8.isVideoOnly
+		jboolean jisVideoOnly = (int)env->GetIntField(jni_recordingConfig, isVideoOnlyFid); 
+    isVideoOnly = bool(jisVideoOnly);
+    //9.isAudioOnly
+		jboolean jisAudioOnly = (int)env->GetIntField(jni_recordingConfig, isAudioOnlyFid); 
+    isAudioOnly = bool(jisAudioOnly);
+    //10.mixResolution
+    jstring jmixResolution = (jstring)env->GetObjectField(jni_recordingConfig, mixResolutionFid);
+		const char * c_mixResolution = env->GetStringUTFChars(jmixResolution ,NULL);
+		mixResolution = c_mixResolution;
+		env->ReleaseStringUTFChars(jmixResolution, c_mixResolution);
+
+    //11.mixedVideoAudio
+    jboolean jmixedVideoAudio = env->GetBooleanField(jni_recordingConfig, mixedVideoAudioFid);
+    mixedVideoAudio = bool(jmixedVideoAudio);
+
+    //13.recordFileRootDir
+    jstring jrecordFileRootDir = (jstring)env->GetObjectField(jni_recordingConfig, recordFileRootDirFid);
+		const char * c_recordFileRootDir = env->GetStringUTFChars(jrecordFileRootDir, NULL);
+		recordFileRootDir = c_recordFileRootDir;
+		env->ReleaseStringUTFChars(jrecordFileRootDir, c_recordFileRootDir);
+
+    //14.cfgFilePath
+    jstring jcfgFilePath = (jstring)env->GetObjectField(jni_recordingConfig, cfgFilePathFid);
+		const char * c_cfgFilePath = env->GetStringUTFChars(jcfgFilePath, NULL);
+		cfgFilePath = c_cfgFilePath;
+		env->ReleaseStringUTFChars(jcfgFilePath, c_cfgFilePath);
+    //15.secret
+    jstring jsecret = (jstring)env->GetObjectField(jni_recordingConfig, secretFid);
+		const char * c_secret = env->GetStringUTFChars(jsecret, NULL);
+		secret = c_secret;
+		env->ReleaseStringUTFChars(jsecret, c_secret);
+      
+    //16.decryptionMode
+    jstring jdecryptionMode = (jstring)env->GetObjectField(jni_recordingConfig, decryptionModeFid);
+		const char * c_decryptionMode = env->GetStringUTFChars(jdecryptionMode, NULL);
+		decryptionMode = c_decryptionMode;
+		env->ReleaseStringUTFChars(jdecryptionMode, c_decryptionMode);
+      
+    //17.lowUdpPort
+		lowUdpPort = (int)env->GetIntField(jni_recordingConfig, lowUdpPortFid); 
+    //18.highUdpPort
+		highUdpPort = (int)env->GetIntField(jni_recordingConfig, highUdpPortFid); 
+    //19.captureInterval
+		captureInterval = (int)env->GetIntField(jni_recordingConfig, captureIntervalFid); 
+    //20.triggerMode
+		triggerMode = (int)env->GetIntField(jni_recordingConfig, triggerModeFid); 
+
+    
     //paser parameters end
 
 		agora::recording::RecordingConfig config;
@@ -1523,17 +1588,36 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
     jniRecorder.setJcAgoraJavaRecording(thisJcInstance);
     jniRecorder.setJobAgoraJavaRecording(thisObj);
     
-    
-		config.appliteDir = const_cast<char*>(applitePath.c_str());	
 		config.idleLimitSec = idleLimitSec;
-    cout<<"appId:"<<appId<<",uid:"<<uid<<",channelKey:"<<channelKey<<",channelName:"<<channelName<<",applitePath:"
-          <<applitePath<<",channelProfileValue:"<<channelProfileValue<<",decodeAudio:"
-          <<decodeAudioValue<<",decodeVideoValue:"<<decodeVideoValue;
-	  config.decodeAudio = static_cast<agora::linuxsdk::AUDIO_FORMAT_TYPE>(decodeAudioValue);
+		config.channelProfile = static_cast<agora::linuxsdk::CHANNEL_PROFILE_TYPE>(channelProfile);
+   	
+		config.isVideoOnly = isVideoOnly;
+  	config.isAudioOnly = isAudioOnly;
+  	config.isMixingEnabled = isMixingEnabled;
+		config.mixResolution = (isMixingEnabled && !isAudioOnly)? const_cast<char*>(mixResolution.c_str()):NULL;
+		config.mixedVideoAudio = mixedVideoAudio;
+
+		config.appliteDir = const_cast<char*>(applitePath.c_str());	
+		config.recordFileRootDir = const_cast<char*>(recordFileRootDir.c_str());
+		config.cfgFilePath = const_cast<char*>(cfgFilePath.c_str());
+
+		config.secret = secret.empty()? NULL:const_cast<char*>(secret.c_str());
+    config.decryptionMode = decryptionMode.empty()? NULL:const_cast<char*>(decryptionMode.c_str());
+		
+		config.lowUdpPort = lowUdpPort;
+		config.highUdpPort = highUdpPort;
+		config.captureInterval = captureInterval;
+	  
+		config.decodeAudio = static_cast<agora::linuxsdk::AUDIO_FORMAT_TYPE>(decodeAudioValue);
     config.decodeVideo = static_cast<agora::linuxsdk::VIDEO_FORMAT_TYPE>(decodeVideoValue);
 		config.streamType = static_cast<agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE>(streamTypeValue);
-    config.isMixingEnabled = isMixingEnabled;
-    //testCode
+		config.triggerMode = static_cast<agora::linuxsdk::TRIGGER_MODE_TYPE>(triggerMode);
+	  
+		cout<<"appId:"<<appId<<",uid:"<<uid<<",channelKey:"<<channelKey<<",channelName:"<<channelName<<",applitePath:"
+          <<applitePath<<",channelProfileValue:"<<channelProfileValue<<",decodeAudio:"
+          <<decodeAudioValue<<",decodeVideoValue:"<<decodeVideoValue;
+		
+		//testCode
     jniRecorder.setTmp(std::string("helloJni"));
 
     if(!jniRecorder.createChannel(appId, channelKey, channelName, uid, config))

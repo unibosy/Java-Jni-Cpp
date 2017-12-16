@@ -239,13 +239,6 @@ class AgoraJavaRecording{
   	int count = 0;
     
     //paser command line parameters
-		/*Args myArgs = new Args();
-		CmdLineParser parser = new CmdLineParser(myArgs);
-    //CommandLineParser parser = new BasicParser();
-    Options options = new Options();
-    parser.parseArgument(myArgs);
-		parser.printUsage(System.out);*/
-    System.out.println("args length:"+args.length);
     if(args.length % 2 !=0){
       System.out.println("command line parameters error, should be '--key value' format!");
       return;
@@ -320,7 +313,7 @@ class AgoraJavaRecording{
     
     AgoraJavaRecording ars = new AgoraJavaRecording();
     RecordingConfig config= new RecordingConfig();
-    
+    System.out.println("profile:"+CHANNEL_PROFILE_TYPE.values()[channelProfile]);
     config.channelProfile = CHANNEL_PROFILE_TYPE.values()[channelProfile];
 		config.idleLimitSec = idleLimitSec;
     config.isVideoOnly = isVideoOnly;
@@ -341,7 +334,7 @@ class AgoraJavaRecording{
 		config.streamType = REMOTE_VIDEO_STREAM_TYPE.values()[streamType];
     config.triggerMode = triggerMode;
 		
-    System.out.println(map.get("java.library.path"));
+    System.out.println(System.getProperty("java.library.path"));
 
     ars.isMixMode = isMixingEnabled; 
     if(isMixingEnabled && !isAudioOnly) {

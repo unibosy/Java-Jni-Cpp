@@ -8,9 +8,9 @@ build_java()
   LD_LIBRARY_PATH=`pwd`/bin
   export LD_LIBRARY_PATH
 
-  binDir="bin"
-  [ -d "$binDir" ] && rmdir "$binDir"
-  mkdir "$binDir"
+  #binDir="bin"
+  #[ -d "$binDir" ] && rmdir "$binDir"
+  #mkdir "$binDir"
 
   #jni layer
   jniLayer="./jni_code/jni_headers"

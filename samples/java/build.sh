@@ -58,15 +58,11 @@ cmdhelp()
   #echo "$1 clean_java"
   #echo "$1 clean_cpp"
 }
-
-if [ $# -eq "0" ];then
-  cmdhelp $0
-  exit
-fi
-
-for param in $@
-do
-  case $param in
+run()
+{
+  for param in $@
+  do
+    case $param in
        "build")
           build
           ;;
@@ -87,7 +83,12 @@ do
           ;;
        *)
        cmdhelp $0
-       exit
        ;;
-  esac
-done
+    esac
+  done
+}
+if [ $# -eq "0" ];then
+  cmdhelp $0
+else
+  run $1
+fi

@@ -27,14 +27,14 @@ TARGET=librecording.so
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	g++ -c ./jni_code $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/agorasdk/AgoraSdk.cpp
+	$(CXX) -c ./jni_code $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/agorasdk/AgoraSdk.cpp
 	mv AgoraSdk.o ./bin
 	
-	g++ ./jni_code/proxy.cpp -o $@ $(LDFLAGS) $(INCPATH) $(JNIPATH) $(CPP11) $(CXXFLAGS) ./bin/AgoraSdk.o ./bin/opt_parser.o $(LIB) -I.
+	$(LINK) ./jni_code/proxy.cpp -o $@ $(LDFLAGS) $(INCPATH) $(JNIPATH) $(CPP11) $(CXXFLAGS) ./bin/AgoraSdk.o ./bin/opt_parser.o $(LIB) -I.
 	mv $@ ./bin
 
 $(OBJ):
-	g++ -c -d ./bin $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/base/opt_parser.cpp
+	$(CXX) -c ./bin $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/base/opt_parser.cpp
 	mv opt_parser.o ./bin
 
 clean:

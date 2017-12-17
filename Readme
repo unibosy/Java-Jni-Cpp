@@ -1,0 +1,15 @@
+1.Jva环境:
+      请确保您的Java 环境已经就绪,比如可以正常的编译运行hello world.
+
+2.demo简单使用说明:
+     编译后bin文件夹下会生成librecording.so,此动态库是封装了录制SDK C++ APIs后生成的动态库文件,java demo可以通过jni的方式调用.下面是具体的编译步骤及简单说明.
+
+  第一步:
+      a.在build.sh第三行设置jni的环境变量
+  第二步:
+      a.第一次编译时用 " . build.sh java " 的方式进行编译,使得java中的CLASSPATH和LD_LIBRARY_PATH生效.
+
+3.注意:
+      a.bin文件夹是生成java可执行文件和c++ so的地方,在执行clean的时候,会把bin下面的so,.class,headers删除.
+      b.Java调用so时会根据LD_LIBRARY_PATH环境变量来寻找,此值已经在build.sh脚本中临时指定到bin文件夹下;CLASSPATH也是临时指定到bin文件夹下,
+      但这个两个环境变量只是临时设置,在其他窗口打开不会生效,需要再执行第二步方可. 您也可以根据需要自行设置成全局变量.

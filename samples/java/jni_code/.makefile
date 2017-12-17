@@ -2,7 +2,6 @@ ifeq (${CXX},)
 CXX=g++
 endif
 LINK=${CXX}
-
 TOPDIR=`pwd`
 COMMONPATH=`pwd`/../..
 LIBPATH=${COMMONPATH}/libs
@@ -17,7 +16,8 @@ CXXFLAGS  = -pipe -std=c++0x -fPIC -g -fno-omit-frame-pointer \
 LIB	   = -pthread -lpthread -L$(LIBPATH) -lrecorder -lrt
 INCPATH =-I. -I${COMMONPATH}/include -I${COMMONPATH}/include/base -I${COMMONPATH}/samples/base -I${COMMONPATH}/samples/agorasdk -I${COMMONPATH}/samples
 #JNIPATH = -I. -I/$(JNIINCLUDE) -I/$(JNIINCLUDE)/linux/
-JNIPATH=
+
+JNIPATH=-I${JNIINCLUDEPATH} -I${JNIINCLUDEPATH}/linux
 OBJ = opt_parser.o
 
 REALTARGET = exe

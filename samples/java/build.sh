@@ -1,20 +1,16 @@
 #!/bin/bash
+#set jni path,you can get this by 'locate jni.h'
+JNI_PATH='/usr/lib/jvm/java-9-openjdk-amd64/include'
 
 build_java()
 {
-  #CLASSPATH=`pwd`/bin
-  #export CLASSPATH
+  CLASSPATH=`pwd`/bin
+  export CLASSPATH
   
-  #LD_LIBRARY_PATH=`pwd`/bin
-  #export LD_LIBRARY_PATH
-
-  #binDir="bin"
-  #[ -d "$binDir" ] && rmdir "$binDir"
-  #mkdir "$binDir"
-
-  #jni layer
+  LD_LIBRARY_PATH=`pwd`/bin
+  export LD_LIBRARY_PATH
+  
   jniLayer="./jni_code/jni_headers"
-
   javac java_code/headers/*.java -d bin
   javac java_code/*.java -d bin -Xlint:unchecked
   javah -d $jniLayer -classpath ./bin AgoraJavaRecording
@@ -22,8 +18,7 @@ build_java()
 
 build_cpp()
 {
-  export PATH=$PATH:/usr/lib/jvm/java-9-openjdk-amd64/include:/usr/lib/jvm/java-9-openjdk-amd64/include/linux
-  make -f ./jni_code/.makefile
+  make -f ./jni_code/.makefile JNIINCLUDEPATH=$JNI_PATH
 }
 clean_java()
 {

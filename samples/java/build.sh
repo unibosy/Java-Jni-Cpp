@@ -6,7 +6,7 @@ createBinFloder()
 {
   binDir="bin"
   if [ -d "$binDir" ];then
-  echo "111"
+  echo
   else
   mkdir "$binDir"
   fi

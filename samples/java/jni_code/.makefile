@@ -30,7 +30,7 @@ $(TARGET): $(OBJ)
 	$(CXX) -c ./jni_code $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/agorasdk/AgoraSdk.cpp
 	mv AgoraSdk.o ./bin
 	
-	$(LINK) ./jni_code/proxy.cpp -o $@ $(LDFLAGS) $(INCPATH) $(JNIPATH) $(CPP11) $(CXXFLAGS) ./bin/AgoraSdk.o ./bin/opt_parser.o $(LIB) -I.
+	$(LINK) ./jni_code/proxy.cpp -o $@ $(LDFLAGS) $(FPIC) $(INCPATH) $(JNIPATH) $(CPP11) ./bin/AgoraSdk.o ./bin/opt_parser.o $(LIB) -I.
 	mv $@ ./bin
 
 $(OBJ):

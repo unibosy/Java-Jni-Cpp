@@ -797,7 +797,6 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
 		return;
 	}
 	assert(jni_env);
-  assert(javaClass);
 	pid_t tid = getpid();
 	LOG_DIR(m_logdir.c_str(), INFO,"videoFrameReceived this thread id is:%u",tid);
   //1.find VideoFrame class
@@ -1114,7 +1113,6 @@ void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
 	pid_t tid = getpid();
 	LOG_DIR(m_logdir.c_str(), INFO,"onLeaveChannel this thread id is:%u",tid);
   jmethodID jLeaveMid =  jni_env->GetMethodID(m_jcAgoraJavaRecording,"onLeaveChannel","(I)V");
-  assert(jcLeave);
   jni_env->CallVoidMethod(m_jobAgoraJavaRecording, jLeaveMid, jint((int)(code)));
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk::onLeaveChannel call end");
 	((JavaVM*)g_jvm)->DetachCurrentThread();
@@ -1166,7 +1164,6 @@ void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_c
     LOG_DIR(m_logdir.c_str(), INFO,"get method onError failed!");
     return;
   }
-  assert(jcLeave);
   jni_env->CallVoidMethod(m_jobAgoraJavaRecording, jLeaveMid, error, jint((int)(stat_code)));
 #endif 
   leaveChannel();

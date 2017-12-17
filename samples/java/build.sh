@@ -1,5 +1,5 @@
 #!/bin/bash
-#set jni path,you can get this by 'locate jni.h'
+#set jni path,you can get this by 'locate jni.h' or 'find / -name jni.h'
 JNI_PATH='/usr/lib/jvm/java-9-openjdk-amd64/include'
 
 createBinFloder()

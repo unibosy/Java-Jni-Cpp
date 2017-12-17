@@ -2,8 +2,19 @@
 #set jni path,you can get this by 'locate jni.h'
 JNI_PATH='/usr/lib/jvm/java-9-openjdk-amd64/include'
 
-build_java()
+createBinFloder()
 {
+  binDir="bin"
+  if [ -d "$binDir" ];then
+  echo "111"
+  else
+  mkdir "$binDir"
+  fi
+}
+build_java()
+{ 
+  createBinFloder
+  
   CLASSPATH=`pwd`/bin
   export CLASSPATH
   

@@ -62,7 +62,7 @@ class AgoraJavaRecording{
   public void onUserOffline(long uid, int reason) {
     System.out.println("AgoraJavaRecording onUserOffline uid:"+uid+",offline reason:"+reason);
     m_peers.remove(uid);
-    print(m_peers);
+    PrintUsersInfo(m_peers);
     SetVideoMixingLayout();
   }
   public void onUserJoined(long uid, String recordingDir){
@@ -70,7 +70,7 @@ class AgoraJavaRecording{
     System.out.println("onUserJoined uid:"+uid+",recordingDir:"+recordingDir);
     storageDir = recordingDir;
     m_peers.add(uid);
-    print(m_peers);
+    PrintUsersInfo(m_peers);
     //When the user joined, we can re-layout the canvas
     SetVideoMixingLayout();
   }
@@ -191,10 +191,10 @@ class AgoraJavaRecording{
     return temp_str;   
 	}
 
-  private void print(Vector vector){
-    System.out.println("print vector size:"+vector.size());
+  private void PrintUsersInfo(Vector vector){
+    System.out.println("user size:"+vector.size());
     for(Long l : m_peers){  
-      System.out.println("iter:"+l);
+      System.out.println("user:"+l);
     }
   }
   public static void main(String[] args) 
@@ -345,19 +345,7 @@ class AgoraJavaRecording{
       ars.fps = Integer.valueOf(sourceStrArray[2]).intValue();
       ars.kbps = Integer.valueOf(sourceStrArray[3]).intValue();
     }
-    System.out.println("############ars.createChannel begin###########");
     ars.createChannel(appId, channelKey,name,uid,config);
-		System.out.println("############ars.createChannel end###########");
-		/*while(!ars.stopped)
-		{
-			try{
-				Thread.currentThread().sleep(10);//sleep 10 ms
-				//System.out.println("in a loop");
-			}
-			catch(InterruptedException ie){
-				System.out.println("exception throwed!");
-			}
-		}*/
-    System.out.println("jni layer has been exited");
+    System.out.println("jni layer has been exited...");
   }
 }

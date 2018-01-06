@@ -1,1 +1,0 @@
-javac -d . xxxx.java to generate a packet, and packet class must public

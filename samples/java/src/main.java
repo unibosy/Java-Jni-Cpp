@@ -216,9 +216,29 @@ class AgoraJavaRecording extends Thread{
   }
   public void run(){
     System.out.println("new thread");
-    createChannel(appId2, channelKey2,channel2,uid2,config2);
-    //while(true)
-    //{System.out.println("new thread end");}
+    this.isMixMode = config2.isMixingEnabled; 
+    this.profile_type = config2.channelProfile;
+    if(config2.isMixingEnabled && !config2.isAudioOnly) {
+      String[] sourceStrArray=config2.mixResolution.split(",");
+      if(sourceStrArray.length != 4) {
+		    System.out.println("Illegal resolution:"+config2.mixResolution);
+        return;
+      }
+      this.width = Integer.valueOf(sourceStrArray[0]).intValue();
+      this.height = Integer.valueOf(sourceStrArray[1]).intValue();
+      this.fps = Integer.valueOf(sourceStrArray[2]).intValue();
+      this.kbps = Integer.valueOf(sourceStrArray[3]).intValue();
+    }
+    boolean ret = createChannel(appId2, channelKey2,channel2,uid2,config2);
+    if(!ret){
+      System.out.println("java call native createChannel failed!");
+      return;
+    }
+  }
+  private static void Help(){
+    System.out.println("Type \"start\" to start recording!(Only valid when \"triggerMode=1\")");
+    System.out.println("Type \"stop\" to stop recording!(Only valid when \"triggerMode=1\")");
+    System.out.println("Type \"quit\" to quit recording!");
   }
   public static void main(String[] args) 
   {
@@ -359,62 +379,44 @@ class AgoraJavaRecording extends Thread{
      */
 		
     System.out.println(System.getProperty("java.library.path"));
-    /*ars.isMixMode = isMixingEnabled; 
-    ars.profile_type = CHANNEL_PROFILE_TYPE.values()[channelProfile];
-    if(isMixingEnabled && !isAudioOnly) {
-      String[] sourceStrArray=mixResolution.split(",");
-      if(sourceStrArray.length != 4) {
-		    System.out.println("Illegal resolution:"+mixResolution);
-        return;
-      }
-      ars.width = Integer.valueOf(sourceStrArray[0]).intValue();
-      ars.height = Integer.valueOf(sourceStrArray[1]).intValue();
-      ars.fps = Integer.valueOf(sourceStrArray[2]).intValue();
-      ars.kbps = Integer.valueOf(sourceStrArray[3]).intValue();
-    }
-    System.out.println("run jni thread");
-    (new AgoraJavaRecording(appId, channelKey,name,uid,config)).run();*/
-    for(int i = 0; i < 2; ++i){
-      AgoraJavaRecording ars = new AgoraJavaRecording(appId,channelKey,name,uid,config);
+    //run jni event loop , or start a new thread to do it
+    AgoraJavaRecording ars = new AgoraJavaRecording(appId,channelKey,name,uid,config);
+    for(int i = 0; i < 1; ++i){
       Thread arsThread = new Thread(ars);
       arsThread.start();
       System.out.println("after run thread:"+i);
-    }
-        /*Scanner sc=new Scanner(System.in);
-    while(true){
-      System.out.println("output");
       try{
-        Thread.currentThread().sleep(10);//sleep 10 ms
+        Thread.currentThread().sleep(1000*2);//sleep 2s
       }
       catch(InterruptedException ie){
         System.out.println("exception throwed!");
       }
-    }*/
-    /*while(sc.hasNext()){
-          System.out.println("output："+sc.next()); 
-        }
-        System.out.println("no output："+sc.next());*/
-/*
-    while(!true){
+    }
+    System.out.println("\n[Tips] Type \"help\" to show operations!");
+    Scanner scn=new Scanner(System.in);
+    while(true){
+      if(ars.stopped){
+        break;
+      }
+      String input = scn.nextLine();
+      if(input.equals("quit")){
+        ars.leaveChannel(ars.mNativeHandle);
+        break;
+      }else if(input.equals("start")){
+        ars.startService(ars.mNativeHandle);
+      }else if(input.equals("stop")){
+        ars.stopService(ars.mNativeHandle);
+      }else if(input.equals("help")){
+        Help();      
+      }else{
+        System.out.println("Undefined command: "+input+"."+"  Try \"help");
+      }
       try{
-        Thread.currentThread().sleep(10);//sleep 10 ms
-        while(sc.hasNext()){
-          System.out.println("output："+sc.next()); 
-        }
-        System.out.println("no output："+sc.next());
-
-        //System.out.println("in a loop");
-        }
-      catch(InterruptedException ie){
-        System.out.println("exception throwed!");                     }
-    }*/
-    //run jni event loop , or start a new thread to do it
-    //ars.createChannel(appId, channelKey,name,uid,config);
-    //System.out.println("java recording exited...");
-  }
-  public synchronized  void run(AgoraJavaRecording ars, String appId, String channelKey, String name, int uid, RecordingConfig config){
-    System.out.println("run -----1");
-    ars.createChannel(appId, channelKey,name,uid,config);
-    System.out.println("jni layer has been exited...");
+        Thread.currentThread().sleep(1000);//sleep 1s
+      }catch(InterruptedException ie){
+        System.out.println("exception throwed!");
+      }
+    }
+    System.out.println("exit java process...");
   }
 }

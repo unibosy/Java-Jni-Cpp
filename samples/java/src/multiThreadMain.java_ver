@@ -22,7 +22,7 @@ import java.awt.*;
 
 class AgoraJavaRecording extends Thread{
   //java run status flag
-  private boolean stopped = false;
+  private static boolean stopped = false;
   private boolean isMixMode = false;
   private int width = 0;
   private int height = 0;
@@ -81,6 +81,7 @@ class AgoraJavaRecording extends Thread{
     }
     
     stopped = true;
+    leaveChannel(mNativeHandle);
   }
   private void onWarning(int warn) {
     //refer to "WARN_CODE_TYPE"
@@ -296,7 +297,7 @@ class AgoraJavaRecording extends Thread{
   	int fps = 0;
   	int kbps = 0;
   	int count = 0;
-    
+    int threadCounnt = 1;
     //paser command line parameters
     if(args.length % 2 !=0){
       System.out.println("command line parameters error, should be '--key value' format!");
@@ -336,10 +337,11 @@ class AgoraJavaRecording extends Thread{
     Object CfgFilePath = map.get("--cfgFilePath");
     Object StreamType = map.get("--streamType");
     Object TriggerMode = map.get("--triggerMode");
+    Object ThreadCount = map.get("--threadCount");
 
     if( Appid ==null || Uid==null ||Channel==null || AppliteDir == null){
       //print usage
-      String usage = "java AgoraJavaRecording --appId STRING --uid UINTEGER32 --channel STRING --appliteDir STRING --channelKey STRING --channelProfile UINTEGER32 --isAudioOnly --isVideoOnly --isMixingEnabled --mixResolution STRING --mixedVideoAudio --decryptionMode STRING --secret STRING --idle INTEGER32 --recordFileRootDir STRING --lowUdpPort INTEGER32 --highUdpPort INTEGER32 --getAudioFrame UINTEGER32 --getVideoFrame UINTEGER32 --captureInterval INTEGER32 --cfgFilePath STRING --streamType UINTEGER32 --triggerMode INTEGER32 \r\n --appId     (App Id/must) \r\n --uid     (User Id default is 0/must)  \r\n --channel     (Channel Id/must) \r\n --appliteDir     (directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Server_SDK_for_Linux_FULL/bin/' folder/must) \r\n --channelKey     (channelKey/option)\r\n --channelProfile     (channel_profile:(0:COMMUNICATION),(1:broadcast) default is 0/option)  \r\n --isAudioOnly     (Default 0:A/V, 1:AudioOnly (0:1)/option) \r\n --isVideoOnly     (Default 0:A/V, 1:VideoOnly (0:1)/option)\r\n --isMixingEnabled     (Mixing Enable? (0:1)/option)\r\n --mixResolution     (change default resolution for vdieo mix mode/option)                 \r\n --mixedVideoAudio     (mixVideoAudio:(0:seperated Audio,Video) (1:mixed Audio & Video), default is 0 /option)                 \r\n --decryptionMode     (decryption Mode, default is NULL/option)                 \r\n --secret     (input secret when enable decryptionMode/option)                 \r\n --idle     (Default 300s, should be above 3s/option)                 \r\n --recordFileRootDir     (recording file root dir/option)                 \r\n --lowUdpPort     (default is random value/option)                 \r\n --highUdpPort     (default is random value/option)                 \r\n --getAudioFrame     (default 0 (0:save as file, 1:aac frame, 2:pcm frame) /option)                 \r\n --getVideoFrame     (default 0 (0:save as file, 1:h.264, 2:yuv, 3.jpg buffer, 4,jpg file) /option)              \r\n --captureInterval     (default 5 (Video snapshot interval (second)))                 \r\n --cfgFilePath     (config file path / option)                 \r\n --streamType     (remote video stream type(0:STREAM_HIGH,1:STREAM_LOW), default is 0/option)  \r\n --triggerMode     (triggerMode:(0: automatically mode, 1: manually mode) default is 0/option)";      
+      String usage = "java AgoraJavaRecording --appId STRING --uid UINTEGER32 --channel STRING --appliteDir STRING --channelKey STRING --channelProfile UINTEGER32 --isAudioOnly --isVideoOnly --isMixingEnabled --mixResolution STRING --mixedVideoAudio --decryptionMode STRING --secret STRING --idle INTEGER32 --recordFileRootDir STRING --lowUdpPort INTEGER32 --highUdpPort INTEGER32 --getAudioFrame UINTEGER32 --getVideoFrame UINTEGER32 --captureInterval INTEGER32 --cfgFilePath STRING --streamType UINTEGER32 --triggerMode INTEGER32 \r\n --appId     (App Id/must) \r\n --uid     (User Id default is 0/must)  \r\n --channel     (Channel Id/must) \r\n --appliteDir     (directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Server_SDK_for_Linux_FULL/bin/' folder/must) \r\n --channelKey     (channelKey/option)\r\n --channelProfile     (channel_profile:(0:COMMUNICATION),(1:broadcast) default is 0/option)  \r\n --isAudioOnly     (Default 0:A/V, 1:AudioOnly (0:1)/option) \r\n --isVideoOnly     (Default 0:A/V, 1:VideoOnly (0:1)/option)\r\n --isMixingEnabled     (Mixing Enable? (0:1)/option)\r\n --mixResolution     (change default resolution for vdieo mix mode/option)                 \r\n --mixedVideoAudio     (mixVideoAudio:(0:seperated Audio,Video) (1:mixed Audio & Video), default is 0 /option)                 \r\n --decryptionMode     (decryption Mode, default is NULL/option)                 \r\n --secret     (input secret when enable decryptionMode/option)                 \r\n --idle     (Default 300s, should be above 3s/option)                 \r\n --recordFileRootDir     (recording file root dir/option)                 \r\n --lowUdpPort     (default is random value/option)                 \r\n --highUdpPort     (default is random value/option)                 \r\n --getAudioFrame     (default 0 (0:save as file, 1:aac frame, 2:pcm frame) /option)                 \r\n --getVideoFrame     (default 0 (0:save as file, 1:h.264, 2:yuv, 3.jpg buffer, 4,jpg file) /option)              \r\n --captureInterval     (default 5 (Video snapshot interval (second)))                 \r\n --cfgFilePath     (config file path / option)                 \r\n --streamType     (remote video stream type(0:STREAM_HIGH,1:STREAM_LOW), default is 0/option)  \r\n --triggerMode     (triggerMode:(0: automatically mode, 1: manually mode) default is 0/option) --threadCount (default is 1/option)";      
       
       System.out.println("Usage:"+usage);
       return;
@@ -369,7 +371,7 @@ class AgoraJavaRecording extends Thread{
     if(StreamType != null) streamType = Integer.parseInt(String.valueOf(StreamType));
     if(CaptureInterval != null) captureInterval = Integer.parseInt(String.valueOf(CaptureInterval));
     if(TriggerMode != null) triggerMode = Integer.parseInt(String.valueOf(TriggerMode));
-    
+    if(ThreadCount != null)  threadCounnt = Integer.parseInt(String.valueOf(ThreadCount));
     RecordingConfig config= new RecordingConfig();
     config.channelProfile = CHANNEL_PROFILE_TYPE.values()[channelProfile];
 		config.idleLimitSec = idleLimitSec;
@@ -399,43 +401,25 @@ class AgoraJavaRecording extends Thread{
 		
     System.out.println(System.getProperty("java.library.path"));
     //run jni event loop , or start a new thread to do it
-    AgoraJavaRecording ars = new AgoraJavaRecording(appId,channelKey,name,uid,config);
-    for(int i = 0; i < 1; ++i){
+    System.out.println("run multi thread:"+threadCounnt);
+    for(int i = 0; i < threadCounnt; ++i){
+      if(config.lowUdpPort != 0) config.lowUdpPort+=5;
+      if(config.highUdpPort !=0 ) config.highUdpPort+=5;
+      
+      AgoraJavaRecording ars = new AgoraJavaRecording(appId,channelKey,name,uid,config);
       Thread arsThread = new Thread(ars);
       arsThread.start();
+      if(ars.stopped){
+        System.out.println("one ars has been stopped!");
+        continue;
+      }
       System.out.println("after run thread:"+i);
       try{
-        Thread.currentThread().sleep(1000*2);//sleep 2s
+        Thread.currentThread().sleep(1500);//sleep 2s
       }
       catch(InterruptedException ie){
         System.out.println("exception throwed!");
       }
-    }
-    System.out.println("\n[Tips] Type \"help\" to show operations!");
-    Scanner scn=new Scanner(System.in);
-    while(true){
-      if(ars.stopped){
-        break;
-      }
-      String input = scn.nextLine();
-      if(input.equals("quit")){
-        ars.leaveChannel(ars.mNativeHandle);
-        break;
-      }else if(input.equals("start")){
-        ars.startService(ars.mNativeHandle);
-      }else if(input.equals("stop")){
-        ars.stopService(ars.mNativeHandle);
-      }else if(input.equals("help")){
-        Help();      
-      }else{
-        System.out.println("Undefined command: "+input+"."+"  Try \"help");
-      }
-      try{
-        Thread.currentThread().sleep(1000);//sleep 1s
-      }catch(InterruptedException ie){
-        System.out.println("exception throwed!");
-      }
-    }
-    System.out.println("exit java process...");
   }
+ }
 }

@@ -25,13 +25,16 @@ public:
   virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
 
   void setJobAgoraJavaRecording(jobject job){
-    m_jobAgoraJavaRecording = job;
+    mJavaAgoraJavaRecordingObject = job;
   }
   void setJcAgoraJavaRecording(jclass jc){
-    m_jcAgoraJavaRecording = jc;
+    mJavaAgoraJavaRecordingClass = jc;
   }
   void stopJavaProc(JNIEnv* env);
   void setJavaRecordingPath(JNIEnv* env, std::string& storeDir);
+
+  jclass newGlobalJClass(JNIEnv* env, const char* className);
+  jobject newGlobalJObject(JNIEnv* env, jclass jc, const char* signature);
 private:
   void initJavaObjects(bool init);
 private:
@@ -56,12 +59,12 @@ private:
   //video
   jclass mJavaVideoFrameClass;
   jobject mJavaVideoFrameObject;
-  jclass mJavaVideoYUVFrameClass;
-  jobject mJavaVideoYUVFrameObject;
-  jclass mJavaVideoFrameJPGClass;
-  jobject mJavaVideoFrameJPGObject;
-  jclass mJavaVideoFrameH264Class;
-  jobject mJavaVideoFrameH264Object;
+  jclass mJavaVideoYuvFrameClass;
+  jobject mJavaVideoYuvFrameObject;
+  jclass mJavaVideoJPGFrameClass;
+  jobject mJavaVideoJPGFrameObject;
+  jclass mJavaVideoH264FrameClass;
+  jobject mJavaVideoH264FrameObject;
   //audio
   jclass mJavaAudioFrameClass;
   jobject mJavaAudioFrameObject;
@@ -73,9 +76,8 @@ private:
   jobject mJavaAudioPcmFrameObject;
 
 private:
-  JNIEnv* m_jni_env;
-  jclass m_jcAgoraJavaRecording;
-  jobject m_jobAgoraJavaRecording;
+  jclass mJavaAgoraJavaRecordingClass;
+  jobject mJavaAgoraJavaRecordingObject;
 };
 
 }//endnamespace

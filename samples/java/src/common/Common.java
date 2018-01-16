@@ -1,4 +1,5 @@
 package io.agora.recording.common;
+import java.nio.ByteBuffer;
 
 public class Common{
   public enum ERROR_CODE_TYPE {
@@ -130,12 +131,6 @@ public class Common{
     }
   }
 
-  public enum MEMORY_TYPE {
-    STACK_MEM_TYPE(0),
-    HEAP_MEM_TYPE(1);
-    private MEMORY_TYPE(int value){}
-  }
-
   public class VIDEO_FRAME_TYPE {
     public final int VIDEO_FRAME_RAW_YUV = 0;
     public final int VIDEO_FRAME_H264 = 1;
@@ -156,7 +151,6 @@ public class Common{
     public AUDIO_FRAME_TYPE type;
     public AudioPcmFrame pcm;
     public AudioAacFrame aac;
-    public MEMORY_TYPE mType;
   }
   public class AudioPcmFrame {
     public AudioPcmFrame(long frame_ms, long sample_rates, long samples) {
@@ -167,7 +161,7 @@ public class Common{
     public long sample_rates_; // 8k, 16k, 32k
     public long samples_;
 
-    public byte[] pcmBuf_;
+    public ByteBuffer pcmBuf_;
     public long pcmBufSize_;
   }
   public class AudioAacFrame {
@@ -175,7 +169,7 @@ public class Common{
       frame_ms_ = frame_ms;
       aacBufSize_ = 0;
     }
-    public byte[] aacBuf_;
+    public ByteBuffer aacBuf_;
     public long frame_ms_;
     public long aacBufSize_;
   }
@@ -190,9 +184,9 @@ public class Common{
     }
     public long frame_ms_;
 
-    public byte[] ybuf_;
-    public byte[] ubuf_;
-    public byte[] vbuf_;
+    public ByteBuffer ybuf_;
+    public ByteBuffer ubuf_;
+    public ByteBuffer vbuf_;
 
     public int width_;
     public int height_;
@@ -201,7 +195,7 @@ public class Common{
     public int ustride_;
     public int vstride_;
     //all
-    public byte[] buf_;
+    public ByteBuffer buf_;
     public long bufSize_;
   }
   public class VideoH264Frame {
@@ -213,7 +207,7 @@ public class Common{
     public long frame_ms_;
     public long frame_num_;
     //all
-    public byte[] buf_;
+    public ByteBuffer buf_;
     public long bufSize_;
   }
   public class  VideoJpgFrame {
@@ -223,7 +217,7 @@ public class Common{
     }
     public long frame_ms_;
     //all
-    public byte[] buf_;
+    public ByteBuffer buf_;
     public long bufSize_;
   }
   public class VideoFrame {
@@ -232,7 +226,6 @@ public class Common{
     public VideoH264Frame h264;
     public VideoJpgFrame jpg;
     public int rotation_; // 0, 90, 180, 270
-    public MEMORY_TYPE mType;
   }
 
   public class UserJoinInfos {

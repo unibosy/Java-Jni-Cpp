@@ -81,7 +81,7 @@ int AgoraSdk::stopService() {
 int AgoraSdk::setVideoMixLayout()
 {
     recording::RecordingConfig *pConfig = getConfigInfo();
-    size_t max_peers = pConfig->channelProfile == linuxsdk::CHANNEL_PROFILE_COMMUNICATION ? 7:17;
+    size_t max_peers = pConfig->channelProfile == linuxsdk::CHANNEL_PROFILE_COMMUNICATION ? 7:16;
     if(!m_mixRes.m_videoMix) return 0;
 
     LOG_DIR(m_logdir.c_str(), INFO, "setVideoMixLayout: user size: %d, permitted max_peers:%d", m_peers.size(), max_peers);

@@ -7,7 +7,7 @@ COMMONPATH=`pwd`/../..
 LIBPATH=${COMMONPATH}/libs
 #set your jvm path!!!
 #JNIINCLUDE = /usr/lib/jvm/java-9-openjdk-amd64/include/
-CPP = -std=c++0x
+STDFLAGS = -std=c++0x
 LDFLAGS= -shared
 FPIC = -fPIC
 CXXFLAGS  = -pipe -std=c++0x -fPIC -g -fno-omit-frame-pointer \
@@ -30,7 +30,7 @@ $(TARGET): $(OBJ)
 	$(CXX) -c ./native $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/agorasdk/AgoraSdk.cpp
 	mv AgoraSdk.o ./bin
 	
-	$(LINK) ./native/AgoraJniProxy.cpp -o $@ $(LDFLAGS) $(FPIC) $(INCPATH) $(JNIPATH) $(CPP) ./bin/AgoraSdk.o ./bin/opt_parser.o $(LIB) -I.
+	$(LINK) ./native/AgoraJniProxy.cpp ./native/helper.cpp -o $@ $(LDFLAGS) $(FPIC) $(INCPATH) $(JNIPATH) $(STDFLAGS) ./bin/AgoraSdk.o ./bin/opt_parser.o $(LIB) -I.
 	mv $@ ./bin
 
 $(OBJ):

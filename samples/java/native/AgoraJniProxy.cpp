@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "helper.h"
 
 using std::string;
 using std::cout;
@@ -69,6 +70,13 @@ JavaVM* g_jvm = NULL;//one eventhandler vs one?
 //jmethodID
 #define INIT_SIGNATURE "<init>"
 #define VIDEO_FRAME_SIGNATURE "(Lio/agora/recording/common/Common;)V"
+
+//java callback function signature
+#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JLio/agora/recording/common/Common$VideoFrame;)V"
+
+//declare java callback function
+#define CB_FUNC_RECEIVE_VIDEOFRAME "videoFrameReceived"
+
 //jclass
 //audio
 static jclass JC_AUDIO_FRAME_TYPE = NULL;
@@ -102,8 +110,11 @@ AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   mJavaAudioAacFrameObject = NULL;
   mJavaAudioPcmFrameClass =NULL;
   mJavaAudioPcmFrameObject =NULL;
+  //AgoraJavaRecording callback function jmethodIDs
+  mJavaRecvVideoMtd = NULL;
 
   initJavaObjects(true);
+  cacheJavaCBFuncMethodIDs(CN_VIDEO_FRAME);
 }
 AgoraJniProxySdk::~AgoraJniProxySdk(){
   cout<<"AgoraJniProxySdk destructor begin"<<endl;
@@ -174,7 +185,6 @@ private:
   JNIEnv* env_;
 };
 
-
 jclass AgoraJniProxySdk::newGlobalJClass(JNIEnv* env, const char* className){
   jclass localRef = env->FindClass(className);
   if(!localRef) {
@@ -202,7 +212,21 @@ jobject AgoraJniProxySdk::newGlobalJObject(JNIEnv* env, jclass jc, const char* s
   }
   return globalJob;
 }
-
+void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs(const char* className){
+  AttachThreadScoped ats(g_jvm);
+  JNIEnv* env = ats.env();
+  if (!env) return;
+  jclass localRef = env->FindClass(className);
+  if(!localRef) {
+    LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJClass cannot find class:%s", className);
+    return ;
+  }
+  mJavaRecvVideoMtd = Helper::safeGetMethodID(env, localRef, CB_FUNC_RECEIVE_VIDEOFRAME, SN_CB_FUNC_RECEIVE_VIDEOFRAME);
+  if(!mJavaRecvVideoMtd) {
+     LOG_DIR(m_logdir.c_str(), ERROR, "get receive video frame jmethodid failed ");
+     return;
+  }
+}
 void AgoraJniProxySdk::initJavaObjects(bool init){
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
@@ -210,7 +234,6 @@ void AgoraJniProxySdk::initJavaObjects(bool init){
 
   mJavaVideoFrameClass = newGlobalJClass(env, CN_VIDEO_FRAME);
   mJavaVideoFrameObject = newGlobalJObject(env, mJavaVideoFrameClass, SN_MTD_COMMON_INIT);
-#if 1
   mJavaVideoYuvFrameClass = newGlobalJClass(env, CN_VIDEO_YUV_FRAME);
   mJavaVideoYuvFrameObject = newGlobalJObject(env, mJavaVideoYuvFrameClass, SN_MTD_VIDEO_YUV_FRAME);
   
@@ -220,7 +243,6 @@ void AgoraJniProxySdk::initJavaObjects(bool init){
   
   mJavaVideoH264FrameClass = newGlobalJClass(env, CN_VIDEO_H264_FRAME);
   mJavaVideoH264FrameObject = newGlobalJObject(env, mJavaVideoH264FrameClass, SN_MTD_COMMON_INIT);
-#endif
 }
 
 //do common!
@@ -751,17 +773,10 @@ bool AgoraJniProxySdk::fillJVideoFrameByFields(JNIEnv* env, const agora::linuxsd
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   jmethodID jmid = NULL;
-  jmethodID initMid = NULL;
 
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-  //2.get init methodid to new VideoFrame object
-  initMid = env->GetMethodID(mJavaVideoFrameClass,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
-  if(!initMid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get VideoFrmae init method ");
-    return;
-  }
   //3.get subclass or enumm details and fill these' fields
   if(!fillJVideoFrameByFields(env, frame, mJavaVideoFrameClass, mJavaVideoFrameObject))
   {
@@ -770,13 +785,9 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
   }
   //4.find class where callback function in
   //5. find callback function
-  jmid = env->GetMethodID(mJavaAgoraJavaRecordingClass, "videoFrameReceived", "(JLio/agora/recording/common/Common$VideoFrame;)V");
-  if(!jmid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get callback function");
-    return;
-  }
-  //so far so well
-  env->CallVoidMethod(mJavaAgoraJavaRecordingClass, jmid,jlong(long(uid)), mJavaVideoFrameObject);
+    //so far so well
+  jmethodID mJavaRecvVideoMtd2 = env->GetMethodID(mJavaAgoraJavaRecordingClass, CB_FUNC_RECEIVE_VIDEOFRAME, SN_CB_FUNC_RECEIVE_VIDEOFRAME);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvVideoMtd2, jlong(long(uid)), mJavaVideoFrameObject);
   return;
 }
 //TODO  use the same parameter
@@ -859,7 +870,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
     return ;
   }
   //7. callback java method
-  env->CallVoidMethod(mJavaAgoraJavaRecordingClass, mid,jlong(long(uid)), jobAudioFrame);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mid,jlong(long(uid)), jobAudioFrame);
   env->DeleteLocalRef(job);
   env->DeleteLocalRef(jc); 
   env->DeleteLocalRef(jobAudioFrame);
@@ -883,14 +894,12 @@ void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk:
     return;
   }
   jstring jstrRecordingDir = env->NewStringUTF(store_dir.c_str());
-  env->CallVoidMethod(mJavaAgoraJavaRecordingClass, jUserJoinedMid, jlong((long)(uid)),jstrRecordingDir);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jUserJoinedMid, jlong((long)(uid)),jstrRecordingDir);
   return;
 }
 void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk::USER_OFFLINE_REASON_TYPE reason) {
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onUserOffline User:%u",uid, ",reason:%d",static_cast<int>(reason));
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
-
-
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
@@ -899,7 +908,7 @@ void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk
     LOG_DIR(m_logdir.c_str(), ERROR,"cnnot find jUserOfflineMid" );
     return;
   }
-  env->CallVoidMethod(mJavaAgoraJavaRecordingClass, jUserOfflineMid, jlong((long)(uid)),jint(int(reason)));
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jUserOfflineMid, jlong((long)(uid)),jint(int(reason)));
 
   return;
 }
@@ -912,7 +921,7 @@ void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
   if (!env) return;
 
   jmethodID jLeaveMid =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"onLeaveChannel","(I)V");
-  env->CallVoidMethod(mJavaAgoraJavaRecordingClass, jLeaveMid, jint((int)(code)));
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jLeaveMid, jint((int)(code)));
   return;
 }
 void AgoraJniProxySdk::onWarning(int warn) {
@@ -923,25 +932,30 @@ void AgoraJniProxySdk::onWarning(int warn) {
   if (!env) return;
   jmethodID jOnWarnMid =  env->GetMethodID(mJavaAgoraJavaRecordingClass, "onWarning","(I)V");
   assert(jOnWarnMid);
-  env->CallVoidMethod(mJavaAgoraJavaRecordingClass, jOnWarnMid, warn);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jOnWarnMid, warn);
   return;
 }
 
 void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code) {
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onError");
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
-
+  cout<<"on error -1"<<endl;
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
 
+  cout<<"on error -2"<<endl;
   jmethodID jLeaveMid =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"onError","(II)V");
   if(!jLeaveMid) {
     LOG_DIR(m_logdir.c_str(), INFO,"get method onError failed!");
     return;
   }
-  env->CallVoidMethod(mJavaAgoraJavaRecordingClass, jLeaveMid, error, jint((int)(stat_code)));
+  cout<<"on error -3"<<endl;
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jLeaveMid, error, jint((int)(stat_code)));
+
+  cout<<"on error -4"<<endl;
   leaveChannel();
+  cout<<"on error -2"<<endl;
 
   ats.detach();
   return;
@@ -1175,7 +1189,7 @@ void AgoraJniProxySdk::stopJavaProc(JNIEnv* env) {
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   jmethodID jStopCB =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"stopCallBack","()V");
   assert(jStopCB);
-  env->CallVoidMethod(mJavaAgoraJavaRecordingClass, jStopCB);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jStopCB);
 }
 
 void AgoraJniProxySdk::setJavaRecordingPath(JNIEnv* env, std::string& storeDir){
@@ -1184,7 +1198,7 @@ void AgoraJniProxySdk::setJavaRecordingPath(JNIEnv* env, std::string& storeDir){
   jmethodID jRecordingPathCB =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"recordingPathCallBack","(Ljava/lang/String;)V");
   jstring jstrRecordingDir = env->NewStringUTF(storeDir.c_str());
 
-  env->CallVoidMethod(mJavaAgoraJavaRecordingClass, jRecordingPathCB, jstrRecordingDir);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jRecordingPathCB, jstrRecordingDir);
 }
 /*void AgoraJniProxySdk::setJavaObjects(bool init, jobject job){
     
@@ -1476,9 +1490,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
     usleep(1*1000*1000); //1s
   }
   if (g_bSignalStop) {
-    cout<<"g_bSignalStop -1"<<endl;
     jniRecorder.leaveChannel();
-    cout<<"g_bSignalStop -2"<<endl;
     jniRecorder.release();
     cout<<"jni layer stopped!";
   }

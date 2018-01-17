@@ -8,5 +8,5 @@ using namespace std;
  */
 class Helper{
 public:
-
-}
+  static jmethodID safeGetMethodID(JNIEnv* env, jclass clazz, const char* name, const char* sig);
+};

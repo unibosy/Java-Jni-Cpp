@@ -35,6 +35,8 @@ public:
 
   jclass newGlobalJClass(JNIEnv* env, const char* className);
   jobject newGlobalJObject(JNIEnv* env, jclass jc, const char* signature);
+  //cache field ids & method ids
+  void cacheJavaCBFuncMethodIDs(const char* className);
 private:
   void initJavaObjects(bool init);
 private:
@@ -74,6 +76,8 @@ private:
 
   jclass mJavaAudioPcmFrameClass;
   jobject mJavaAudioPcmFrameObject;
+  //jmethod IDs
+  jmethodID mJavaRecvVideoMtd;
 
 private:
   jclass mJavaAgoraJavaRecordingClass;

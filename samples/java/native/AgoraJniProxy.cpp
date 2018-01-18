@@ -705,83 +705,7 @@ bool AgoraJniProxySdk::fillVideoOfH264(JNIEnv* env, const agora::linuxsdk::Video
 }
 bool AgoraJniProxySdk::fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass jcVideoFrame, jobject jobVideoFrame) const{
   CHECK_PTR_RETURN_BOOL(mJavaAgoraJavaRecordingClass);
-#if 0
   bool ret = false;
-  jclass jc = NULL;
-  jmethodID initMid = NULL;
-  jfieldID fid = NULL;
-  jobject job = NULL;
-
-  if(!env || !frame || !jcVideoFrame || !jobVideoFrame){
-    LOG_DIR(m_logdir.c_str(), ERROR,"AgoraJniProxySdk::fillVideoFrameByFields para error!");
-    return ret;
-  }
-  if (frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) {
-    //3.1
-    if(!fillVideoOfYUV(env, frame, jcVideoFrame, jobVideoFrame)){
-      LOG_DIR(m_logdir.c_str(), INFO,"fill subclass falied!");
-      return false;
-    }
-  }else if(frame->type == agora::linuxsdk::VIDEO_FRAME_JPG){
-    //3.2
-    if(!fillVideoOfJPG(env, frame, jcVideoFrame, jobVideoFrame)) {
-      LOG_DIR(m_logdir.c_str(), INFO,"fill subclass falied!");
-      return false;
-    }
-  }else{
-    //3.3
-    if(!fillVideoOfH264(env, frame, jcVideoFrame, jobVideoFrame))
-    {
-      LOG_DIR(m_logdir.c_str(), INFO,"fillVideoOfH264 failed!");
-      return false;
-    }
-  }
-
-  //fill VIDEO_FRAME_TYPE
-  //set type of VIDEO_FRAME_TYPE by FindClass
-  jc = env->FindClass("Lio/agora/recording/common/Common$VIDEO_FRAME_TYPE;");
-  if(!jc) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get VIDEO_FRAME_TYPE class");
-    return false;
-  }
-  //4.1.1
-  initMid = env->GetMethodID(jc,SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
-  if(!initMid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"get init methid failed!");
-    return false;
-  }
-  //4.1.2
-  job = env->NewObject(jc, initMid);
-  //4.1.3 get field of this class
-  fid = env->GetFieldID(jc, "type", "I");
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get value of VIDEO_FRAME_TYPE class");
-    env->DeleteLocalRef(job);
-    return false;
-  }
-  //4.1.4 fill this field
-  int iVideoFrameType = static_cast<int>(frame->type);
-  env->SetIntField(job, fid, jint(iVideoFrameType));
-  //4.2
-  //set this object into jobAudioFrame!
-  //step 1:get this object field
-  fid = env->GetFieldID(jcVideoFrame, "type", VIDEO_FRAME_TYPE_SIGNATURE);
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get VIDEO_FORMAT_TYPE field");
-    env->DeleteLocalRef(job);
-    return false;
-  }
-  //4.3
-  env->SetObjectField(jobVideoFrame, fid, job);
-  
-  env->DeleteLocalRef(job);
-  env->DeleteLocalRef(jc);
-#else
-  bool ret = false;
-  jclass jc = NULL;
-  jmethodID initMid = NULL;
-  jfieldID fid = NULL;
-  jobject job = NULL;
   if(!env || !frame || !jcVideoFrame || !jobVideoFrame){
     LOG_DIR(m_logdir.c_str(), ERROR,"AgoraJniProxySdk::fillVideoFrameByFields para error!");
     return ret;
@@ -803,7 +727,7 @@ bool AgoraJniProxySdk::fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk
       return false;
     }
   }
-  job = env->NewObject(mJavaVideoFrameTypeClass, mJavaVideoFrameTypeInitMtd);
+  jobject job = env->NewObject(mJavaVideoFrameTypeClass, mJavaVideoFrameTypeInitMtd);
   CPB(job);
   int iVideoFrameType = static_cast<int>(frame->type);
   env->SetIntField(job, mJavaVideoFrameTypeTypeFid, jint(iVideoFrameType));
@@ -811,7 +735,6 @@ bool AgoraJniProxySdk::fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk
   //TODO
   //rotation need to set!
   env->DeleteLocalRef(job);
-#endif
   return true;
 }
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {

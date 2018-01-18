@@ -34,8 +34,7 @@ public:
   void stopJavaProc(JNIEnv* env);
   void setJavaRecordingPath(JNIEnv* env, std::string& storeDir);
 
-  jobject newJObject(JNIEnv* env) const;
-  jobject newJObject2(JNIEnv* env) const;
+  jobject newJObject(JNIEnv* env, jclass jcls, jmethodID jmtd) const;
 
   jclass newGlobalJClass(JNIEnv* env, const char* className);
   jobject newGlobalJObject(JNIEnv* env, jclass jc, const char* signature);

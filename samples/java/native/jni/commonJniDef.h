@@ -1,3 +1,4 @@
+
 //define signatures
 #define LONG_SIGNATURE "J"
 #define INT_SIGNATURE "I"
@@ -5,6 +6,7 @@
 #define DOUBLE_SIGNATURE "D"
 #define LONG_PARA_VOID_RETURN "(J)V" 
 #define EMPTY_PARA_INT_RETURN "()I"
+#define SG_INT "I"
 #define STRING_SIGNATURE "Ljava/lang/String;"
 #define BYTEARRAY "Ljava/nio/ByteBuffer;"
 #define CHANNEL_PROFILE_SIGNATURE "Lio/agora/recording/common/Common$CHANNEL_PROFILE_TYPE;"
@@ -29,8 +31,15 @@
 #define CN_VIDEO_YUV_FRAME "io/agora/recording/common/Common$VideoYuvFrame"
 #define CN_VIDEO_JPG_FRAME "io/agora/recording/common/Common$VideoJpgFrame"
 #define CN_VIDEO_H264_FRAME "io/agora/recording/common/Common$VideoH264Frame"
+
+//video frame type clas
+#define CN_VIDEO_FRAME_TYPE "io/agora/recording/common/Common$VIDEO_FRAME_TYPE"
+
 //init jmethodID
-#define MTD_INIT_SIGNATURE "<init>"
+#define SG_MTD_INIT "<init>"
+#define SG_COMMON_INIT "<init>"
+#define MTD_TYPE "type"
+
 #define VIDEO_FRAME_SIGNATURE "(Lio/agora/recording/common/Common;)V"
 #define MTD_INIT_VIDEO_FRAME "(Lio/agora/recording/common/Common;)V"
 
@@ -64,5 +73,38 @@ static jmethodID mJavaVideoYuvFrameInitMtd;
 static jmethodID mJavaRecvVideoMtd = NULL;
 
 static jmethodID mJavaRecvAudioMtd = NULL;
- 
 
+/*
+struct JavaObjectMethod {
+  int id;
+  const char* name;
+  const char* signature;
+};
+
+enum ObjectMethodId {
+  MID_ON_EVENT = 0,
+  MID_ON_LOG_EVENT = 1,
+  MID_GET_NETWORK_TYPE = 2,
+  MID_GET_NETWORK_INFO = 3,
+  MID_GET_BATTERY_LIFE_PERCENT = 4,
+  MID_OBJECT_NUM = 5,
+};
+enum ClassMethodId {
+  MID_GET_RANDOM_UUID = 0,
+  MID_GET_LOCAL_HOST = 1,
+  MID_GET_LOCAL_HOST_LIST = 2,
+  MID_CLASS_NUM = 3,
+};
+static JavaObjectMethod jObjectMethods[] = {
+  { MID_ON_EVENT, "onEvent", "(I[B)V" },
+  { MID_ON_LOG_EVENT, "onLogEvent", "(ILjava/lang/String;)V" },
+  { MID_GET_NETWORK_TYPE, "getNetworkType", "()I" },
+  { MID_GET_NETWORK_INFO, "getNetworkInfo", "()[B" },
+  { MID_GET_BATTERY_LIFE_PERCENT, "getBatteryLifePercent", "()I" },
+};
+static JavaObjectMethod jVideoFrameClassMethods[] = {
+  { MID_GET_RANDOM_UUID, "getRandomUUID", "()Ljava/lang/String;" },
+  { MID_GET_LOCAL_HOST, "getLocalHost", "()Ljava/lang/String;" },
+  { MID_GET_LOCAL_HOST_LIST, "getLocalHostList", "()[Ljava/lang/String;" },
+};
+*/

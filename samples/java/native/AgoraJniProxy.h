@@ -41,7 +41,14 @@ public:
   //cache field ids & method ids
   void cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* className);
   void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
+  void cacheJavaObject(JNIEnv* env);
+  //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
+  //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
+  //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
+  //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
   jmethodID safeGetMethodID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
+  jfieldID safeGetFieldID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
+  jobject newGlobalJObject2(JNIEnv* env, jclass jc, jmethodID initMid) const;
 
 public:
    
@@ -58,10 +65,10 @@ private:
   bool fillAacAllFields(JNIEnv* env, jobject& job, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const;
 
   //video
-  bool fillJVideoFrameByFields(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass jcVideoFrame, jobject jobVideoFrame) const;
-  bool fillJVideoOfYUV(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
-  bool fillJVideoOfJPG(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
-  bool fillJVideoOfH264(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
+  bool fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass jcVideoFrame, jobject jobVideoFrame) const;
+  bool fillVideoOfYUV(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
+  bool fillVideoOfJPG(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
+  bool fillVideoOfH264(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const;
 private:
   std::string m_logdir;
 private:
@@ -69,12 +76,19 @@ private:
   //video
   jclass mJavaVideoFrameClass;
   jobject mJavaVideoFrameObject;
+  jfieldID mJavaVideoFrameTypeFid;
   jclass mJavaVideoYuvFrameClass;
   jobject mJavaVideoYuvFrameObject;
   jclass mJavaVideoJPGFrameClass;
   jobject mJavaVideoJPGFrameObject;
   jclass mJavaVideoH264FrameClass;
   jobject mJavaVideoH264FrameObject;
+  //type
+  jclass mJavaVideoFrameTypeClass;
+  jobject mJavaVideoFrameTypeObject;
+  jmethodID mJavaVideoFrameTypeInitMtd; 
+  jfieldID mJavaVideoFrameTypeTypeFid;
+
   //audio
   jclass mJavaAudioFrameClass;
   jobject mJavaAudioFrameObject;

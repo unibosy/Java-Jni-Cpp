@@ -54,7 +54,9 @@ JavaVM* g_jvm = NULL;//one eventhandler vs one?
 
 //jmethodID signature
 #define SN_MTD_COMMON_INIT "(Lio/agora/recording/common/Common;)V"
-#define SN_MTD_VIDEO_YUV_FRAME "(Lio/agora/recording/common/Common;JIIIII)V"
+//video  init jmethodID 
+#define SN_MTD_VIDEO_YUV_FRAME_INIT "(Lio/agora/recording/common/Common;JIIIII)V"
+
 //class name
 //VIDEO
 #define CN_REP "io/agora/recording/common/RecordingEngineProperties"
@@ -67,15 +69,20 @@ JavaVM* g_jvm = NULL;//one eventhandler vs one?
 #define CN_AUDIO_AAC_FRAME "io/agora/recording/common/Common$AudioAacFrame"
 #define CN_AUDIO_PCM_FRAME "io/agora/recording/common/Common$AudioPcmFrame"
 
-//jmethodID
-#define INIT_SIGNATURE "<init>"
+//init jmethodID
+#define MTD_INIT_SIGNATURE "<init>"
 #define VIDEO_FRAME_SIGNATURE "(Lio/agora/recording/common/Common;)V"
+#define MTD_INIT_VIDEO_FRAME "(Lio/agora/recording/common/Common;)V"
 
-//java callback function signature
 #define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JLio/agora/recording/common/Common$VideoFrame;)V"
-
 //declare java callback function
 #define CB_FUNC_RECEIVE_VIDEOFRAME "videoFrameReceived"
+
+//declare filedIDs
+#define FID_VIDEO_YUV_FRAME_BUF "buf_"
+#define FID_VIDEO_YUV_FRAME_BUFSIZE "bufSize_"
+#define FID_VIDEO_FRAME_YUV "yuv"
+#define FID_VIDEO_YUV_FRAME_FRAMEMS "frame_ms_"
 
 //jclass
 //audio
@@ -91,10 +98,49 @@ static jclass JC_VIDEO_JPG_FRAME = NULL;
 
 static jclass JC_RECORDING_ENGINE_PROPERTIES = NULL;
 
+//static jmethodID mJavaVideoFrameInitMtd = NULL;
+//static jmethodID mJavaVideoYuvFrameInitMtd = NULL;
+static jmethodID mJavaRecvVideoMtd = NULL;
+
+class AttachThreadScoped
+{
+public:
+  explicit AttachThreadScoped(JavaVM* jvm)
+    : attached_(false), jvm_(jvm), env_(NULL) {
+    jint ret_val = jvm->GetEnv(reinterpret_cast<void**>(&env_),JNI_VERSION_1_4);
+    if (ret_val == JNI_EDETACHED) {
+      // Attach the thread to the Java VM.
+      ret_val = jvm_->AttachCurrentThread((void**)&env_, NULL);
+      attached_ = ret_val >= 0;
+      assert(attached_);
+    }
+  }
+  /*~AttachThreadScoped() {
+    if (attached_ && (jvm_->DetachCurrentThread() < 0)) {
+      assert(false);
+    }
+  }*/
+  void detach(){
+    if (!attached_ && jvm_->DetachCurrentThread() < 0) {
+      assert(false);
+    }
+  }
+  JNIEnv* env() { return env_; }
+private:
+  bool attached_;
+  JavaVM* jvm_;
+  JNIEnv* env_;
+};
+static jmethodID mJavaVideoFrameInitMtd;
+static jmethodID mJavaVideoYuvFrameInitMtd;
+
+//jmethodID AgoraJniProxySdk::mJavaVideoYuvFrameInitMtd = NULL;
+//jmethodID AgoraJniProxySdk::mJavaVideoFrameInitMtd = NULL;
+
 AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk constructor");
   mJavaAgoraJavaRecordingClass = NULL;
-  mJavaAgoraJavaRecordingClass = NULL;
+  mJavaAgoraJavaRecordingObject = NULL;
   mJavaVideoFrameClass = NULL;
   mJavaVideoFrameObject = NULL;
   mJavaVideoYuvFrameClass = NULL;
@@ -110,18 +156,42 @@ AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   mJavaAudioAacFrameObject = NULL;
   mJavaAudioPcmFrameClass =NULL;
   mJavaAudioPcmFrameObject =NULL;
-  //AgoraJavaRecording callback function jmethodIDs
-  mJavaRecvVideoMtd = NULL;
 
-  initJavaObjects(true);
-  cacheJavaCBFuncMethodIDs(CN_VIDEO_FRAME);
+  //java videoframe jmethodIDs
+  //mJavaVideoFrameInitMtd = NULL;
+  //mJavaVideoYuvFrameInitMtd = NULL;
+  mJavaVideoJPGFrameInitMtd = NULL;
+  mJavaVideoH264FrameInitMtd = NULL;
+  //java audioframe jmethodIDs
+  mJavaAudioFrameInitMtd = NULL;
+  mJavaAudioAacFrameInitMtd = NULL;
+  mJavaAudioPcmFrameInitMtd = NULL;
+  //AV fieldIDs
+  mJavaVideoFrameMsFid = NULL;
+  mJavaVideoFrameBufFid = NULL;
+  mJavaVideoFrameBufSizeFid = NULL;
+  mJavaVideoFrameYuvFid = NULL;
+
+  //AgoraJavaRecording callback function jmethodIDs
+  //mJavaRecvVideoMtd = NULL;
 }
 AgoraJniProxySdk::~AgoraJniProxySdk(){
+  AttachThreadScoped ats(g_jvm);
+  JNIEnv* env = ats.env();
+  if(!env) return;
+ 
   cout<<"AgoraJniProxySdk destructor begin"<<endl;
-  initJavaObjects(false);
+  initJavaObjects(env, false);
   cout<<"AgoraJniProxySdk destructor end"<<endl;
 }
-
+void AgoraJniProxySdk::initialize(){
+  AttachThreadScoped ats(g_jvm);
+  JNIEnv* env = ats.env();
+  if(!env) return;
+  initJavaObjects(env, true);
+  cacheJavaCBFuncMethodIDs4Video(env, CN_VIDEO_FRAME);
+  cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
+}
 
 #define CHECK_PTR_RETURN(PTR) \
   {            \
@@ -155,35 +225,79 @@ AgoraJniProxySdk::~AgoraJniProxySdk(){
 
 #endif
 */
-class AttachThreadScoped
-{
-public:
-  explicit AttachThreadScoped(JavaVM* jvm)
-    : attached_(false), jvm_(jvm), env_(NULL) {
-    jint ret_val = jvm->GetEnv(reinterpret_cast<void**>(&env_),JNI_VERSION_1_4);
-    if (ret_val == JNI_EDETACHED) {
-      // Attach the thread to the Java VM.
-      ret_val = jvm_->AttachCurrentThread((void**)&env_, NULL);
-      attached_ = ret_val >= 0;
-      assert(attached_);
-    }
+jobject AgoraJniProxySdk::newJObject2(JNIEnv* env) const{
+#if 0
+  cout<<"new object"<<endl;
+  jobject job = env->NewObject(mJavaVideoYuvFrameClass, mJavaVideoYuvFrameInitMtd);
+  cout<<"new object -1"<<endl;
+  if(!job){
+    LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJClass cound not create global reference!");
+    return NULL;
   }
-  /*~AttachThreadScoped() {
-    if (attached_ && (jvm_->DetachCurrentThread() < 0)) {
-      assert(false);
-    }
-  }*/
-  void detach(){
-    if (!attached_ && jvm_->DetachCurrentThread() < 0) {
-      assert(false);
-    }
+  cout<<"new object -2"<<endl;
+  return job;
+#else
+  if(!mJavaVideoYuvFrameInitMtd){
+    cout<<"newJObject mJavaVideoFrameInitMtd is NULL"<<endl;
+    return NULL;
   }
-  JNIEnv* env() { return env_; }
-private:
-  bool attached_;
-  JavaVM* jvm_;
-  JNIEnv* env_;
-};
+  //jmethodID jmid = safeGetMethodID(env, mJavaVideoFrameInitMtd, MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  
+  //jobject job = env->NewObject(localRef, jmid);
+  jobject job = env->NewObject(mJavaVideoYuvFrameClass, mJavaVideoYuvFrameInitMtd);
+  if(!job) {
+    cout<<"cannot get new mJavaVideoYuvFrameClass"<<endl;
+    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get new JavaVideoYuvFrameClass,");
+    return NULL;
+  }
+  return job;
+
+#endif
+}
+jobject AgoraJniProxySdk::newJObject(JNIEnv* env) const{
+#if 0
+  jclass localRef = env->FindClass("io/agora/recording/common/Common$VideoFrame");
+  if(!localRef) {
+    LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJClass cannot find class:%s"/*,className*/);
+    return NULL;
+  }
+  if(mJavaVideoFrameInitMtd == NULL){
+    cout<<"newJObject mJavaVideoFrameInitMtd is NULL"<<endl;
+  }
+  cout<<"new object -11"<<endl;
+  jmethodID jmid = safeGetMethodID(env, localRef, MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+   
+  cout<<"new object -22"<<endl;
+  jobject job = env->NewObject(localRef, jmid);
+  //jobject job = env->NewObject(mJavaVideoFrameClass, mJavaVideoFrameInitMtd);
+  //jobject job = env->NewObject(localRef, );
+
+  if(!job) {
+    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get videoinit methodid");
+    return NULL;
+  }
+  cout<<"new object -33"<<endl;
+  return job;
+#else
+  if(mJavaVideoFrameInitMtd == NULL){
+    cout<<"newJObject mJavaVideoFrameInitMtd is NULL"<<endl;
+    return NULL;
+  }
+  //jmethodID jmid = safeGetMethodID(env, mJavaVideoFrameInitMtd, MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  
+  //jobject job = env->NewObject(localRef, jmid);
+  jobject job = env->NewObject(mJavaVideoFrameClass, mJavaVideoFrameInitMtd);
+
+  if(!job) {
+    
+    cout<<"cannot get videoinit methodid"<<endl;
+    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get videoinit methodid");
+    return NULL;
+  }
+  return job;
+
+#endif
+}
 
 jclass AgoraJniProxySdk::newGlobalJClass(JNIEnv* env, const char* className){
   jclass localRef = env->FindClass(className);
@@ -200,7 +314,7 @@ jclass AgoraJniProxySdk::newGlobalJClass(JNIEnv* env, const char* className){
   return globalJc;
 }
 jobject AgoraJniProxySdk::newGlobalJObject(JNIEnv* env, jclass jc, const char* signature){
-  jmethodID initMid = env->GetMethodID(jc, INIT_SIGNATURE, signature);
+  jmethodID initMid = env->GetMethodID(jc, MTD_INIT_SIGNATURE, signature);
   if(!initMid) {
     LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJObject cannot get init method for this signature:%s", signature);
     return NULL;
@@ -212,33 +326,136 @@ jobject AgoraJniProxySdk::newGlobalJObject(JNIEnv* env, jclass jc, const char* s
   }
   return globalJob;
 }
-void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs(const char* className){
-  AttachThreadScoped ats(g_jvm);
+#if 1
+jmethodID AgoraJniProxySdk::safeGetMethodID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const {
+  /*AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
-  if (!env) return;
+  if (!env) return NULL;*/
+  //env->ExceptionClear();
+  jmethodID mid = env->GetMethodID(clazz, name, sig);
+  if (/*env->ExceptionCheck() || */!mid) {
+    //log(LOG_ERROR, "exception occurred at jni call GetMethodID('%s')", name);
+    env->ExceptionClear();
+    mid = 0;
+    cout<<"safeGetMethodID get null mid"<<endl;
+  }
+  return mid;
+}
+#endif
+void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className){
+  cout<<"ooooooooooooooooooooooooooooooooooooooooooo33"<<endl;
+  //AV init jmethodIDs
+#if 1
   jclass localRef = env->FindClass(className);
   if(!localRef) {
     LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJClass cannot find class:%s", className);
     return ;
   }
-  mJavaRecvVideoMtd = Helper::safeGetMethodID(env, localRef, CB_FUNC_RECEIVE_VIDEOFRAME, SN_CB_FUNC_RECEIVE_VIDEOFRAME);
+  if(!mJavaVideoYuvFrameClass){
+    cout<<"mJavaVideoYuvFrameClass is NULL"<<endl;
+    return;
+  }
+  mJavaVideoYuvFrameInitMtd = safeGetMethodID(env, localRef, MTD_INIT_SIGNATURE, SN_MTD_VIDEO_YUV_FRAME_INIT);
+  if(!mJavaVideoYuvFrameInitMtd) {
+    cout<<"oooooooooooooooooooooooooooooooooooooooooo333333333333"<<endl;
+    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get video yuv init methodid");
+    return;
+  }
+  cout<<"oooooooooooooooooooooooooooooooooooooooooo44"<<endl;
+  //AV para fieldIDs
+  mJavaVideoFrameMsFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_VIDEO_YUV_FRAME_FRAMEMS, LONG_SIGNATURE);
+  mJavaVideoFrameBufFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_VIDEO_YUV_FRAME_BUF, BYTEARRAY);
+  mJavaVideoFrameBufSizeFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_VIDEO_YUV_FRAME_BUFSIZE, LONG_SIGNATURE);
+  //mJavaVideoFrameYuvFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_VIDEO_FRAME_YUV, VIDEOFRAME_YUV_SIGNATURE);
+  //mJavaVideoFrameYuvFid = env->GetFieldID(localRef,  , VIDEOFRAME_YUV_SIGNATURE);
+  //if(!mJavaVideoFrameYuvFid){
+  //  cout<<"mJavaVideoFrameYuvFid is null"<<endl;
+  //  return;
+  //}
+  if(!mJavaVideoFrameBufFid){
+    cout<<"mJavaVideoFrameYuvFid is null"<<endl;
+  }
+#else
+ jclass jc = NULL;
+  jmethodID initMid = NULL;
+  jobject job = NULL;
+  jfieldID fid = NULL;
+  jobject jbArr = NULL;
+  //1.get subclass
+  jc = env->FindClass("Lio/agora/recording/common/Common$VideoYuvFrame;");
+  if(!jc) {
+    LOG_DIR(m_logdir.c_str(), ERROR,"fillJVideoOfYUV cannot find subclass");
+    return false;
+  }
+  //2.get subclass init method
+  initMid = env->GetMethodID(jc,"<init>","(Lio/agora/recording/common/Common;JIIIII)V");
+  if(!initMid) {
+    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get init methodid");
+    return false;
+  }
+
+  //3.new VideoXXXXXFrame object
+  job = env->NewObject(jc, initMid);
+  if(!job){
+    LOG_DIR(m_logdir.c_str(), ERROR,"new subclass  failed! no memory?");
+    return false;
+  }
+  //4.fill all fields
+  //4.1 get & set of this subclass object
+  //frame_ms_
+  fid = env->GetFieldID(jc, "frame_ms_", LONG_SIGNATURE);
+  if(!fid) {
+    //TODO add field ID
+    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID::%u",fid);
+    return false;
+  }
+  //buf_
+  fid = env->GetFieldID(jc, "buf_", BYTEARRAY);
+  if(fid == NULL) {
+    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID::%u",fid);
+    return false;
+  }
+#endif
+}
+void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* className){
+    if (!env) return;
+  //AV class
+    cout<<"oooooooooooooooooooooooooooooooooooooooooo1"<<endl;
+  jclass localRef = env->FindClass(className);
+  if(!localRef) {
+    LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJClass cannot find class:%s", className);
+    return ;
+  }
+    cout<<"ooooooooooooooooooooooooooooooooooooooooooo2"<<endl;
+  mJavaRecvVideoMtd = safeGetMethodID(env, mJavaAgoraJavaRecordingClass, CB_FUNC_RECEIVE_VIDEOFRAME, SN_CB_FUNC_RECEIVE_VIDEOFRAME);
   if(!mJavaRecvVideoMtd) {
+    cout<<"ooooooooooooooooooooooooooooooooooooooooooo2-1"<<endl;
      LOG_DIR(m_logdir.c_str(), ERROR, "get receive video frame jmethodid failed ");
      return;
   }
-}
-void AgoraJniProxySdk::initJavaObjects(bool init){
-  AttachThreadScoped ats(g_jvm);
-  JNIEnv* env = ats.env();
-  if (!env) return;
+   mJavaVideoFrameInitMtd = safeGetMethodID(env, localRef, MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  if(!mJavaVideoFrameInitMtd) {
+    cout<<"ooooooooooooooooooooooooooooooooooooooooooooo"<<endl;
+    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get videoinit methodid");
+    return;
+  }
+  mJavaVideoFrameYuvFid = env->GetFieldID(localRef, FID_VIDEO_FRAME_YUV, VIDEOFRAME_YUV_SIGNATURE);
+  
+  //mJavaVideoFrameYuvFid = env->GetFieldID(localRef,  , VIDEOFRAME_YUV_SIGNATURE);
+  if(!mJavaVideoFrameYuvFid){
+    cout<<"mJavaVideoFrameYuvFid is null"<<endl;
+    return;
+  }
+ }
+void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
 
   mJavaVideoFrameClass = newGlobalJClass(env, CN_VIDEO_FRAME);
   mJavaVideoFrameObject = newGlobalJObject(env, mJavaVideoFrameClass, SN_MTD_COMMON_INIT);
+  
   mJavaVideoYuvFrameClass = newGlobalJClass(env, CN_VIDEO_YUV_FRAME);
-  mJavaVideoYuvFrameObject = newGlobalJObject(env, mJavaVideoYuvFrameClass, SN_MTD_VIDEO_YUV_FRAME);
+  mJavaVideoYuvFrameObject = newGlobalJObject(env, mJavaVideoYuvFrameClass, SN_MTD_VIDEO_YUV_FRAME_INIT);
   
   mJavaVideoJPGFrameClass = newGlobalJClass(env, CN_VIDEO_JPG_FRAME);
-  CHECK_EXCEPTION(env,"");  
   mJavaVideoJPGFrameObject = newGlobalJObject(env, mJavaVideoJPGFrameClass, SN_MTD_COMMON_INIT);
   
   mJavaVideoH264FrameClass = newGlobalJClass(env, CN_VIDEO_H264_FRAME);
@@ -387,7 +604,7 @@ bool AgoraJniProxySdk::fillAudioAacFrame(JNIEnv* env, const agora::linuxsdk::Aud
   }
   //new AudioAacFrame
   //TODO  place these to one function
-  initMid = env->GetMethodID(jc,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;J)V");
+  initMid = env->GetMethodID(jc,MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;J)V");
   if(!initMid) {
     LOG_DIR(m_logdir.c_str(), INFO,"get AudioAacFrame init methid failed!");
     return false;
@@ -430,7 +647,7 @@ bool AgoraJniProxySdk::fillAudioPcmFrame(JNIEnv* env, const agora::linuxsdk::Aud
   }
   //new AudioPcmFrame
   //TODO  place these to one function
-  initMid = env->GetMethodID(jc,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;JJJ)V");
+  initMid = env->GetMethodID(jc,MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;JJJ)V");
   if(initMid == NULL) {
     LOG_DIR(m_logdir.c_str(), ERROR,"get AudioPcmFrame init methid failed!");
     return false;
@@ -460,30 +677,25 @@ bool AgoraJniProxySdk::fillJVideoOfYUV(JNIEnv* env, const agora::linuxsdk::Video
   CHECK_PTR_RETURN_BOOL(mJavaAgoraJavaRecordingClass);
   if(frame->type != agora::linuxsdk::VIDEO_FRAME_RAW_YUV) return false;
   if(!env || !frame) return false;
-  jclass jc = NULL;
+  //jclass jc = NULL;
   jmethodID initMid = NULL;
   jobject job = NULL;
   jfieldID fid = NULL;
   jobject jbArr = NULL;
-  //1.get subclass
+#if 0  
   jc = env->FindClass("Lio/agora/recording/common/Common$VideoYuvFrame;");
   if(!jc) {
     LOG_DIR(m_logdir.c_str(), ERROR,"fillJVideoOfYUV cannot find subclass");
     return false;
   }
-  //2.get subclass init method
-  initMid = env->GetMethodID(jc,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;JIIIII)V");
-  if(!initMid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get init methodid");
-    return false;
-  }
 
   //3.new VideoXXXXXFrame object
-  job = env->NewObject(jc, initMid);
+  job = env->NewObject(mJvaVideoYuvFrameClass, mJvaVideoYuvFrameInitMtd);
   if(!job){
     LOG_DIR(m_logdir.c_str(), ERROR,"new subclass  failed! no memory?");
     return false;
   }
+#endif
   agora::linuxsdk::VideoYuvFrame *f = frame->frame.yuv;
   if(!f) {
     LOG_DIR(m_logdir.c_str(), ERROR,"yuv frame is nullptr");
@@ -492,47 +704,43 @@ bool AgoraJniProxySdk::fillJVideoOfYUV(JNIEnv* env, const agora::linuxsdk::Video
   //4.fill all fields
   //4.1 get & set of this subclass object
   //frame_ms_
-  fid = env->GetFieldID(jc, "frame_ms_", LONG_SIGNATURE);
+#if 0
   if(!fid) {
     //TODO add field ID
     LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID::%u",fid);
     return false;
   }
+#endif 
+#if 0
   long frame_ms_ = f->frame_ms_;
-  env->SetLongField(job, fid, jlong(frame_ms_));
-  //buf_
-  fid = env->GetFieldID(jc, "buf_", BYTEARRAY);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID::%u",fid);
-    return false;
-  }
+  env->SetLongField(mJavaVideoYuvFrameObject, mJavaVideoFrameFrameMsFid, jlong(frame_ms_));
   long bufSize_ = f->bufSize_;
-  //jbArr  = env->NewDirectByteBuffer((void*)(char*)((const_cast<unsigned char*>(f->buf_))), bufSize_);
   jbArr  = env->NewDirectByteBuffer((void*)(f->buf_), bufSize_);
-  env->SetObjectField(job, fid, jbArr);
-  //bufSize_
-  fid = env->GetFieldID(jc, "bufSize_", LONG_SIGNATURE);
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID::%u",fid);
-    return false;
-  }
-  env->SetLongField(job, fid, jlong(bufSize_));
+  env->SetObjectField(mJavaVideoYuvFrameObject, FID_VIDEO_YUV_FRAME_BUF, jbArr);
+  env->SetLongField(mJavaVideoYuvFrameObject, FID_VIDEO_YUV_FRAME_BUFSIZE, jlong(bufSize_));
 
-  //5.get subclass field
-  fid = env->GetFieldID(jcVideoFrame, "yuv", VIDEOFRAME_YUV_SIGNATURE);
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get VIDEOFRAME_YUV_SIGNATURE");
+  env->SetObjectField(mJavaVideoFrameObject, FID_VIDEO_FRAME_YUV, mJavaVideoYuvFrameObject);
+  env->DeleteLocalRef(jbArr);
+#else
+  job = newJObject2(env);
+  if(!job){
+    cout<<"new yuv frame return null"<<endl;
     return false;
   }
-  //6.fill jobVideFrame
-  env->SetObjectField(jobVideoFrame, fid, job);
-   
-  env->DeleteLocalRef(job);
-  env->DeleteLocalRef(jc);
+  long frame_ms_ = f->frame_ms_;
+  env->SetLongField(job, mJavaVideoFrameMsFid, jlong(frame_ms_));
+  long bufSize_ = f->bufSize_;
+  jbArr  = env->NewDirectByteBuffer((void*)(f->buf_), bufSize_);
+  env->SetObjectField(job, mJavaVideoFrameBufFid, jbArr);
+  env->SetLongField(job, mJavaVideoFrameBufSizeFid, jlong(bufSize_));
+  env->SetObjectField(jobVideoFrame, mJavaVideoFrameYuvFid, job);
+  //env->SetObjectField(jobVideoFrame, mJavaVideoFrameYuvFid, mJavaVideoYuvFrameObject);
   env->DeleteLocalRef(jbArr);
+#endif
+
   return  true;
 }
-bool AgoraJniProxySdk::fillJVideoOfJPG(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const {
+bool AgoraJniProxySdk::fillJVideoOfJPG(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const{
   CHECK_PTR_RETURN_BOOL(mJavaAgoraJavaRecordingClass);
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk::fillJVideoOfJPG enter" );
   if(frame->type != agora::linuxsdk::VIDEO_FRAME_JPG) return false;
@@ -551,7 +759,7 @@ bool AgoraJniProxySdk::fillJVideoOfJPG(JNIEnv* env, const agora::linuxsdk::Video
     return false;
   }
   //2.get subclass init method
-  initMid = env->GetMethodID(jc,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  initMid = env->GetMethodID(jc,MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
   if(!initMid) {
     LOG_DIR(m_logdir.c_str(), ERROR,"cannot get init methodid");
     return false;
@@ -609,7 +817,7 @@ bool AgoraJniProxySdk::fillJVideoOfJPG(JNIEnv* env, const agora::linuxsdk::Video
   env->DeleteLocalRef(jbArr);
   return  true;
 }
-bool AgoraJniProxySdk::fillJVideoOfH264(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const{
+bool AgoraJniProxySdk::fillJVideoOfH264(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass& jcVideoFrame, jobject& jobVideoFrame) const {
   CHECK_PTR_RETURN_BOOL(mJavaAgoraJavaRecordingClass);
   if(frame->type == agora::linuxsdk::VIDEO_FRAME_JPG || frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) return false;
   if(!env || !frame) return false;
@@ -626,7 +834,7 @@ bool AgoraJniProxySdk::fillJVideoOfH264(JNIEnv* env, const agora::linuxsdk::Vide
     return false;
   }
   //2.get subclass init method
-  initMid = env->GetMethodID(jc,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  initMid = env->GetMethodID(jc,MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
   if(!initMid) {
     LOG_DIR(m_logdir.c_str(), ERROR,"cannot get init methodid");
     return false;
@@ -694,7 +902,7 @@ bool AgoraJniProxySdk::fillJVideoOfH264(JNIEnv* env, const agora::linuxsdk::Vide
   env->DeleteLocalRef(jbArr);
   return  true;
 }
-bool AgoraJniProxySdk::fillJVideoFrameByFields(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass jcVideoFrame, jobject jobVideoFrame) const {
+bool AgoraJniProxySdk::fillJVideoFrameByFields(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass jcVideoFrame, jobject jobVideoFrame) const{
   CHECK_PTR_RETURN_BOOL(mJavaAgoraJavaRecordingClass);
   bool ret = false;
   jclass jc = NULL;
@@ -706,7 +914,6 @@ bool AgoraJniProxySdk::fillJVideoFrameByFields(JNIEnv* env, const agora::linuxsd
     LOG_DIR(m_logdir.c_str(), ERROR,"AgoraJniProxySdk::fillJVideoFrameByFields para error!");
     return ret;
   }
-
   if (frame->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) {
     //3.1
     if(!fillJVideoOfYUV(env, frame, jcVideoFrame, jobVideoFrame)){
@@ -736,7 +943,7 @@ bool AgoraJniProxySdk::fillJVideoFrameByFields(JNIEnv* env, const agora::linuxsd
     return false;
   }
   //4.1.1
-  initMid = env->GetMethodID(jc,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  initMid = env->GetMethodID(jc,MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
   if(!initMid) {
     LOG_DIR(m_logdir.c_str(), ERROR,"get init methid failed!");
     return false;
@@ -772,22 +979,42 @@ bool AgoraJniProxySdk::fillJVideoFrameByFields(JNIEnv* env, const agora::linuxsd
 }
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
-  jmethodID jmid = NULL;
-
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-  //3.get subclass or enumm details and fill these' fields
-  if(!fillJVideoFrameByFields(env, frame, mJavaVideoFrameClass, mJavaVideoFrameObject))
+#if 1
+  jobject job = newJObject(env);
+#else
+  jclass localRef = env->FindClass("io/agora/recording/common/Common$VideoFrame");
+  if(!localRef) {
+    LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJClass cannot find class:%s"/*,className*/);
+    return ;
+  }
+  if(mJavaVideoFrameInitMtd == NULL){
+    cout<<"newJObject mJavaVideoFrameInitMtd is NULL"<<endl;
+  }
+  cout<<"new object -11"<<endl;
+  jmethodID jmid = safeGetMethodID(env, localRef, MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  if(!jmid){
+    cout<<"safeGetMethodID jmid is NULL!"<<endl;
+    return;
+  }
+  cout<<"new object -22"<<endl;
+  jobject job = env->NewObject(localRef, jmid);
+
+  if(!job) {
+    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get videoinit methodid");
+    return ;
+  }
+  cout<<"new object -33"<<endl;
+
+#endif
+  if(!fillJVideoFrameByFields(env, frame, mJavaVideoFrameClass, job))
   {
     LOG_DIR(m_logdir.c_str(), ERROR,"jni fillJVideoFrameByFields failed!" );
     return;
   }
-  //4.find class where callback function in
-  //5. find callback function
-    //so far so well
-  jmethodID mJavaRecvVideoMtd2 = env->GetMethodID(mJavaAgoraJavaRecordingClass, CB_FUNC_RECEIVE_VIDEOFRAME, SN_CB_FUNC_RECEIVE_VIDEOFRAME);
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvVideoMtd2, jlong(long(uid)), mJavaVideoFrameObject);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvVideoMtd, jlong(long(uid)), job);
   return;
 }
 //TODO  use the same parameter
@@ -813,7 +1040,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   }
   iAudioFrameType = static_cast<int>(frame->type);
   //2.get main class init methodid
-  initMid = env->GetMethodID(jcAudioFrame,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  initMid = env->GetMethodID(jcAudioFrame,MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
   if(!initMid){
     LOG_DIR(m_logdir.c_str(), ERROR,"not find AudioFrameOfPcm initMid!");
     return;
@@ -838,7 +1065,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
     return;
   }
   //4.1.1
-  initMid = env->GetMethodID(jc,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  initMid = env->GetMethodID(jc,MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
   if(!initMid) {
     LOG_DIR(m_logdir.c_str(), ERROR,"get init methid failed!");
     return;
@@ -939,32 +1166,20 @@ void AgoraJniProxySdk::onWarning(int warn) {
 void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code) {
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onError");
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
-  cout<<"on error -1"<<endl;
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-
-  cout<<"on error -2"<<endl;
   jmethodID jLeaveMid =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"onError","(II)V");
   if(!jLeaveMid) {
     LOG_DIR(m_logdir.c_str(), INFO,"get method onError failed!");
     return;
   }
-  cout<<"on error -3"<<endl;
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jLeaveMid, error, jint((int)(stat_code)));
-
-  cout<<"on error -4"<<endl;
   leaveChannel();
-  cout<<"on error -2"<<endl;
-
   ats.detach();
   return;
 }
-//void AgoraJniProxySdk::setJavaVM(JavaVM* jvm){ 
-//  m_jvm = jvm;
-//}
 JNIEXPORT jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
-  //jniproxy::AgoraJniProxySdk::setJavaVM(jvm);
   g_jvm = jvm;
   return JNI_VERSION_1_4;
 }
@@ -1138,7 +1353,7 @@ JNIEXPORT jobject JNICALL Java_AgoraJavaRecording_getProperties(JNIEnv * env, jo
     cout<<"cannot get jclass RecordingEngineProperties!"<<endl;    
     return JNI_FALSE;
   }
-  jmethodID initMid = env->GetMethodID(jc,INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
+  jmethodID initMid = env->GetMethodID(jc,MTD_INIT_SIGNATURE,"(Lio/agora/recording/common/Common;)V");
   if(!initMid){
     cout<<"cannot get RecordingEngineProperties init!"<<endl;
     return JNI_FALSE;
@@ -1430,6 +1645,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   }
   jniRecorder.setJcAgoraJavaRecording(thisJcInstance);
   jniRecorder.setJobAgoraJavaRecording(thisObj);
+  jniRecorder.initialize();
 
   config.idleLimitSec = idleLimitSec;
   config.channelProfile = static_cast<agora::linuxsdk::CHANNEL_PROFILE_TYPE>(channelProfile);

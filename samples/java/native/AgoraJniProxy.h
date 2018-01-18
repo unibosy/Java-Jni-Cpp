@@ -12,6 +12,7 @@ public:
   typedef void (*callback_t ) (void);
   AgoraJniProxySdk();
   ~AgoraJniProxySdk(); 
+  void initialize();
   virtual void onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code);
   virtual void onWarning(int warn);
 
@@ -33,12 +34,20 @@ public:
   void stopJavaProc(JNIEnv* env);
   void setJavaRecordingPath(JNIEnv* env, std::string& storeDir);
 
+  jobject newJObject(JNIEnv* env) const;
+  jobject newJObject2(JNIEnv* env) const;
+
   jclass newGlobalJClass(JNIEnv* env, const char* className);
   jobject newGlobalJObject(JNIEnv* env, jclass jc, const char* signature);
   //cache field ids & method ids
-  void cacheJavaCBFuncMethodIDs(const char* className);
+  void cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* className);
+  void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
+  jmethodID safeGetMethodID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
+
+public:
+   
 private:
-  void initJavaObjects(bool init);
+  void initJavaObjects(JNIEnv* env, bool init);
 private:
   //audio
   bool fillJAudioFrameByFields(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, jclass& jcAudioFrame, jobject& jobAudioFrame) const;
@@ -76,8 +85,22 @@ private:
 
   jclass mJavaAudioPcmFrameClass;
   jobject mJavaAudioPcmFrameObject;
-  //jmethod IDs
-  jmethodID mJavaRecvVideoMtd;
+  //callback function jmethodIDs
+
+  //java class jmethod IDs
+  //static jmethodID mJavaVideoFrameInitMtd;
+  //static jmethodID mJavaVideoYuvFrameInitMtd;
+  jmethodID mJavaVideoJPGFrameInitMtd;
+  jmethodID mJavaVideoH264FrameInitMtd;
+  jmethodID mJavaAudioFrameInitMtd;
+  jmethodID mJavaAudioAacFrameInitMtd;
+  jmethodID mJavaAudioPcmFrameInitMtd;
+  //video frame field
+  //different jobject can or cannotshare one field?
+  jfieldID mJavaVideoFrameMsFid;
+  jfieldID mJavaVideoFrameBufFid;
+  jfieldID mJavaVideoFrameBufSizeFid;
+  jfieldID mJavaVideoFrameYuvFid;
 
 private:
   jclass mJavaAgoraJavaRecordingClass;

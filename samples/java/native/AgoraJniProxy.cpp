@@ -199,9 +199,9 @@ jfieldID AgoraJniProxySdk::safeGetFieldID2(JNIEnv* env, jclass clazz, const char
   return fid;
 }
 void AgoraJniProxySdk::cacheAudioPcmFrame(JNIEnv* env){
-  mJavaAudioFrameMsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_CHANNELS, LONG_SIGNATURE);
+  mJavaAudioFrameMsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_FRAME_MS, LONG_SIGNATURE);
   CP(mJavaAudioFrameMsFid);
-  mJavaAudioPcmFrameFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_CHANNELS, LONG_SIGNATURE);
+  mJavaAudioPcmFrameFid = safeGetFieldID(env, mJavaAudioFrameClass, FID_PCM, SN_AUDIO_PCM_FRAME);
   CP(mJavaAudioPcmFrameFid);
   mJavaAudioPcmFrameChannelsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_CHANNELS, LONG_SIGNATURE);
   CP(mJavaAudioPcmFrameChannelsFid);
@@ -308,9 +308,7 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   mJavaAudioFrameTypeObject = newGlobalJObject2(env, mJavaAudioFrameTypeClass,  mJavaAudioFrameTypeInitMtd);
   CP(mJavaAudioFrameTypeObject);
   //audioFrameType class type fid
-  cout<<"safe get field -1"<<endl;
   mJavaAudioFrameTypeTypeFid = safeGetFieldID(env, mJavaAudioFrameTypeClass, MTD_TYPE, SG_INT);
-  cout<<"safe get field -2"<<endl;
   CP(mJavaAudioFrameTypeTypeFid);
   //audio frame type
   mJavaAudioFrameTypeFid = safeGetFieldID(env, mJavaAudioFrameClass, MTD_TYPE, SN_AUDIO_FRAME_TYPE);
@@ -377,9 +375,11 @@ bool AgoraJniProxySdk::fillPcmAllFields(JNIEnv* env, jobject& job, jclass& jc, c
   //pcmBuf_
   long pcmBufSize_ = f->pcmBufSize_;
   jobject jbArr = env->NewDirectByteBuffer((void*)f->pcmBuf_, pcmBufSize_);
+  CPB(mJavaAudioPcmFrameBufFid);
   env->SetObjectField(job, mJavaAudioPcmFrameBufFid, jbArr);
   //pcmBufSize_
   env->SetLongField(job, mJavaAudioPcmFrameBufferSizeFid, jlong(pcmBufSize_));
+  env->DeleteLocalRef(jbArr);
   return true;
 }
 

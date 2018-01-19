@@ -85,7 +85,7 @@ static jmethodID mJavaVideoYuvFrameInitMtd;
 #define FID_SAMPLE_RATES "sample_rates_"
 #define FID_PCM_BUF "pcmBuf_"
 #define FID_PCM_BUFFER_SIZE "pcmBufSize_"
-
+#define FID_PCM "pcm"
 //-----------------Callback Java method----------------
 static jmethodID mJavaRecvVideoMtd = NULL;
 

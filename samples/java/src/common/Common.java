@@ -125,7 +125,7 @@ public class Common{
   public class AUDIO_FRAME_TYPE {
     public final int AUDIO_FRAME_RAW_PCM = 0;
     public final int AUDIO_FRAME_AAC =1;
-    private int type = 1;
+    public int type = 1;
     public int getValue(){
       return type;
     }
@@ -135,7 +135,7 @@ public class Common{
     public final int VIDEO_FRAME_RAW_YUV = 0;
     public final int VIDEO_FRAME_H264 = 1;
     public final int VIDEO_FRAME_JPG = 2;
-    private int type = 0;
+    public int type = 0;
     public int getValue(){
       return type;
     }

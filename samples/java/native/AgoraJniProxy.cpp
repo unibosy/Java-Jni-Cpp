@@ -29,49 +29,6 @@ extern "C" {
 
 JavaVM* g_jvm = NULL;
 
-#define CHECK_PTR_RETURN(PTR) \
-  {            \
-    if(!PTR)   \
-      return;  \
-  }
-#define CHECK_PTR_RETURN_BOOL(PTR) \
-  {            \
-    if(!PTR)   \
-      return false;  \
-  }
-#define CHECK_EXCEPTION(jni, message)                              \
-  if (jni->ExceptionCheck()) {                                     \
-    jni->ExceptionDescribe();                                      \
-    jni->ExceptionClear();                                         \
-  }
-
-#define PRINTDETAIL (printf("ERROR:%s (%d) - <%s>\n",__FILE__,__LINE__,__FUNCTION__),printf)
-
-#define CP(PTR)            \
-  {                        \
-    if(!PTR){              \
-      PRINTDETAIL;         \
-      return;              \
-    }                      \
-  }                        \
-
-#define CPB(PTR)           \
-  {                        \
-    if(!PTR){              \
-      PRINTDETAIL;         \
-      return false;        \
-    }                      \
-  }                        \
-
-#define CPN(PTR)           \
-  {                        \
-    if(!PTR){              \
-      PRINTDETAIL;         \
-      return NULL;         \
-    }                      \
-  }                        \
-
-
 class AttachThreadScoped
 {
 public:
@@ -159,6 +116,7 @@ void AgoraJniProxySdk::initialize(){
   initJavaObjects(env, true);
   cacheJavaCBFuncMethodIDs4Video(env, CN_VIDEO_FRAME);
   cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
+  cacheAudioPcmFrame(env);
   cacheJavaObject(env);
   //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
   //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
@@ -235,6 +193,27 @@ jfieldID AgoraJniProxySdk::safeGetFieldID(JNIEnv* env, jclass clazz, const char*
   jfieldID fid = env->GetFieldID(clazz, name, sig);
   return fid;
 }
+jfieldID AgoraJniProxySdk::safeGetFieldID2(JNIEnv* env, jclass clazz, const char* name, const char* sig) const {
+  jclass jc = env->FindClass("Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;");
+  jfieldID fid = env->GetFieldID(jc, "type", "I");
+  return fid;
+}
+void AgoraJniProxySdk::cacheAudioPcmFrame(JNIEnv* env){
+  mJavaAudioFrameMsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_CHANNELS, LONG_SIGNATURE);
+  CP(mJavaAudioFrameMsFid);
+  mJavaAudioPcmFrameFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_CHANNELS, LONG_SIGNATURE);
+  CP(mJavaAudioPcmFrameFid);
+  mJavaAudioPcmFrameChannelsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_CHANNELS, LONG_SIGNATURE);
+  CP(mJavaAudioPcmFrameChannelsFid);
+  mJavaAudioPcmFrameSampleBitsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_SAMPLE_BITS, LONG_SIGNATURE);
+  CP(mJavaAudioPcmFrameSampleBitsFid);
+  mJavaAudioPcmFrameSampleRatesFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_SAMPLE_RATES, LONG_SIGNATURE);
+  CP(mJavaAudioPcmFrameSampleRatesFid);
+  mJavaAudioPcmFrameBufFid =safeGetFieldID(env, mJavaAudioPcmFrameClass,FID_PCM_BUF, BYTEARRAY);
+  CP(mJavaAudioPcmFrameBufFid);
+  mJavaAudioPcmFrameBufferSizeFid =safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_PCM_BUFFER_SIZE, LONG_SIGNATURE);
+  CP(mJavaAudioPcmFrameBufferSizeFid);
+}
 void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className){
   //AV init jmethodIDs
   jclass localRef = env->FindClass(className);
@@ -252,7 +231,7 @@ void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* cla
     return;
   }
   //AV para fieldIDs
-  mJavaVideoFrameMsFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_VIDEO_YUV_FRAME_FRAMEMS, LONG_SIGNATURE);
+  mJavaVideoFrameMsFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_FRAME_MS, LONG_SIGNATURE);
   mJavaVideoFrameBufFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_VIDEO_YUV_FRAME_BUF, BYTEARRAY);
   mJavaVideoFrameBufSizeFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_VIDEO_YUV_FRAME_BUFSIZE, LONG_SIGNATURE);
   if(!mJavaVideoFrameBufFid){
@@ -284,6 +263,7 @@ void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* c
   }
  }
 void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
+  if(!init) return;
   mJavaVideoFrameClass = newGlobalJClass(env, CN_VIDEO_FRAME);
   CP(mJavaVideoFrameClass);
   mJavaVideoFrameObject = newGlobalJObject(env, mJavaVideoFrameClass, SN_MTD_COMMON_INIT);
@@ -310,6 +290,38 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   CP(mJavaVideoFrameTypeObject);
   mJavaVideoFrameTypeTypeFid = safeGetFieldID(env, mJavaVideoFrameTypeClass, MTD_TYPE, SG_INT);
   CP(mJavaVideoFrameTypeTypeFid);
+  //audio
+  mJavaAudioFrameClass = newGlobalJClass(env, CN_AUDIO_FRAME);
+  CP(mJavaAudioFrameClass);
+  mJavaAudioFrameInitMtd = safeGetMethodID(env, mJavaAudioFrameClass, SG_MTD_INIT, SN_MTD_COMMON_INIT);
+  CP(mJavaAudioFrameInitMtd);
+  mJavaAudioFrameObject = newGlobalJObject2(env, mJavaAudioFrameClass,  mJavaAudioFrameInitMtd);
+  CP(mJavaAudioFrameObject);
+  //java audio receive func
+  mJavaRecvAudioMtd = safeGetMethodID(env, mJavaAgoraJavaRecordingClass, CB_FUNC_RECEIVE_AUDIOFRAME, SN_CB_FUNC_RECEIVE_AUDIOFRAME);
+  CP(mJavaRecvAudioMtd);
+  //audio frame type
+  mJavaAudioFrameTypeClass = newGlobalJClass(env, CN_AUDIO_FRAME_TYPE);
+  CP(mJavaAudioFrameTypeClass);
+  mJavaAudioFrameTypeInitMtd = safeGetMethodID(env, mJavaAudioFrameTypeClass, SG_MTD_INIT, SN_MTD_COMMON_INIT);
+  CP(mJavaAudioFrameTypeInitMtd);
+  mJavaAudioFrameTypeObject = newGlobalJObject2(env, mJavaAudioFrameTypeClass,  mJavaAudioFrameTypeInitMtd);
+  CP(mJavaAudioFrameTypeObject);
+  //audioFrameType class type fid
+  cout<<"safe get field -1"<<endl;
+  mJavaAudioFrameTypeTypeFid = safeGetFieldID(env, mJavaAudioFrameTypeClass, MTD_TYPE, SG_INT);
+  cout<<"safe get field -2"<<endl;
+  CP(mJavaAudioFrameTypeTypeFid);
+  //audio frame type
+  mJavaAudioFrameTypeFid = safeGetFieldID(env, mJavaAudioFrameClass, MTD_TYPE, SN_AUDIO_FRAME_TYPE);
+  CP(mJavaAudioFrameTypeFid);
+  //pcm
+  mJavaAudioPcmFrameClass = newGlobalJClass(env, CN_AUDIO_PCM_FRAME);
+  CP(mJavaAudioPcmFrameClass);
+  mJavaAudioPcmFrameInitMtd = safeGetMethodID(env, mJavaAudioPcmFrameClass, SG_MTD_INIT, SN_INIT_MTD_AUDIO_FRAME);
+  CP(mJavaAudioPcmFrameInitMtd);
+  mJavaAudioPcmFrameObject = newGlobalJObject2(env, mJavaAudioPcmFrameClass,  mJavaAudioPcmFrameInitMtd);
+  CP(mJavaAudioPcmFrameObject);
 }
 
 bool AgoraJniProxySdk::fillAacAllFields(JNIEnv* env, jobject& job, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const {
@@ -317,7 +329,6 @@ bool AgoraJniProxySdk::fillAacAllFields(JNIEnv* env, jobject& job, jclass& jc, c
   if(frame->type != agora::linuxsdk::AUDIO_FRAME_AAC) return false;
   jfieldID fid = NULL;
   jobject jbArr = NULL;
-
   agora::linuxsdk::AudioAacFrame *f = frame->frame.aac;
   //frame_ms_
   fid = env->GetFieldID(jc, "frame_ms_", LONG_SIGNATURE);
@@ -344,76 +355,35 @@ bool AgoraJniProxySdk::fillAacAllFields(JNIEnv* env, jobject& job, jclass& jc, c
     return false;
   }
   env->SetLongField(job, fid, jlong(aacBufSize_));
-  
-  env->DeleteLocalRef(jc);
   env->DeleteLocalRef(jbArr);
-
   return true;
 }
 
 bool AgoraJniProxySdk::fillPcmAllFields(JNIEnv* env, jobject& job, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const {
   CHECK_PTR_RETURN_BOOL(mJavaAgoraJavaRecordingClass);
   if(frame->type != agora::linuxsdk::AUDIO_FRAME_RAW_PCM) return false;
-  jfieldID fid = NULL;
-  jobject jbArr = NULL;
-
   agora::linuxsdk::AudioPcmFrame *f = frame->frame.pcm;
   //frame_ms_
-  fid = env->GetFieldID(jc, "frame_ms_", LONG_SIGNATURE);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get frame_ms_ value of audioPcmFrame");
-    return false;
-  }
   long frame_ms_ = f->frame_ms_;
-  env->SetLongField(job, fid, jlong(frame_ms_));
+  env->SetLongField(job, mJavaAudioFrameMsFid, jlong(frame_ms_));
   //channels_
-  fid = env->GetFieldID(jc, "channels_", LONG_SIGNATURE);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get channels_ value of audioPcmFrame");
-    return false;
-  }
   long channels_ = f->channels_;
-  env->SetLongField(job, fid, jlong(channels_));
-  //sample_bits_
-  fid = env->GetFieldID(jc, "sample_bits_", LONG_SIGNATURE);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get sample_bits_ value of audioPcmFrame");
-    return false;
-  }
+  env->SetLongField(job, mJavaAudioPcmFrameChannelsFid, jlong(channels_));
   long sample_bits_ = f->sample_bits_;
-  env->SetLongField(job, fid, jlong(sample_bits_));
+  env->SetLongField(job, mJavaAudioPcmFrameSampleBitsFid, jlong(sample_bits_));
   //sample_rates_
-  fid = env->GetFieldID(jc, "sample_rates_", LONG_SIGNATURE);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get sample_rates_value of audioPcmFrame");
-    return false;
-  }
   long sample_rates_ = f->sample_rates_;
-  env->SetLongField(job, fid, jlong(sample_rates_));
+  env->SetLongField(job, mJavaAudioPcmFrameSampleRatesFid, jlong(sample_rates_));
   //pcmBuf_
-  fid = env->GetFieldID(jc, "pcmBuf_", BYTEARRAY);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get frame_ms_ value of audioPcmFrame");
-    return false;
-  }
   long pcmBufSize_ = f->pcmBufSize_;
-
-  jbArr = env->NewDirectByteBuffer((void*)f->pcmBuf_, pcmBufSize_);
-  env->SetObjectField(job, fid, jbArr);
+  jobject jbArr = env->NewDirectByteBuffer((void*)f->pcmBuf_, pcmBufSize_);
+  env->SetObjectField(job, mJavaAudioPcmFrameBufFid, jbArr);
   //pcmBufSize_
-  fid = env->GetFieldID(jc, "pcmBufSize_", LONG_SIGNATURE);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get pcmBufSize_ value of audioPcmFrame");
-    return false;
-  }
-  env->SetLongField(job, fid, jlong(pcmBufSize_));
-  
-  env->DeleteLocalRef(jc);
-
+  env->SetLongField(job, mJavaAudioPcmFrameBufferSizeFid, jlong(pcmBufSize_));
   return true;
 }
 
-bool AgoraJniProxySdk::fillJAudioFrameByFields(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, jclass& jcAudioFrame, jobject& jobAudioFrame) const {
+bool AgoraJniProxySdk::fillJAudioFrameByFields(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, jclass jcAudioFrame, jobject& jobAudioFrame) const {
   //1.find main class
   if (frame->type == agora::linuxsdk::AUDIO_FRAME_RAW_PCM) {
     //call one function
@@ -473,48 +443,25 @@ bool AgoraJniProxySdk::fillAudioAacFrame(JNIEnv* env, const agora::linuxsdk::Aud
   env->SetObjectField(jobAudioFrame, fid, job);
   env->DeleteLocalRef(jc);
   env->DeleteLocalRef(job);
-
   return true;
 }
 bool AgoraJniProxySdk::fillAudioPcmFrame(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, \
             jclass& jcAudioFrame, jobject& jobAudioFrame) const  {
   CHECK_PTR_RETURN_BOOL(mJavaAgoraJavaRecordingClass);
   if(frame->type != agora::linuxsdk::AUDIO_FRAME_RAW_PCM) return false;
-  jclass jc = NULL;
-  jfieldID fid = NULL;
-  jmethodID initMid = NULL;
-  jobject job = NULL;
-  //get pcm frame by find class
-  jc = env->FindClass("Lio/agora/recording/common/Common$AudioPcmFrame;");
-  if(jc == NULL) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get AudioPcmFrame jclass");
-    return false;
-  }
-  //new AudioPcmFrame
-  //TODO  place these to one function
-  initMid = env->GetMethodID(jc,SG_MTD_INIT,"(Lio/agora/recording/common/Common;JJJ)V");
-  if(initMid == NULL) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"get AudioPcmFrame init methid failed!");
-    return false;
-  }
-  job = env->NewObject(jc, initMid);
-  if(job == NULL){
+  jobject job = newJObject(env, mJavaAudioPcmFrameClass, mJavaAudioPcmFrameInitMtd);
+  CPB(job);
+  if(!job){
     LOG_DIR(m_logdir.c_str(), ERROR,"new AudioPcmFrame failed! no memory?");
     return false;
   }
-  fid = env->GetFieldID(jcAudioFrame, "pcm", "Lio/agora/recording/common/Common$AudioPcmFrame;");
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get pcm AUDIO_FRAME_TYPE field");
-    return false;
-  }
   //fill all fields of AudioPcmFrame jobject
-  if(!fillPcmAllFields(env, job, jc, frame)){
+  if(!fillPcmAllFields(env, job, jcAudioFrame, frame)){
     LOG_DIR(m_logdir.c_str(), INFO,"fillPcmAllFields failed!");
     return false;
   }
   //Fill in the jobAdudioFrame
-  env->SetObjectField(jobAudioFrame, fid, job);
-  env->DeleteLocalRef(jc);
+  env->SetObjectField(jobAudioFrame, mJavaAudioPcmFrameFid, job);
   env->DeleteLocalRef(job);
   return true;
 }
@@ -758,163 +705,27 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-#if 0
-  jfieldID fid;
-  jmethodID mid;
-  jclass jc = NULL;
-  jmethodID initMid  = NULL;
-  jobject job = NULL;
-  int iAudioFrameType = 0; //default pcm?
-  jclass jcAudioFrame = NULL;
-
-  jcAudioFrame = (env)->FindClass("io/agora/recording/common/Common$AudioFrame");
-  if(!jcAudioFrame){
-    LOG_DIR(m_logdir.c_str(), ERROR,"not find audioFrame");
-    return ;
-  }
-  iAudioFrameType = static_cast<int>(frame->type);
-  //2.get main class init methodid
-  initMid = env->GetMethodID(jcAudioFrame,SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
-  if(!initMid){
-    LOG_DIR(m_logdir.c_str(), ERROR,"not find AudioFrameOfPcm initMid!");
-    return;
-  }
-  //3.new main class object
-  jobject jobAudioFrame = env->NewObject(jcAudioFrame, initMid);
+  jobject jobAudioFrame = newJObject(env, mJavaAudioFrameClass, mJavaAudioFrameInitMtd);
   if(!jobAudioFrame){
     LOG_DIR(m_logdir.c_str(), ERROR,"new audio frame object failed!");
     return;
   }
-  if(!fillJAudioFrameByFields(env, frame, jcAudioFrame,jobAudioFrame)) {
+  if(!fillJAudioFrameByFields(env, frame, mJavaAudioFrameClass, jobAudioFrame)) {
     LOG_DIR(m_logdir.c_str(), ERROR,"fillJAudioFrameByFields failed!" );
     return;
   }
-  
-  //4.get main class field
-  //4.1.find subclass in main class
-  //set type of AUDIO_FRAME_TYPE by FindClass
-  jc = env->FindClass("Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;");
-  if(!jc) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get AUDIO_FRAME_TYPE class");
-    return;
-  }
-  //4.1.1
-  initMid = env->GetMethodID(jc,SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
-  if(!initMid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"get init methid failed!");
-    return;
-  }
-  //4.1.2
-  job = env->NewObject(jc, initMid);
-  //4.1.3 get field of this class
-  fid = env->GetFieldID(jc, "type", "I");
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get value of AUDIO_FRAME_TYPE class");
-    return;
-  }
-  //4.1.4 fill this field
-  env->SetIntField(job, fid, jint(iAudioFrameType));
-  //4.2
-  //set this object into jobAudioFrame!
-  //step 1:get this object field
-  fid = env->GetFieldID(jcAudioFrame, "type", "Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;");
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get AUDIO_FRAME_TYPE field");
-    return;
-  }
-  //4.3
-  env->SetObjectField(jobAudioFrame, fid, job);
- //6.find callback method in Java ---wrong, should use thisObj
-  mid = env->GetMethodID(mJavaAgoraJavaRecordingClass, "audioFrameReceived", "(JLio/agora/recording/common/Common$AudioFrame;)V");
-  if(!mid){
-    LOG_DIR(m_logdir.c_str(), ERROR,"audioFrameReceived get method failed!");
-    return ;
-  }
-  //7. callback java method
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mid,jlong(long(uid)), jobAudioFrame);
-  env->DeleteLocalRef(job);
-  env->DeleteLocalRef(jc); 
-  env->DeleteLocalRef(jobAudioFrame);
-
-#else
-  jfieldID fid;
-  jmethodID mid;
-  jclass jc = NULL;
-  jmethodID initMid  = NULL;
-  jobject job = NULL;
+  CP(mJavaAudioFrameTypeClass);
+  CP(mJavaAudioFrameTypeInitMtd);
+  //jobject job = newJObject(env,mJavaAudioFrameTypeClass, mJavaAudioFrameTypeInitMtd);
+  jobject job = env->NewObject(mJavaAudioFrameTypeClass, mJavaAudioFrameTypeInitMtd);
+  CP(job);
   int iAudioFrameType = 0; //default pcm?
-  jclass jcAudioFrame = NULL;
-
-  jcAudioFrame = (env)->FindClass("io/agora/recording/common/Common$AudioFrame");
-  if(!jcAudioFrame){
-    LOG_DIR(m_logdir.c_str(), ERROR,"not find audioFrame");
-    return ;
-  }
   iAudioFrameType = static_cast<int>(frame->type);
-  //2.get main class init methodid
-  initMid = env->GetMethodID(jcAudioFrame,SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
-  if(!initMid){
-    LOG_DIR(m_logdir.c_str(), ERROR,"not find AudioFrameOfPcm initMid!");
-    return;
-  }
-  //3.new main class object
-  jobject jobAudioFrame = env->NewObject(jcAudioFrame, initMid);
-  if(!jobAudioFrame){
-    LOG_DIR(m_logdir.c_str(), ERROR,"new audio frame object failed!");
-    return;
-  }
-  if(!fillJAudioFrameByFields(env, frame, jcAudioFrame,jobAudioFrame)) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"fillJAudioFrameByFields failed!" );
-    return;
-  }
-  
-  //4.get main class field
-  //4.1.find subclass in main class
-  //set type of AUDIO_FRAME_TYPE by FindClass
-  jc = env->FindClass("Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;");
-  if(!jc) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get AUDIO_FRAME_TYPE class");
-    return;
-  }
-  //4.1.1
-  initMid = env->GetMethodID(jc,SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
-  if(!initMid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"get init methid failed!");
-    return;
-  }
-  //4.1.2
-  job = env->NewObject(jc, initMid);
-  //4.1.3 get field of this class
-  fid = env->GetFieldID(jc, "type", "I");
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get value of AUDIO_FRAME_TYPE class");
-    return;
-  }
-  //4.1.4 fill this field
-  env->SetIntField(job, fid, jint(iAudioFrameType));
-  //4.2
-  //set this object into jobAudioFrame!
-  //step 1:get this object field
-  fid = env->GetFieldID(jcAudioFrame, "type", "Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;");
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get AUDIO_FRAME_TYPE field");
-    return;
-  }
-  //4.3
-  env->SetObjectField(jobAudioFrame, fid, job);
- //6.find callback method in Java ---wrong, should use thisObj
-  mid = env->GetMethodID(mJavaAgoraJavaRecordingClass, "audioFrameReceived", "(JLio/agora/recording/common/Common$AudioFrame;)V");
-  if(!mid){
-    LOG_DIR(m_logdir.c_str(), ERROR,"audioFrameReceived get method failed!");
-    return ;
-  }
-  //7. callback java method
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mid,jlong(long(uid)), jobAudioFrame);
-  env->DeleteLocalRef(job);
-  env->DeleteLocalRef(jc); 
+  env->SetIntField(job, mJavaAudioFrameTypeTypeFid, jint(iAudioFrameType));
+  env->SetObjectField(jobAudioFrame, mJavaAudioFrameTypeFid, job);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvAudioMtd, jlong(long(uid)), jobAudioFrame);
   env->DeleteLocalRef(jobAudioFrame);
-
-#endif
+  //env->DeleteLocalRef(job);
   return;
 }
 

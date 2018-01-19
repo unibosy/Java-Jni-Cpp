@@ -77,7 +77,8 @@ class AgoraJavaRecording{
   }
   private void audioFrameReceived(long uid, AudioFrame aFrame)
   {
-    /*//System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue());
+    System.out.println("java demo audioFrameReceived,uid:"+uid);
+    System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue());
     ByteBuffer buf = null;
     String path = storageDir + Long.toString(uid);
     if(aFrame.type.getValue() == 0) {//pcm
@@ -87,7 +88,7 @@ class AgoraJavaRecording{
       path += ".aac";
       buf = aFrame.aac.aacBuf_;
     }
-    WriteBytesToFileClassic(buf, path);*/
+    WriteBytesToFileClassic(buf, path);
   }
   private void videoFrameReceived(long uid, VideoFrame frame)
   {

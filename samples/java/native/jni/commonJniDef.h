@@ -47,11 +47,13 @@
 //declare java callback function
 #define CB_FUNC_RECEIVE_VIDEOFRAME "videoFrameReceived"
 
+#define CB_FUNC_RECEIVE_AUDIOFRAME "audioFrameReceived"
+
 //declare filedIDs
 #define FID_VIDEO_YUV_FRAME_BUF "buf_"
 #define FID_VIDEO_YUV_FRAME_BUFSIZE "bufSize_"
 #define FID_VIDEO_FRAME_YUV "yuv"
-#define FID_VIDEO_YUV_FRAME_FRAMEMS "frame_ms_"
+#define FID_FRAME_MS "frame_ms_"
 
 //static java class init jmethodIDs
 static jmethodID mJavaVideoFrameInitMtd;
@@ -63,11 +65,26 @@ static jmethodID mJavaVideoYuvFrameInitMtd;
 //class name
 //Audio
 #define CN_AUDIO_FRAME "io/agora/recording/common/Common$AudioFrame"
+#define CN_AUDIO_FRAME_TYPE "io/agora/recording/common/Common$AUDIO_FRAME_TYPE"
 #define CN_AUDIO_AAC_FRAME "io/agora/recording/common/Common$AudioAacFrame"
 #define CN_AUDIO_PCM_FRAME "io/agora/recording/common/Common$AudioPcmFrame"
+#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JLio/agora/recording/common/Common$AudioFrame;)V"
+
+#define SN_AUDIO_FRAME_TYPE "Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;"
+#define SN_INIT_MTD_AUDIO_FRAME "(Lio/agora/recording/common/Common;JJJ)V"
+
+#define SN_AUDIO_PCM_FRAME "Lio/agora/recording/common/Common$AudioPcmFrame;"
+
 
 //-----------------Audio End-------------------
 
+//common
+//audio pcm 
+#define FID_CHANNELS "channels_"
+#define FID_SAMPLE_BITS "sample_bits_"
+#define FID_SAMPLE_RATES "sample_rates_"
+#define FID_PCM_BUF "pcmBuf_"
+#define FID_PCM_BUFFER_SIZE "pcmBufSize_"
 
 //-----------------Callback Java method----------------
 static jmethodID mJavaRecvVideoMtd = NULL;
@@ -80,7 +97,6 @@ struct JavaObjectMethod {
   const char* name;
   const char* signature;
 };
-
 enum ObjectMethodId {
   MID_ON_EVENT = 0,
   MID_ON_LOG_EVENT = 1,

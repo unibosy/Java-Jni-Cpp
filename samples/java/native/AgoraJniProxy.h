@@ -41,6 +41,7 @@ public:
   //cache field ids & method ids
   void cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* className);
   void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
+  void cacheAudioPcmFrame(JNIEnv* env);
   void cacheJavaObject(JNIEnv* env);
   //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
   //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
@@ -48,6 +49,7 @@ public:
   //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
   jmethodID safeGetMethodID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
   jfieldID safeGetFieldID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
+  jfieldID safeGetFieldID2(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
   jobject newGlobalJObject2(JNIEnv* env, jclass jc, jmethodID initMid) const;
 
 public:
@@ -56,7 +58,7 @@ private:
   void initJavaObjects(JNIEnv* env, bool init);
 private:
   //audio
-  bool fillJAudioFrameByFields(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, jclass& jcAudioFrame, jobject& jobAudioFrame) const;
+  bool fillJAudioFrameByFields(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, jclass jcAudioFrame, jobject& jobAudioFrame) const;
   //pcm
   bool fillAudioPcmFrame(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame,jclass& jcAudioFrame, jobject& jobAudioFrame) const;
   bool fillPcmAllFields(JNIEnv* env, jobject& job, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const;
@@ -79,10 +81,15 @@ private:
   jfieldID mJavaVideoFrameTypeFid;
   jclass mJavaVideoYuvFrameClass;
   jobject mJavaVideoYuvFrameObject;
+  
   jclass mJavaVideoJPGFrameClass;
+  jmethodID mJavaVideoJPGFrameInitMtd;
   jobject mJavaVideoJPGFrameObject;
+  
   jclass mJavaVideoH264FrameClass;
+  jmethodID mJavaVideoH264FrameInitMtd;
   jobject mJavaVideoH264FrameObject;
+  
   //type
   jclass mJavaVideoFrameTypeClass;
   jobject mJavaVideoFrameTypeObject;
@@ -93,21 +100,41 @@ private:
   jclass mJavaAudioFrameClass;
   jobject mJavaAudioFrameObject;
 
+  //pcm field
+  jfieldID mJavaAudioPcmFrameFid;
+
+  jfieldID mJavaAudioFrameMsFid;
+  jfieldID mJavaAudioPcmFrameChannelsFid;
+  jfieldID mJavaAudioPcmFrameSampleBitsFid;
+  jfieldID mJavaAudioPcmFrameSampleRatesFid;
+  jfieldID mJavaAudioPcmFrameBufFid;
+  jfieldID mJavaAudioPcmFrameBufferSizeFid;
+
+  //aac field
+  jfieldID mJavaAudioAacFrameFid;
+
+  //pcm
+  jclass mJavaAudioPcmFrameClass;
+  jmethodID mJavaAudioPcmFrameInitMtd;
+  jobject mJavaAudioPcmFrameObject;
+
+  //aac
   jclass mJavaAudioAacFrameClass;
+  jmethodID mJavaAudioAacFrameInitMtd;
   jobject mJavaAudioAacFrameObject;
 
-  jclass mJavaAudioPcmFrameClass;
-  jobject mJavaAudioPcmFrameObject;
-  //callback function jmethodIDs
+  //AudioFrameType
+  jclass mJavaAudioFrameTypeClass;
+  jmethodID mJavaAudioFrameTypeInitMtd;
+  jobject mJavaAudioFrameTypeObject;
+  jfieldID mJavaAudioFrameTypeFid;
+  jfieldID mJavaAudioFrameTypeTypeFid;
 
+  //callback function jmethodIDs
   //java class jmethod IDs
   //static jmethodID mJavaVideoFrameInitMtd;
   //static jmethodID mJavaVideoYuvFrameInitMtd;
-  jmethodID mJavaVideoJPGFrameInitMtd;
-  jmethodID mJavaVideoH264FrameInitMtd;
   jmethodID mJavaAudioFrameInitMtd;
-  jmethodID mJavaAudioAacFrameInitMtd;
-  jmethodID mJavaAudioPcmFrameInitMtd;
   //video frame field
   //different jobject can or cannotshare one field?
   jfieldID mJavaVideoFrameMsFid;
@@ -115,6 +142,7 @@ private:
   jfieldID mJavaVideoFrameBufSizeFid;
   jfieldID mJavaVideoFrameYuvFid;
 
+  //pcm fields
 private:
   jclass mJavaAgoraJavaRecordingClass;
   jobject mJavaAgoraJavaRecordingObject;

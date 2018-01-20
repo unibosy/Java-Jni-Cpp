@@ -863,12 +863,12 @@ JNIEXPORT jint JNICALL Java_AgoraJavaRecording_setVideoMixingLayout
   jint canvasHeight = env->GetIntField(jVideoMixLayout,jCanvasWidthID);
   
   jstring jstrBackgroundColor = (jstring)env->GetObjectField(jVideoMixLayout, jBackgroundColorID);
-  const char* c_backgroundColor = env->GetStringUTFChars(jstrBackgroundColor, NULL);
+  const char* c_backgroundColor = env->GetStringUTFChars(jstrBackgroundColor, JNI_FALSE);
   
   jint regionCount = env->GetIntField(jVideoMixLayout,jRegionCountID);
   
   //jstring jstrAppData = (jstring)env->GetObjectField(jVideoMixLayout,jAppDataID);
-  //const char* c_jstrAppData = env->GetStringUTFChars(jstrAppData, NULL);
+  //const char* c_jstrAppData = env->GetStringUTFChars(jstrAppData, JNI_FALSE);
   //jint appDataLength = env->GetIntField(jVideoMixLayout,jAppDataLengthID);
 
   agora::linuxsdk::VideoMixingLayout layout;
@@ -1086,7 +1086,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   signal(SIGPIPE, SIG_IGN);
 
   //const char* appId = NULL;
-  const char* c_appId = env->GetStringUTFChars(jni_appid,false);
+  const char* c_appId = env->GetStringUTFChars(jni_appid, JNI_FALSE);
   appId = c_appId;
   env->ReleaseStringUTFChars(jni_appid, c_appId);
   if(appId.empty()){
@@ -1095,14 +1095,14 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   }
   
   //const char* channelKey = NULL;
-  const char* c_channelKey = env->GetStringUTFChars(jni_channelKey,false);
+  const char* c_channelKey = env->GetStringUTFChars(jni_channelKey, JNI_FALSE);
   channelKey = c_channelKey;
   env->ReleaseStringUTFChars(jni_channelKey, c_channelKey);
   if(channelKey.empty()){
      cout<<"get channel key is NULL"<<endl;
   }
   //const char* channelName = NULL; 
-  const char* c_channelName = env->GetStringUTFChars(jni_channelName,false);
+  const char* c_channelName = env->GetStringUTFChars(jni_channelName, JNI_FALSE);
   channelName = c_channelName;
   env->ReleaseStringUTFChars(jni_channelName, c_channelName);
   if(channelName.empty()){
@@ -1147,7 +1147,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   idleLimitSec = (int)env->GetIntField(jni_recordingConfig, idleLimitSecFieldID); 
   //2.appliteDir
   jstring appliteDir = (jstring)env->GetObjectField(jni_recordingConfig, appliteDirFieldID);
-  const char * c_appliteDir = env->GetStringUTFChars(appliteDir ,NULL);
+  const char * c_appliteDir = env->GetStringUTFChars(appliteDir, JNI_FALSE);
   applitePath = c_appliteDir;
   env->ReleaseStringUTFChars(appliteDir,c_appliteDir);
   env->DeleteLocalRef(appliteDir);
@@ -1213,7 +1213,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   isAudioOnly = bool(jisAudioOnly);
   //10.mixResolution
   jstring jmixResolution = (jstring)env->GetObjectField(jni_recordingConfig, mixResolutionFid);
-  const char * c_mixResolution = env->GetStringUTFChars(jmixResolution ,NULL);
+  const char * c_mixResolution = env->GetStringUTFChars(jmixResolution, JNI_FALSE);
   mixResolution = c_mixResolution;
   env->ReleaseStringUTFChars(jmixResolution, c_mixResolution);
   env->DeleteLocalRef(jmixResolution);
@@ -1224,26 +1224,26 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
 
   //12.recordFileRootDir
   jstring jrecordFileRootDir = (jstring)env->GetObjectField(jni_recordingConfig, recordFileRootDirFid);
-  const char * c_recordFileRootDir = env->GetStringUTFChars(jrecordFileRootDir, NULL);
+  const char * c_recordFileRootDir = env->GetStringUTFChars(jrecordFileRootDir, JNI_FALSE);
   recordFileRootDir = c_recordFileRootDir;
   env->ReleaseStringUTFChars(jrecordFileRootDir, c_recordFileRootDir);
   env->DeleteLocalRef(jrecordFileRootDir);
   //14.cfgFilePath
   jstring jcfgFilePath = (jstring)env->GetObjectField(jni_recordingConfig, cfgFilePathFid);
-  const char * c_cfgFilePath = env->GetStringUTFChars(jcfgFilePath, NULL);
+  const char * c_cfgFilePath = env->GetStringUTFChars(jcfgFilePath, JNI_FALSE);
   cfgFilePath = c_cfgFilePath;
   env->ReleaseStringUTFChars(jcfgFilePath, c_cfgFilePath);
   env->DeleteLocalRef(jcfgFilePath);
   //15.secret
   jstring jsecret = (jstring)env->GetObjectField(jni_recordingConfig, secretFid);
-  const char * c_secret = env->GetStringUTFChars(jsecret, NULL);
+  const char * c_secret = env->GetStringUTFChars(jsecret, JNI_FALSE);
   secret = c_secret;
   env->ReleaseStringUTFChars(jsecret, c_secret);
   env->DeleteLocalRef(jsecret);
 
   //16.decryptionMode
   jstring jdecryptionMode = (jstring)env->GetObjectField(jni_recordingConfig, decryptionModeFid);
-  const char * c_decryptionMode = env->GetStringUTFChars(jdecryptionMode, NULL);
+  const char * c_decryptionMode = env->GetStringUTFChars(jdecryptionMode, JNI_FALSE);
   decryptionMode = c_decryptionMode;
   env->ReleaseStringUTFChars(jdecryptionMode, c_decryptionMode);
   env->DeleteLocalRef(jdecryptionMode);

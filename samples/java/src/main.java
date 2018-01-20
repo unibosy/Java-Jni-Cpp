@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.File; 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream; 
+import java.io.BufferedOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
@@ -22,6 +23,9 @@ class AgoraJavaRecording{
   private int fps = 0;
   private int kbps = 0;
   private String storageDir = "./";
+  private long aCount = 0;
+  private long count = 0;
+  private long size = 0;
   private CHANNEL_PROFILE_TYPE profile_type;
   Vector<Long> m_peers = new Vector<Long>();
   private long mNativeHandle = 0;
@@ -77,8 +81,8 @@ class AgoraJavaRecording{
   }
   private void audioFrameReceived(long uid, AudioFrame aFrame)
   {
-    System.out.println("java demo audioFrameReceived,uid:"+uid);
-    System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue());
+    //System.out.println("java demo audioFrameReceived,uid:"+uid);
+    //System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue());
     ByteBuffer buf = null;
     String path = storageDir + Long.toString(uid);
     if(aFrame.type.getValue() == 0) {//pcm
@@ -88,13 +92,13 @@ class AgoraJavaRecording{
       path += ".aac";
       buf = aFrame.aac.aacBuf_;
     }
-    WriteBytesToFileClassic(buf, path);
+    WriteBytesToFileClassic(buf, path/*,false*/);
   }
   private void videoFrameReceived(long uid, VideoFrame frame)
   {
     String path = storageDir + Long.toString(uid);
     ByteBuffer buf = null;
-    System.out.println("java demo videoFrameReceived,uid:"+uid+",VIDEO_FRAME_TYPE:"+frame.type.getValue());
+    //System.out.println("java demo videoFrameReceived,uid:"+uid+",VIDEO_FRAME_TYPE:"+frame.type.getValue());
     if(frame.type.getValue() == 0){//yuv
       path += ".yuv";
       buf = frame.yuv.buf_;
@@ -109,7 +113,7 @@ class AgoraJavaRecording{
       buf = frame.jpg.buf_;
     }
 
-    WriteBytesToFileClassic(buf, path);
+    WriteBytesToFileClassic(buf, path/*,true*/);
   }
 
   private int SetVideoMixingLayout(){
@@ -177,11 +181,34 @@ class AgoraJavaRecording{
   private void recordingPathCallBack(String path){
     storageDir =  path;
   }
-  private void WriteBytesToFileClassic(ByteBuffer byteBuffer,String fileDest) {
+  private void WriteBytesToFileClassic(ByteBuffer byteBuffer,String fileDest/*, boolean v*/) {
     if(byteBuffer == null){
       System.out.println("WriteBytesToFileClassic but byte buffer is null!");
       return;
     }
+    /*if(v)
+      count=count+1;
+    if(count > 5000){
+      return;
+    }*/ 
+    //long startTime = System.nanoTime();
+    byte[] data = new byte[byteBuffer.capacity()];
+    ((ByteBuffer) byteBuffer.duplicate().clear()).get(data);
+    try {
+      FileOutputStream fos = new FileOutputStream(fileDest, true);
+      BufferedOutputStream bos = new BufferedOutputStream(fos);
+      bos.write(data);
+      bos.flush();
+      bos.close();
+      //long duration = System.nanoTime() - startTime;
+      //size = size+duration;
+      //if(v)
+      //  System.out.println("BufferedWriter lost time:" +duration+",total size:"+ size +",count:"+count+",byteBuffer.size:"+byteBuffer.capacity());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    /*
+    long startTime = System.nanoTime();
     byte[] data = new byte[byteBuffer.capacity()];
     ((ByteBuffer) byteBuffer.duplicate().clear()).get(data);
     FileOutputStream fileOuputStream = null;
@@ -194,11 +221,16 @@ class AgoraJavaRecording{
       if (fileOuputStream != null) {
         try {
           fileOuputStream.close();
+          long duration = System.nanoTime() - startTime;
+          size = size+duration;
+          if(v)
+            System.out.println("BufferedWriter lost time:" +duration+",total size:"+ size +",count:"+count+",byteBuffer.size:"+byteBuffer.capacity());
         } catch (IOException e) {
           e.printStackTrace();
         }
       }
     }
+    */
   }
   private String GetNowDate(){
     String temp_str="";   

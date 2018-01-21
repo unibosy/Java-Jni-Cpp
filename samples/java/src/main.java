@@ -97,7 +97,7 @@ class AgoraJavaRecording{
     path = null;
     frame = null;
   }
-  private void videoFrameReceived(long uid, int type, VideoFrame frame, int rotation)
+  private void videoFrameReceived(long uid, int type, VideoFrame frame, int rotation)//rotation:0, 90, 180, 270
   {
     String path = storageDir + Long.toString(uid);
     ByteBuffer buf = null;

@@ -29,6 +29,7 @@ jmethodID AgoraJniProxySdk::mJavaVideoFrameInitMtd = NULL;
 jmethodID AgoraJniProxySdk::mJavaVideoYuvFrameInitMtd = NULL;
 
 jmethodID AgoraJniProxySdk::m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
+jfieldID AgoraJniProxySdk::m_VideoYuvFrameMethodIDs[FID_YUVNUM];
 
 #ifdef __cplusplus
 extern "C" {
@@ -95,11 +96,6 @@ AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   mJavaAudioFrameInitMtd = NULL;
   mJavaAudioAacFrameInitMtd = NULL;
   mJavaAudioPcmFrameInitMtd = NULL;
-  //AV fieldIDs
-  mJavaVideoFrameMsFid = NULL;
-  mJavaVideoFrameBufFid = NULL;
-  mJavaVideoFrameBufSizeFid = NULL;
-  mJavaVideoFrameYuvFid = NULL;
 
   mJavaVideoFrameTypeClass = NULL;
   mJavaVideoFrameTypeObject = NULL;
@@ -120,22 +116,25 @@ void AgoraJniProxySdk::initialize(){
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if(!env) return;
-  staticInitCBFuncMid(env, mJavaAgoraJavaRecordingClass);
   initJavaObjects(env, true);
   cacheJavaCBFuncMethodIDs4Video(env, CN_VIDEO_FRAME);
   cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
   cacheAudioPcmFrame(env);
   cacheJavaObject(env);
-  //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
-  //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
-  //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
-  //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
-  //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
-  //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
-  //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
-  //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
-  //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
+  staticInitCBFuncMid(env, mJavaAgoraJavaRecordingClass);
+  staticInitVideoYuvFrameFid(env,mJavaVideoYuvFrameClass);
 }
+int AgoraJniProxySdk::staticInitVideoYuvFrameFid(JNIEnv* env, jclass clazz){
+  for (int i = 0; i < sizeof(jVideoYuvFrameFields) / sizeof(jVideoYuvFrameFields[0]); i++){
+    const JavaObjectMethod& m = jVideoYuvFrameFields[i];
+    jfieldID fid = safeGetFieldID(env, clazz, m.name, m.signature);
+    if (!fid){
+      cout<<"AgoraJniProxySdk::staticInitCBFuncMid failed get methid:"<<m.name<<endl;
+    }
+    m_VideoYuvFrameMethodIDs[m.id] = fid;
+  }
+}
+
 int AgoraJniProxySdk::staticInitCBFuncMid(JNIEnv* env, jclass clazz){
   for (int i = 0; i < sizeof(jCBObjectMethods) / sizeof(jCBObjectMethods[0]); i++){
     const JavaObjectMethod& m = jCBObjectMethods[i];
@@ -248,13 +247,6 @@ void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* cla
     LOG_DIR(m_logdir.c_str(), ERROR,"cannot get video yuv init methodid");
     return;
   }
-  //AV para fieldIDs
-  mJavaVideoFrameMsFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_FRAME_MS, LONG_SIGNATURE);
-  mJavaVideoFrameBufFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_VIDEO_YUV_FRAME_BUF, BYTEARRAY);
-  mJavaVideoFrameBufSizeFid = env->GetFieldID(mJavaVideoYuvFrameClass, FID_VIDEO_YUV_FRAME_BUFSIZE, LONG_SIGNATURE);
-  if(!mJavaVideoFrameBufFid){
-    cout<<"mJavaVideoFrameYuvFid is null"<<endl;
-  }
 }
 void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* className){
   if (!env) return;
@@ -286,8 +278,6 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   CP(mJavaVideoFrameClass);
   mJavaVideoFrameObject = newGlobalJObject(env, mJavaVideoFrameClass, SN_MTD_COMMON_INIT);
   CP(mJavaVideoFrameObject);
-  mJavaVideoFrameTypeFid = safeGetFieldID(env, mJavaVideoFrameClass, MTD_TYPE, VIDEO_FRAME_TYPE_SIGNATURE);
-  CP(mJavaVideoFrameTypeFid);
   mJavaVideoYuvFrameClass = newGlobalJClass(env, CN_VIDEO_YUV_FRAME);
   CP(mJavaVideoYuvFrameClass);
   mJavaVideoYuvFrameObject = newGlobalJObject(env, mJavaVideoYuvFrameClass, SN_MTD_VIDEO_YUV_FRAME_INIT); 
@@ -498,11 +488,11 @@ bool AgoraJniProxySdk::fillVideoOfYUV(JNIEnv* env, const agora::linuxsdk::VideoF
     return false;
   }
   long frame_ms_ = f->frame_ms_;
-  env->SetLongField(job, mJavaVideoFrameMsFid, jlong(frame_ms_));
+  env->SetLongField(job, m_VideoYuvFrameMethodIDs[FID_FRAMEMS], jlong(frame_ms_));
   long bufSize_ = f->bufSize_;
   jobject buf  = env->NewDirectByteBuffer((void*)(f->buf_), bufSize_);
-  env->SetObjectField(job, mJavaVideoFrameBufFid, buf);
-  env->SetLongField(job, mJavaVideoFrameBufSizeFid, jlong(bufSize_));
+  env->SetObjectField(job, m_VideoYuvFrameMethodIDs[FID_YUVBUF], buf);
+  env->SetLongField(job, m_VideoYuvFrameMethodIDs[FID_YUVBUFSIZE], jlong(bufSize_));
   env->SetObjectField(jobVideoFrame, mJavaVideoFrameYuvFid, job);
   env->DeleteLocalRef(buf);
   env->DeleteLocalRef(job);
@@ -692,14 +682,6 @@ bool AgoraJniProxySdk::fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk
       return false;
     }
   }
-  /*jobject job = env->NewObject(mJavaVideoFrameTypeClass, mJavaVideoFrameTypeInitMtd);
-  CPB(job);
-  int iVideoFrameType = static_cast<int>(frame->type);
-  env->SetIntField(job, mJavaVideoFrameTypeTypeFid, jint(iVideoFrameType));
-  env->SetObjectField(jobVideoFrame, mJavaVideoFrameTypeFid, job);
-  //TODO
-  //rotation need to set!
-  env->DeleteLocalRef(job);*/
   return true;
 }
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {

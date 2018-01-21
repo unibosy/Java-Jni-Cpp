@@ -221,7 +221,6 @@ public class Common{
     public long bufSize_;
   }
   public class VideoFrame {
-    public VIDEO_FRAME_TYPE type;
     public VideoYuvFrame yuv;
     public VideoH264Frame h264;
     public VideoJpgFrame jpg;

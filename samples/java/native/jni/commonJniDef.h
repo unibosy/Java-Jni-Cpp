@@ -89,10 +89,6 @@
 #define FID_PCM_BUFFER_SIZE "pcmBufSize_"
 #define FID_PCM "pcm"
 //-----------------Callback Java method----------------
-//static jmethodID mJavaRecvVideoMtd = NULL;
-
-//static jmethodID mJavaRecvAudioMtd = NULL;
-
 
 struct JavaObjectMethod {
   int id;
@@ -124,6 +120,58 @@ static JavaObjectMethod jCBObjectMethods[] = {
   { MID_ON_VIDEOFRAME_RECEIVED, "videoFrameReceived","(JILio/agora/recording/common/Common$VideoFrame;I)V"},
   { MID_ON_LEAVECHANNEL, "onLeaveChannel", "(I)V"}
 };
+//video
+enum VIDEOFRAME{
+  MID_INIT = 0,
+  MID_YUV = 1,
+  MID_H264 = 2,
+  MID_JPG = 3
+};
+static JavaObjectMethod jVideoFrameMethods[] = {
+  {MID_INIT, "<init>" "(Lio/agora/recording/common/Common;)V"},
+  {MID_YUV, "yuv", "Lio/agora/recording/common/Common$VideoYuvFrame;"},
+  {MID_H264,"h264","Lio/agora/recording/common/Common$VideoH264Frame;"},
+  {MID_JPG, "jpg", "Lio/agora/recording/common/Common$VideoJpgFrame;"}
+};
+enum FID_VIDEOYUVFRAME{
+  FID_FRAMEMS = 0,
+  FID_YUVBUF = 1,
+  FID_YUVBUFSIZE =2,
+  FID_YUVWIDTH = 3,
+  FID_YUVHEIGHT = 4,
+  FID_YUVNUM = 5,
+};
+static JavaObjectMethod jVideoYuvFrameFields[] = {
+  {FID_FRAMEMS, "frame_ms_", "J"},
+  {FID_YUVBUF, "buf_", "Ljava/nio/ByteBuffer;"},
+  {FID_YUVBUFSIZE,"bufSize_", "J"},
+  {FID_YUVWIDTH,"width_", "I"},
+  {FID_YUVHEIGHT, "height_", "I"},
+};
+static JavaObjectMethod jVideoH264FrameMethods[] = {
+  {},
+  {},
+  {},
+  {}
+};
+static JavaObjectMethod jVideoJPGFrameMethods[] = {
+  {},
+  {},
+  {},
+};
+//audio
+static JavaObjectMethod jAudioFrameMethods[] = {
+  {},
+  {},
+  {},
+  {}
+};
+static JavaObjectMethod jAudioPcmFrameMethods[] = {
+  {},{},{},{}};
+static JavaObjectMethod jAudioAacFrameMethods[] = {
+  {},{},{},{}
+};
+
 static JavaObjectMethod jVideoFrameClassMethods[] = {
   { MID_GET_RANDOM_UUID, "getRandomUUID", "()Ljava/lang/String;" },
   { MID_GET_LOCAL_HOST, "getLocalHost", "()Ljava/lang/String;" },

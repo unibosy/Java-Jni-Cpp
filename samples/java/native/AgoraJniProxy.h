@@ -59,12 +59,15 @@ public:
 private:
   void initJavaObjects(JNIEnv* env, bool init);
   int staticInitCBFuncMid(JNIEnv* env, jclass jclazz);
+  int staticInitVideoYuvFrameFid(JNIEnv* env, jclass jclazz);
 private:
   static jmethodID mJavaRecvVideoMtd;
   static jmethodID mJavaRecvAudioMtd;
   static jmethodID mJavaVideoFrameInitMtd;
   static jmethodID mJavaVideoYuvFrameInitMtd;
+
   static jmethodID m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
+  static jfieldID m_VideoYuvFrameMethodIDs[FID_YUVNUM];
 private:
   //audio
   bool fillJAudioFrameByFields(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, jclass jcAudioFrame, jobject& jobAudioFrame) const;
@@ -87,7 +90,6 @@ private:
   //video
   jclass mJavaVideoFrameClass;
   jobject mJavaVideoFrameObject;
-  jfieldID mJavaVideoFrameTypeFid;
   jclass mJavaVideoYuvFrameClass;
   jobject mJavaVideoYuvFrameObject;
   
@@ -139,17 +141,12 @@ private:
   jfieldID mJavaAudioFrameTypeFid;
   jfieldID mJavaAudioFrameTypeTypeFid;
 
+  jfieldID mJavaVideoFrameYuvFid;
   //callback function jmethodIDs
   //java class jmethod IDs
   //static jmethodID mJavaVideoFrameInitMtd;
   //static jmethodID mJavaVideoYuvFrameInitMtd;
   jmethodID mJavaAudioFrameInitMtd;
-  //video frame field
-  //different jobject can or cannotshare one field?
-  jfieldID mJavaVideoFrameMsFid;
-  jfieldID mJavaVideoFrameBufFid;
-  jfieldID mJavaVideoFrameBufSizeFid;
-  jfieldID mJavaVideoFrameYuvFid;
 
   //static 
   /*static jmethodID mJavaRecvVideoMtd;

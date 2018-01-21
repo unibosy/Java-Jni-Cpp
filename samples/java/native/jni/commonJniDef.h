@@ -197,18 +197,7 @@ static JavaObjectMethod jAudioPcmFrameFields[] = {
   {FID_PCM_BUFSIZE, FID_PCMBUFFERSIZE, LONG_SIGNATURE},
 };
 
-static JavaObjectMethod jAudioAacFrameMethods[] = {
+static JavaObjectMethod jAudioAacFrameFields[] = {
   {},{},{},{}
 };
-
-static JavaObjectMethod jVideoFrameClassMethods[] = {
-  { MID_GET_RANDOM_UUID, "getRandomUUID", "()Ljava/lang/String;" },
-  { MID_GET_LOCAL_HOST, "getLocalHost", "()Ljava/lang/String;" },
-  { MID_GET_LOCAL_HOST_LIST, "getLocalHostList", "()[Ljava/lang/String;" },
-};
-
-
-
-
-
 

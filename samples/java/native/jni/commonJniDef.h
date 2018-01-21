@@ -43,7 +43,8 @@
 #define VIDEO_FRAME_SIGNATURE "(Lio/agora/recording/common/Common;)V"
 #define MTD_INIT_VIDEO_FRAME "(Lio/agora/recording/common/Common;)V"
 
-#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JLio/agora/recording/common/Common$VideoFrame;)V"
+//#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JLio/agora/recording/common/Common$VideoFrame;)V"
+#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JILio/agora/recording/common/Common$VideoFrame;I)V"
 //declare java callback function
 #define CB_FUNC_RECEIVE_VIDEOFRAME "videoFrameReceived"
 
@@ -56,8 +57,8 @@
 #define FID_FRAME_MS "frame_ms_"
 
 //static java class init jmethodIDs
-static jmethodID mJavaVideoFrameInitMtd;
-static jmethodID mJavaVideoYuvFrameInitMtd;
+//static jmethodID mJavaVideoFrameInitMtd;
+//static jmethodID mJavaVideoYuvFrameInitMtd;
 
 //-----------------Video End-------------------
 
@@ -68,7 +69,8 @@ static jmethodID mJavaVideoYuvFrameInitMtd;
 #define CN_AUDIO_FRAME_TYPE "io/agora/recording/common/Common$AUDIO_FRAME_TYPE"
 #define CN_AUDIO_AAC_FRAME "io/agora/recording/common/Common$AudioAacFrame"
 #define CN_AUDIO_PCM_FRAME "io/agora/recording/common/Common$AudioPcmFrame"
-#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JLio/agora/recording/common/Common$AudioFrame;)V"
+//#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JLio/agora/recording/common/Common$AudioFrame;)V"
+#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JILio/agora/recording/common/Common$AudioFrame;)V"
 
 #define SN_AUDIO_FRAME_TYPE "Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;"
 #define SN_INIT_MTD_AUDIO_FRAME "(Lio/agora/recording/common/Common;JJJ)V"
@@ -87,23 +89,25 @@ static jmethodID mJavaVideoYuvFrameInitMtd;
 #define FID_PCM_BUFFER_SIZE "pcmBufSize_"
 #define FID_PCM "pcm"
 //-----------------Callback Java method----------------
-static jmethodID mJavaRecvVideoMtd = NULL;
+//static jmethodID mJavaRecvVideoMtd = NULL;
 
-static jmethodID mJavaRecvAudioMtd = NULL;
+//static jmethodID mJavaRecvAudioMtd = NULL;
 
-/*
+
 struct JavaObjectMethod {
   int id;
   const char* name;
   const char* signature;
 };
-enum ObjectMethodId {
-  MID_ON_EVENT = 0,
-  MID_ON_LOG_EVENT = 1,
-  MID_GET_NETWORK_TYPE = 2,
-  MID_GET_NETWORK_INFO = 3,
-  MID_GET_BATTERY_LIFE_PERCENT = 4,
-  MID_OBJECT_NUM = 5,
+enum CBObjectMethodId {
+  MID_ON_ERROR = 0,
+  MID_ON_WARNING = 1,
+  MID_ON_USEROFFLINE = 2,
+  MID_ON_USERJOINED = 3,
+  MID_ON_AUDIOFRAME_RECEIVED = 4,
+  MID_ON_VIDEOFRAME_RECEIVED = 5,
+  MID_ON_LEAVECHANNEL = 6,
+  MID_CBOBJECT_NUM = 7,
 };
 enum ClassMethodId {
   MID_GET_RANDOM_UUID = 0,
@@ -111,16 +115,23 @@ enum ClassMethodId {
   MID_GET_LOCAL_HOST_LIST = 2,
   MID_CLASS_NUM = 3,
 };
-static JavaObjectMethod jObjectMethods[] = {
-  { MID_ON_EVENT, "onEvent", "(I[B)V" },
-  { MID_ON_LOG_EVENT, "onLogEvent", "(ILjava/lang/String;)V" },
-  { MID_GET_NETWORK_TYPE, "getNetworkType", "()I" },
-  { MID_GET_NETWORK_INFO, "getNetworkInfo", "()[B" },
-  { MID_GET_BATTERY_LIFE_PERCENT, "getBatteryLifePercent", "()I" },
+static JavaObjectMethod jCBObjectMethods[] = {
+  { MID_ON_ERROR, "onError", "(II)V" },
+  { MID_ON_WARNING, "onWarning", "(I)V" },
+  { MID_ON_USEROFFLINE, "onUserOffline", "(JI)V" },
+  { MID_ON_USERJOINED, "onUserJoined", "(JLjava/lang/String;)V"},
+  { MID_ON_AUDIOFRAME_RECEIVED, "audioFrameReceived", "(JILio/agora/recording/common/Common$AudioFrame;)V"},
+  { MID_ON_VIDEOFRAME_RECEIVED, "videoFrameReceived","(JILio/agora/recording/common/Common$VideoFrame;I)V"},
+  { MID_ON_LEAVECHANNEL, "onLeaveChannel", "(I)V"}
 };
 static JavaObjectMethod jVideoFrameClassMethods[] = {
   { MID_GET_RANDOM_UUID, "getRandomUUID", "()Ljava/lang/String;" },
   { MID_GET_LOCAL_HOST, "getLocalHost", "()Ljava/lang/String;" },
   { MID_GET_LOCAL_HOST_LIST, "getLocalHostList", "()[Ljava/lang/String;" },
 };
-*/
+
+
+
+
+
+

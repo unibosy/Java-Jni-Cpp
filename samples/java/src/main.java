@@ -80,38 +80,38 @@ class AgoraJavaRecording{
     //When the user joined, we can re-layout the canvas
     SetVideoMixingLayout();
   }
-  private void audioFrameReceived(long uid, AudioFrame aFrame)
+  private void audioFrameReceived(long uid, int type, AudioFrame frame)
   {
-    //System.out.println("java demo audioFrameReceived,uid:"+uid);
-    //System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue());
+    //System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+type);
     ByteBuffer buf = null;
     String path = storageDir + Long.toString(uid);
-    if(aFrame.type.getValue() == 0) {//pcm
+    if(type == 0) {//pcm
       path += ".pcm";
-      buf = aFrame.pcm.pcmBuf_;
-    }else if(aFrame.type.getValue() == 1){//aac
+      buf = frame.pcm.pcmBuf_;
+    }else if(type == 1){//aac
       path += ".aac";
-      buf = aFrame.aac.aacBuf_;
+      buf = frame.aac.aacBuf_;
     }
     WriteBytesToFileClassic(buf, path,false);
     buf = null;
     path = null;
+    frame = null;
   }
-  private void videoFrameReceived(long uid, VideoFrame frame)
+  private void videoFrameReceived(long uid, int type, VideoFrame frame, int rotation)
   {
     String path = storageDir + Long.toString(uid);
     ByteBuffer buf = null;
     //System.out.println("java demo videoFrameReceived,uid:"+uid+",VIDEO_FRAME_TYPE:"+frame.type.getValue());
-    if(frame.type.getValue() == 0){//yuv
+    if(type == 0){//yuv
       path += ".yuv";
       buf = frame.yuv.buf_;
       if(buf == null){
         System.out.println("java demo videoFrameReceived null");
       }
-    }else if(frame.type.getValue() == 1) {//h264
+    }else if(type == 1) {//h264
       path +=  ".h264";
       buf = frame.h264.buf_;
-    }else if(frame.type.getValue() == 2) { // jpg
+    }else if(type == 2) { // jpg
       path += "_"+GetNowDate() + ".jpg";
       buf = frame.jpg.buf_;
     }
@@ -119,6 +119,7 @@ class AgoraJavaRecording{
     WriteBytesToFileClassic(buf, path, true);
     buf = null;
     path = null;
+    frame = null;
   }
 
   private int SetVideoMixingLayout(){
@@ -202,9 +203,10 @@ class AgoraJavaRecording{
     try {
       FileOutputStream fos = new FileOutputStream(fileDest, true);
       BufferedOutputStream bos = new BufferedOutputStream(fos);
-    // bos.write(data);
+      bos.write(data);
       bos.flush();
       bos.close();
+      fos = null;bos=null;data=null;
       /*long duration = System.nanoTime() - startTime;
       size = size+duration;
       if(v)

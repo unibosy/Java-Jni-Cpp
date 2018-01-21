@@ -6,7 +6,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include "helper.h"
-#include "jni/commonJniDef.h"
 
 using std::string;
 using std::cout;
@@ -23,6 +22,13 @@ void signal_handler(int signo) {
   cerr << "Signal " << signo<<endl;
   g_bSignalStop = true;
 }
+
+jmethodID AgoraJniProxySdk::mJavaRecvVideoMtd = NULL;
+jmethodID AgoraJniProxySdk::mJavaRecvAudioMtd = NULL;
+jmethodID AgoraJniProxySdk::mJavaVideoFrameInitMtd = NULL;
+jmethodID AgoraJniProxySdk::mJavaVideoYuvFrameInitMtd = NULL;
+
+jmethodID AgoraJniProxySdk::m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
 
 #ifdef __cplusplus
 extern "C" {
@@ -114,6 +120,7 @@ void AgoraJniProxySdk::initialize(){
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if(!env) return;
+  staticInitCBFuncMid(env, mJavaAgoraJavaRecordingClass);
   initJavaObjects(env, true);
   cacheJavaCBFuncMethodIDs4Video(env, CN_VIDEO_FRAME);
   cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
@@ -128,6 +135,16 @@ void AgoraJniProxySdk::initialize(){
   //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
   //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
   //cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
+}
+int AgoraJniProxySdk::staticInitCBFuncMid(JNIEnv* env, jclass clazz){
+  for (int i = 0; i < sizeof(jCBObjectMethods) / sizeof(jCBObjectMethods[0]); i++){
+    const JavaObjectMethod& m = jCBObjectMethods[i];
+    jmethodID mid = safeGetMethodID(env, clazz, m.name, m.signature);
+    if (!mid){
+      cout<<"AgoraJniProxySdk::staticInitCBFuncMid failed get methid:"<<m.name<<endl;
+    }
+    m_CBObjectMethodIDs[m.id] = mid;
+  }
 }
 void AgoraJniProxySdk::cacheJavaObject(JNIEnv* env){
 }
@@ -675,14 +692,14 @@ bool AgoraJniProxySdk::fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk
       return false;
     }
   }
-  jobject job = env->NewObject(mJavaVideoFrameTypeClass, mJavaVideoFrameTypeInitMtd);
+  /*jobject job = env->NewObject(mJavaVideoFrameTypeClass, mJavaVideoFrameTypeInitMtd);
   CPB(job);
   int iVideoFrameType = static_cast<int>(frame->type);
   env->SetIntField(job, mJavaVideoFrameTypeTypeFid, jint(iVideoFrameType));
   env->SetObjectField(jobVideoFrame, mJavaVideoFrameTypeFid, job);
   //TODO
   //rotation need to set!
-  env->DeleteLocalRef(job);
+  env->DeleteLocalRef(job);*/
   return true;
 }
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
@@ -702,7 +719,7 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
     LOG_DIR(m_logdir.c_str(), ERROR,"jni fillVideoFrameByFields failed!" );
     return;
   }
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvVideoMtd, jlong(long(uid)), job);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_VIDEOFRAME_RECEIVED], jlong(long(uid)),frame->type, job, 0);
   env->DeleteLocalRef(job);
 #if 0 
   gettimeofday(&end,NULL);
@@ -726,18 +743,9 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
     LOG_DIR(m_logdir.c_str(), ERROR,"fillJAudioFrameByFields failed!" );
     return;
   }
-  CP(mJavaAudioFrameTypeClass);
-  CP(mJavaAudioFrameTypeInitMtd);
-  //jobject job = newJObject(env,mJavaAudioFrameTypeClass, mJavaAudioFrameTypeInitMtd);
-  jobject job = env->NewObject(mJavaAudioFrameTypeClass, mJavaAudioFrameTypeInitMtd);
-  CP(job);
-  int iAudioFrameType = 0; //default pcm?
-  iAudioFrameType = static_cast<int>(frame->type);
-  env->SetIntField(job, mJavaAudioFrameTypeTypeFid, jint(iAudioFrameType));
-  env->SetObjectField(jobAudioFrame, mJavaAudioFrameTypeFid, job);
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvAudioMtd, jlong(long(uid)), jobAudioFrame);
+  int type = static_cast<int>(frame->type);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_AUDIOFRAME_RECEIVED], jlong(long(uid)), jint(type), jobAudioFrame);
   env->DeleteLocalRef(jobAudioFrame);
-  env->DeleteLocalRef(job);
   return;
 }
 
@@ -750,15 +758,12 @@ void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk:
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-
-  jmethodID jUserJoinedMid =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"onUserJoined","(JLjava/lang/String;)V");
-  assert(jUserJoinedMid);
-  if(!jUserJoinedMid){
-    LOG_DIR(m_logdir.c_str(), ERROR,"jUserJoinedMid is null");
+  if(!m_CBObjectMethodIDs[MID_ON_USERJOINED]){
+    LOG_DIR(m_logdir.c_str(), ERROR,"MID_ON_USERJOINED not inited");
     return;
   }
   jstring jstrRecordingDir = env->NewStringUTF(store_dir.c_str());
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jUserJoinedMid, jlong((long)(uid)),jstrRecordingDir);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_USERJOINED], jlong((long)(uid)),jstrRecordingDir);
   return;
 }
 void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk::USER_OFFLINE_REASON_TYPE reason) {
@@ -767,12 +772,11 @@ void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-  jmethodID jUserOfflineMid =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"onUserOffline","(JI)V");
-  if(!jUserOfflineMid){
-    LOG_DIR(m_logdir.c_str(), ERROR,"cnnot find jUserOfflineMid" );
+  if(!m_CBObjectMethodIDs[MID_ON_USEROFFLINE]){
+    LOG_DIR(m_logdir.c_str(), ERROR,"MID_ON_USEROFFLINE not inited" );
     return;
   }
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jUserOfflineMid, jlong((long)(uid)),jint(int(reason)));
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_USEROFFLINE], jlong((long)(uid)),jint(int(reason)));
 
   return;
 }
@@ -783,9 +787,11 @@ void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-
-  jmethodID jLeaveMid =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"onLeaveChannel","(I)V");
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jLeaveMid, jint((int)(code)));
+  if(!m_CBObjectMethodIDs[MID_ON_LEAVECHANNEL]){
+    LOG_DIR(m_logdir.c_str(), ERROR,"MID_ON_LEAVECHANNEL not inited" );
+    return;
+  }
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_LEAVECHANNEL], jint((int)(code)));
   return;
 }
 void AgoraJniProxySdk::onWarning(int warn) {
@@ -794,9 +800,11 @@ void AgoraJniProxySdk::onWarning(int warn) {
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-  jmethodID jOnWarnMid =  env->GetMethodID(mJavaAgoraJavaRecordingClass, "onWarning","(I)V");
-  assert(jOnWarnMid);
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jOnWarnMid, warn);
+  if(!m_CBObjectMethodIDs[MID_ON_WARNING]){
+    LOG_DIR(m_logdir.c_str(), ERROR,"MID_ON_WARNING not inited" );
+    return;
+  }
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_WARNING], warn);
   return;
 }
 
@@ -806,12 +814,12 @@ void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_c
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-  jmethodID jLeaveMid =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"onError","(II)V");
-  if(!jLeaveMid) {
-    LOG_DIR(m_logdir.c_str(), INFO,"get method onError failed!");
+
+  if(!m_CBObjectMethodIDs[MID_ON_ERROR]) {
+    LOG_DIR(m_logdir.c_str(), INFO,"MID_ON_ERROR not inited!");
     return;
   }
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jLeaveMid, error, jint((int)(stat_code)));
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_ERROR], error, jint((int)(stat_code)));
   leaveChannel();
   ats.detach();
   return;

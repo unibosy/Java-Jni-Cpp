@@ -2,8 +2,10 @@
 #include "string.h"
 #include "iostream"
 #include "jni.h"
-using namespace std;
 
+#include "jni/commonJniDef.h"
+
+using namespace std;
 namespace jniproxy
 {
 
@@ -56,6 +58,13 @@ public:
    
 private:
   void initJavaObjects(JNIEnv* env, bool init);
+  int staticInitCBFuncMid(JNIEnv* env, jclass jclazz);
+private:
+  static jmethodID mJavaRecvVideoMtd;
+  static jmethodID mJavaRecvAudioMtd;
+  static jmethodID mJavaVideoFrameInitMtd;
+  static jmethodID mJavaVideoYuvFrameInitMtd;
+  static jmethodID m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
 private:
   //audio
   bool fillJAudioFrameByFields(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, jclass jcAudioFrame, jobject& jobAudioFrame) const;
@@ -142,6 +151,12 @@ private:
   jfieldID mJavaVideoFrameBufSizeFid;
   jfieldID mJavaVideoFrameYuvFid;
 
+  //static 
+  /*static jmethodID mJavaRecvVideoMtd;
+  static jmethodID mJavaRecvAudioMtd;
+  static jmethodID mJavaVideoFrameInitMtd;
+  static jmethodID mJavaVideoYuvFrameInitMtd;
+*/
   //pcm fields
 private:
   jclass mJavaAgoraJavaRecordingClass;

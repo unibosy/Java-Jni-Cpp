@@ -13,6 +13,7 @@ import java.util.Vector;
 import java.util.HashMap;
 import java.util.Map;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 class AgoraJavaRecording{
   //java run status flag
@@ -92,7 +93,9 @@ class AgoraJavaRecording{
       path += ".aac";
       buf = aFrame.aac.aacBuf_;
     }
-    WriteBytesToFileClassic(buf, path/*,false*/);
+    WriteBytesToFileClassic(buf, path,false);
+    buf = null;
+    path = null;
   }
   private void videoFrameReceived(long uid, VideoFrame frame)
   {
@@ -113,7 +116,9 @@ class AgoraJavaRecording{
       buf = frame.jpg.buf_;
     }
 
-    WriteBytesToFileClassic(buf, path/*,true*/);
+    WriteBytesToFileClassic(buf, path, true);
+    buf = null;
+    path = null;
   }
 
   private int SetVideoMixingLayout(){
@@ -181,7 +186,7 @@ class AgoraJavaRecording{
   private void recordingPathCallBack(String path){
     storageDir =  path;
   }
-  private void WriteBytesToFileClassic(ByteBuffer byteBuffer,String fileDest/*, boolean v*/) {
+  private void WriteBytesToFileClassic(ByteBuffer byteBuffer,String fileDest, boolean v) {
     if(byteBuffer == null){
       System.out.println("WriteBytesToFileClassic but byte buffer is null!");
       return;
@@ -190,20 +195,21 @@ class AgoraJavaRecording{
       count=count+1;
     if(count > 5000){
       return;
-    }*/ 
-    //long startTime = System.nanoTime();
+    }*/
+    long startTime = System.nanoTime();
     byte[] data = new byte[byteBuffer.capacity()];
     ((ByteBuffer) byteBuffer.duplicate().clear()).get(data);
     try {
       FileOutputStream fos = new FileOutputStream(fileDest, true);
       BufferedOutputStream bos = new BufferedOutputStream(fos);
-      bos.write(data);
+    // bos.write(data);
       bos.flush();
       bos.close();
-      //long duration = System.nanoTime() - startTime;
-      //size = size+duration;
-      //if(v)
-      //  System.out.println("BufferedWriter lost time:" +duration+",total size:"+ size +",count:"+count+",byteBuffer.size:"+byteBuffer.capacity());
+      /*long duration = System.nanoTime() - startTime;
+      size = size+duration;
+      if(v)
+        System.out.println("BufferedWriter lost time:" +duration+",total size:"+ size +",count:"+count+",byteBuffer.size:"+byteBuffer.capacity());
+        */
     } catch (IOException e) {
       e.printStackTrace();
     }

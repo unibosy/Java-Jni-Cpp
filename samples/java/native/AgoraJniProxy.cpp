@@ -3,6 +3,7 @@
 #include "AgoraJniProxy.h"
 #include <pthread.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include "helper.h"
 #include "jni/commonJniDef.h"
@@ -685,6 +686,12 @@ bool AgoraJniProxySdk::fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk
   return true;
 }
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
+#if 0
+  struct  timeval  start;
+  struct  timeval  end;
+  unsigned long duration;
+  gettimeofday(&start,NULL);
+#endif  
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
@@ -697,6 +704,11 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
   }
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvVideoMtd, jlong(long(uid)), job);
   env->DeleteLocalRef(job);
+#if 0 
+  gettimeofday(&end,NULL);
+  duration = 1000000 * (end.tv_sec-start.tv_sec)+ end.tv_usec-start.tv_usec;
+  cout << "Totle Time : " <<duration << " us" << endl;
+#endif
   return;
 }
 //TODO  use the same parameter
@@ -725,7 +737,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   env->SetObjectField(jobAudioFrame, mJavaAudioFrameTypeFid, job);
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvAudioMtd, jlong(long(uid)), jobAudioFrame);
   env->DeleteLocalRef(jobAudioFrame);
-  //env->DeleteLocalRef(job);
+  env->DeleteLocalRef(job);
   return;
 }
 

@@ -28,8 +28,14 @@ jmethodID AgoraJniProxySdk::mJavaVideoYuvFrameInitMtd = NULL;
 
 jmethodID AgoraJniProxySdk::m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
 jfieldID AgoraJniProxySdk::m_VideoYuvFrameFieldIDs[FID_YUVNUM];
-jfieldID AgoraJniProxySdk::m_AudioPcmFrameFieldIDs[FID_PCMNUM];
 jfieldID AgoraJniProxySdk::m_AudioFrameFieldIDs[FID_AF_NUM];
+
+jfieldID AgoraJniProxySdk::m_VideoH264FrameFieldIDs[FID_H264NUM];
+jfieldID AgoraJniProxySdk::m_VideoJpgFrameFieldIDs[FID_JPGNUM];  
+jfieldID AgoraJniProxySdk::m_AudioPcmFrameFieldIDs[FID_PCMNUM];
+jfieldID AgoraJniProxySdk::m_AudioAacFrameFieldIDs[FID_AACNUM];
+  
+
 
 template<typename T1, typename T2>
 int AgoraJniProxySdk::staticInitCommonFrameFid(JNIEnv* env, jclass clazz, GETID_TYPE type, T1& src, T2& dest){
@@ -148,10 +154,16 @@ void AgoraJniProxySdk::initialize(){
   cacheJavaObject(env);
   staticInitCBFuncMid(env, mJavaAgoraJavaRecordingClass);
   //staticInitVideoYuvFrameFid(env,mJavaVideoYuvFrameClass);
+  //video
   staticInitCommonFrameFid(env, mJavaVideoYuvFrameClass, FIDID,jVideoYuvFrameFields, m_VideoYuvFrameFieldIDs);
+  staticInitCommonFrameFid(env, mJavaVideoH264FrameClass, FIDID,jVideoH264FrameFields, m_VideoH264FrameFieldIDs);
+  staticInitCommonFrameFid(env, mJavaVideoJPGFrameClass, FIDID,jVideoJpgFrameFields, m_VideoJpgFrameFieldIDs);
+  //audio
   staticInitCommonFrameFid(env, mJavaAudioPcmFrameClass, FIDID,jAudioPcmFrameFields, m_AudioPcmFrameFieldIDs);
   staticInitCommonFrameFid(env, mJavaAudioFrameClass, FIDID,jAudioFrameFields, m_AudioFrameFieldIDs);
-}
+  staticInitCommonFrameFid(env, mJavaAudioAacFrameClass, FIDID, jAudioAacFrameFields, m_AudioAacFrameFieldIDs);
+
+  }
 }
 int AgoraJniProxySdk::staticInitVideoYuvFrameFid(JNIEnv* env, jclass clazz){
   for (int i = 0; i < sizeof(jVideoYuvFrameFields) / sizeof(jVideoYuvFrameFields[0]); i++){
@@ -294,6 +306,11 @@ void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* c
     cout<<"mJavaVideoFrameYuvFid is null"<<endl;
     return;
   }
+  mJavaVideoFrameJpgFid = env->GetFieldID(mJavaVideoFrameClass, FID_VIDEO_FRAME_JPG, VIDEOFRAME_JPG_SIGNATURE);
+  CP(mJavaVideoFrameJpgFid);
+  mJavaVideoFrameH264Fid = env->GetFieldID(mJavaVideoFrameClass, FID_VIDEO_FRAME_H264, VIDEOFRAME_H264_SIGNATURE);
+  CP(mJavaVideoFrameH264Fid);
+
  }
 void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   if(!init) return;
@@ -528,27 +545,10 @@ bool AgoraJniProxySdk::fillVideoOfJPG(JNIEnv* env, const agora::linuxsdk::VideoF
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk::fillVideoOfJPG enter" );
   if(frame->type != agora::linuxsdk::VIDEO_FRAME_JPG) return false;
   if(!env || !frame) return false;
-  jclass jc = NULL;
-  jmethodID initMid = NULL;
   jobject job = NULL;
-  jfieldID fid = NULL;
-  int fieldId = 0; //TODO
-  jobject jbArr = NULL;
 
-  //1.get subclass
-  jc = env->FindClass("Lio/agora/recording/common/Common$VideoJpgFrame;");
-  if(!jc) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"fillVideoOfJPG cannot find subclass");
-    return false;
-  }
-  //2.get subclass init method
-  initMid = env->GetMethodID(jc,SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
-  if(!initMid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get init methodid");
-    return false;
-  }
   //3.new VideoXXXXXFrame object
-  job = env->NewObject(jc, initMid);
+  job = env->NewObject(mJavaVideoJPGFrameClass, mJavaVideoJPGFrameInitMtd);
   if(!job){
     LOG_DIR(m_logdir.c_str(), ERROR,"new subclass  failed! no memory?");
     return false;
@@ -558,44 +558,19 @@ bool AgoraJniProxySdk::fillVideoOfJPG(JNIEnv* env, const agora::linuxsdk::VideoF
   //4.fill all fields
   //4.1 get & set of this subclass object
   //frame_ms_
-  fid = env->GetFieldID(jc, "frame_ms_", LONG_SIGNATURE);
-  if(!fid) {
-    //TODO add field ID
-    LOG_DIR(m_logdir.c_str(), ERROR,"fillVideoOfJPG cannot get field,field ID:");
-    return false;
-  }
   long frame_ms_ = f->frame_ms_;
-  env->SetLongField(job, fid, jlong(frame_ms_));
-  //buf_
-  fid = env->GetFieldID(jc, "buf_", BYTEARRAY);
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID::%u",fid);
-    return false;
-  }
+  env->SetLongField(job, m_VideoJpgFrameFieldIDs[FID_JPG_FRAMEMS], jlong(frame_ms_));
   const unsigned char* buf_ = f->buf_;
   long bufSize_ = f->bufSize_;
 
+  jobject jbArr = NULL;
   jbArr = env->NewDirectByteBuffer((void*)f->buf_, bufSize_);
 
-  env->SetObjectField(job, fid, jbArr);
+  env->SetObjectField(job, m_VideoJpgFrameFieldIDs[FID_JPG_BUF], jbArr);
   //bufSize_
-  fid = env->GetFieldID(jc, "bufSize_", LONG_SIGNATURE);
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID::%u",fid);
-    return false;
-  }
-  env->SetLongField(job, fid, jlong(bufSize_));
-
-  //5.get subclass field
-  fid = env->GetFieldID(jcVideoFrame, "jpg", VIDEOFRAME_JPG_SIGNATURE);
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get VIDEOFRAME_JPG_SIGNATURE");
-    return false;
-  }
+  env->SetLongField(job, m_VideoJpgFrameFieldIDs[FID_JPG_BUFSIZE], jlong(bufSize_));
   //6.fill jobVideFrame
-  env->SetObjectField(jobVideoFrame, fid, job);
-  
-  env->DeleteLocalRef(jc);
+  env->SetObjectField(jobVideoFrame, mJavaVideoFrameJpgFid, job);
   env->DeleteLocalRef(job);
   env->DeleteLocalRef(jbArr);
   return  true;
@@ -610,75 +585,31 @@ bool AgoraJniProxySdk::fillVideoOfH264(JNIEnv* env, const agora::linuxsdk::Video
   jfieldID fid = NULL;
   int fieldId = 0; //TODO
   jobject jbArr = NULL;
-  //1.get subclass
-  jc = env->FindClass("Lio/agora/recording/common/Common$VideoH264Frame;");
-  if(!jc) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot find subclass, type:%d",static_cast<int>(frame->type));
-    return false;
-  }
-  //2.get subclass init method
-  initMid = env->GetMethodID(jc,SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
-  if(!initMid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get init methodid");
-    return false;
-  }
   //3.new VideoH264Frame object
-  job = env->NewObject(jc, initMid);
+  job = env->NewObject(mJavaVideoH264FrameClass, mJavaVideoH264FrameInitMtd);
   if(!job){
     LOG_DIR(m_logdir.c_str(), ERROR,"new subclass  failed! no memory?");
     return false;
   }
   agora::linuxsdk::VideoH264Frame *f = frame->frame.h264;
   if(!f) return false;
-  //4.fill all fields
-  //4.1 get & set of this subclass object
   //frame_ms_
-  fid = env->GetFieldID(jc, "frame_ms_", LONG_SIGNATURE);
-  if(!fid) {
-    //TODO add field ID
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID::%d",fid);
-    return false;
-  }
   long frame_ms_ = f->frame_ms_;
-  env->SetLongField(job, fid, jlong(frame_ms_));
+  env->SetLongField(job, m_VideoH264FrameFieldIDs[FID_H264_FRAMEMS], jlong(frame_ms_));
   //frame_num_
-  fid = env->GetFieldID(jc, "frame_num_", LONG_SIGNATURE);
-  if(!fid) {
-    //TODO add field ID
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID:%d",fid);
-    return false;
-  }
   long frame_num_ = f->frame_num_;
-  env->SetLongField(job, fid, jlong(frame_num_));
+  env->SetLongField(job, m_VideoH264FrameFieldIDs[FID_H264_FRAMENUM], jlong(frame_num_));
   //buf_
-  fid = env->GetFieldID(jc, "buf_", BYTEARRAY);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID:%d",fieldId);
-    return false;
-  }
   const unsigned char* buf_ = f->buf_;
   long bufSize_ = f->bufSize_;
   
   jbArr = env->NewDirectByteBuffer((void*)f->buf_, bufSize_);
 
-  env->SetObjectField(job, fid, jbArr);
+  env->SetObjectField(job, m_VideoH264FrameFieldIDs[FID_H264_BUF], jbArr);
   //bufSize_
-  fid = env->GetFieldID(jc, "bufSize_", LONG_SIGNATURE);
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get field,field ID:%s",fieldId);
-    return false;
-  }
-  env->SetLongField(job, fid, jlong(bufSize_));
+  env->SetLongField(job, m_VideoH264FrameFieldIDs[FID_H264_BUF_SIZE], jlong(bufSize_));
   //5.get subclass field
-  fid = env->GetFieldID(jcVideoFrame, "h264", VIDEOFRAME_H264_SIGNATURE);
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get VIDEOFRAME_H264_SIGNATURE");
-    return false;
-  }
-  //6.fill jobVideFrame
-  env->SetObjectField(jobVideoFrame, fid, job);
-  
-  env->DeleteLocalRef(jc);
+  env->SetObjectField(jobVideoFrame, mJavaVideoFrameH264Fid, job);
   env->DeleteLocalRef(job);
   env->DeleteLocalRef(jbArr);
   return  true;

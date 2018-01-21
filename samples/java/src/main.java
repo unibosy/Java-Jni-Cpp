@@ -115,7 +115,6 @@ class AgoraJavaRecording{
       path += "_"+GetNowDate() + ".jpg";
       buf = frame.jpg.buf_;
     }
-
     WriteBytesToFileClassic(buf, path, true);
     buf = null;
     path = null;

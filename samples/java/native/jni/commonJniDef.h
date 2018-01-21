@@ -54,6 +54,8 @@
 #define FID_VIDEO_YUV_FRAME_BUF "buf_"
 #define FID_VIDEO_YUV_FRAME_BUFSIZE "bufSize_"
 #define FID_VIDEO_FRAME_YUV "yuv"
+#define FID_VIDEO_FRAME_JPG "jpg"
+#define FID_VIDEO_FRAME_H264 "h264"
 #define FID_FRAME_MS "frame_ms_"
 
 //static java class init jmethodIDs
@@ -90,6 +92,7 @@
 #define FID_PCMBUFFERSIZE "pcmBufSize_"
 #define FID_PCM "pcm"
 #define FID_AAC "aac"
+#define FID_CHANNELNUM "frame_num_"
 
 //-----------------Callback Java method----------------
 
@@ -150,22 +153,35 @@ enum FID_VIDEOYUVFRAME{
 };
 
 static JavaObjectMethod jVideoYuvFrameFields[] = {
-  {FID_FRAMEMS, "frame_ms_", "J"},
-  {FID_YUVBUF, "buf_", "Ljava/nio/ByteBuffer;"},
-  {FID_YUVBUFSIZE,"bufSize_", "J"},
+  {FID_FRAMEMS, FID_FRAME_MS, LONG_SIGNATURE},
+  {FID_YUVBUF, FID_VIDEO_YUV_FRAME_BUF, "Ljava/nio/ByteBuffer;"},
+  {FID_YUVBUFSIZE,FID_VIDEO_YUV_FRAME_BUFSIZE, LONG_SIGNATURE},
   {FID_YUVWIDTH,"width_", "I"},
   {FID_YUVHEIGHT, "height_", "I"},
 };
-static JavaObjectMethod jVideoH264FrameMethods[] = {
-  {},
-  {},
-  {},
-  {}
+enum FID_VIDEOH264FRAME{
+  FID_H264_FRAMEMS = 0 ,
+  FID_H264_FRAMENUM = 1,
+  FID_H264_BUF = 2,
+  FID_H264_BUF_SIZE = 3,
+  FID_H264NUM = 4
 };
-static JavaObjectMethod jVideoJPGFrameMethods[] = {
-  {},
-  {},
-  {},
+static JavaObjectMethod jVideoH264FrameFields[] = {
+  {FID_H264_FRAMEMS, FID_FRAME_MS, LONG_SIGNATURE},
+  {FID_H264_FRAMENUM, FID_CHANNELNUM, LONG_SIGNATURE},
+  {FID_H264_BUF, FID_VIDEO_YUV_FRAME_BUF, BYTEARRAY},
+  {FID_H264_BUF_SIZE, FID_VIDEO_YUV_FRAME_BUFSIZE, LONG_SIGNATURE}
+};
+enum FID_JPGFRAME{
+  FID_JPG_FRAMEMS = 0,
+  FID_JPG_BUF = 1,
+  FID_JPG_BUFSIZE = 2,
+  FID_JPGNUM = 3
+};
+static JavaObjectMethod jVideoJpgFrameFields[] = {
+  {FID_JPG_FRAMEMS, FID_FRAME_MS, LONG_SIGNATURE},
+  {FID_JPG_BUF, FID_VIDEO_YUV_FRAME_BUF, BYTEARRAY},
+  {FID_JPG_BUFSIZE, FID_VIDEO_YUV_FRAME_BUFSIZE, LONG_SIGNATURE},
 };
 //audio
 enum FID_AUDIOFRAME{
@@ -196,8 +212,17 @@ static JavaObjectMethod jAudioPcmFrameFields[] = {
   {FID_PCM_BUF, FID_PCMBUF, BYTEARRAY},
   {FID_PCM_BUFSIZE, FID_PCMBUFFERSIZE, LONG_SIGNATURE},
 };
-
-static JavaObjectMethod jAudioAacFrameFields[] = {
-  {},{},{},{}
+enum FID_AACFRAME{
+  FID_AAC_FRAMEMS = 0,
+  FID_AAC_BUF = 1,
+  FID_AAC_BUFSIZE = 2,
+  FID_AACNUM = 3
 };
+static JavaObjectMethod jAudioAacFrameFields[] = {
+  {FID_AAC_FRAMEMS, FID_FRAME_MS,LONG_SIGNATURE},
+  {FID_AAC_BUF, FID_PCMBUF, BYTEARRAY},
+  {FID_AAC_BUFSIZE, FID_PCMBUFFERSIZE, LONG_SIGNATURE}
+};
+
+
 

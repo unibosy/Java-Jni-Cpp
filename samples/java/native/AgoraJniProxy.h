@@ -72,8 +72,13 @@ private:
 
   static jmethodID m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
   static jfieldID m_VideoYuvFrameFieldIDs[FID_YUVNUM];
-  static jfieldID m_AudioPcmFrameFieldIDs[FID_PCMNUM];
+  static jfieldID m_VideoH264FrameFieldIDs[FID_H264NUM];
+  static jfieldID m_VideoJpgFrameFieldIDs[FID_JPGNUM];
+  
   static jfieldID m_AudioFrameFieldIDs[FID_AF_NUM];
+  static jfieldID m_AudioPcmFrameFieldIDs[FID_PCMNUM];
+  static jfieldID m_AudioAacFrameFieldIDs[FID_AACNUM];
+  
 private:
   //audio
   bool fillJAudioFrameByFields(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, jclass jcAudioFrame, jobject& jobAudioFrame) const;
@@ -138,6 +143,8 @@ private:
   jfieldID mJavaAudioFrameTypeTypeFid;
 
   jfieldID mJavaVideoFrameYuvFid;
+  jfieldID mJavaVideoFrameH264Fid;
+  jfieldID mJavaVideoFrameJpgFid;
   jmethodID mJavaAudioFrameInitMtd;
 
 private:

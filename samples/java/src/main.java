@@ -80,42 +80,41 @@ class AgoraJavaRecording{
     //When the user joined, we can re-layout the canvas
     SetVideoMixingLayout();
   }
-  private void audioFrameReceived(long uid, AudioFrame aFrame)
+  private void audioFrameReceived(long uid, int type, ByteBuffer byteBuf, long size)
   {
     //System.out.println("java demo audioFrameReceived,uid:"+uid);
-    //System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue());
+    System.out.println("java demo audioFrameReceived,uid:"+uid+",type:"+type);
     ByteBuffer buf = null;
     String path = storageDir + Long.toString(uid);
-    if(aFrame.type.getValue() == 0) {//pcm
+    if(type == 0) {//pcm
       path += ".pcm";
-      buf = aFrame.pcm.pcmBuf_;
-    }else if(aFrame.type.getValue() == 1){//aac
+      buf = byteBuf;
+    }else if(type == 1){//aac
       path += ".aac";
-      buf = aFrame.aac.aacBuf_;
+      buf = byteBuf;
     }
     WriteBytesToFileClassic(buf, path,false);
     buf = null;
     path = null;
   }
-  private void videoFrameReceived(long uid, VideoFrame frame)
+  private void videoFrameReceived(long uid, int type, ByteBuffer byteBuf, long size)
   {
     String path = storageDir + Long.toString(uid);
     ByteBuffer buf = null;
-    //System.out.println("java demo videoFrameReceived,uid:"+uid+",VIDEO_FRAME_TYPE:"+frame.type.getValue());
-    if(frame.type.getValue() == 0){//yuv
+    System.out.println("java demo videoFrameReceived,uid:"+uid+",type:"+type);
+    if(type == 0){//yuv
       path += ".yuv";
-      buf = frame.yuv.buf_;
+      buf = byteBuf;
       if(buf == null){
         System.out.println("java demo videoFrameReceived null");
       }
-    }else if(frame.type.getValue() == 1) {//h264
+    }else if(type == 1) {//h264
       path +=  ".h264";
-      buf = frame.h264.buf_;
-    }else if(frame.type.getValue() == 2) { // jpg
+      buf = byteBuf;
+    }else if(type == 2) { // jpg
       path += "_"+GetNowDate() + ".jpg";
-      buf = frame.jpg.buf_;
+      buf = byteBuf;
     }
-
     WriteBytesToFileClassic(buf, path, true);
     buf = null;
     path = null;
@@ -202,7 +201,7 @@ class AgoraJavaRecording{
     try {
       FileOutputStream fos = new FileOutputStream(fileDest, true);
       BufferedOutputStream bos = new BufferedOutputStream(fos);
-    // bos.write(data);
+      bos.write(data);
       bos.flush();
       bos.close();
       /*long duration = System.nanoTime() - startTime;

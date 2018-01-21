@@ -696,6 +696,7 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
+#if 0
   jobject job = newJObject(env, mJavaVideoFrameClass, mJavaVideoFrameInitMtd);
   if(!fillVideoFrameByFields(env, frame, mJavaVideoFrameClass, job))
   {
@@ -704,11 +705,32 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
   }
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvVideoMtd, jlong(long(uid)), job);
   env->DeleteLocalRef(job);
+#endif
 #if 0 
   gettimeofday(&end,NULL);
   duration = 1000000 * (end.tv_sec-start.tv_sec)+ end.tv_usec-start.tv_usec;
   cout << "Totle Time : " <<duration << " us" << endl;
 #endif
+  jobject buf = NULL;
+  long bufSize_ = 0;
+  int iVideoFrameType = static_cast<int>(frame->type);
+  if(iVideoFrameType == 0){//yuv
+    bufSize_ = frame->frame.yuv->bufSize_;
+    jobject buf = env->NewDirectByteBuffer((void*)frame->frame.yuv->buf_, bufSize_);
+    env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvVideoMtd, jlong(long(uid)), jint(iVideoFrameType), buf, bufSize_);
+  }else if(iVideoFrameType == 1){//h264
+    bufSize_ = frame->frame.h264->bufSize_;
+    jobject buf = env->NewDirectByteBuffer((void*)frame->frame.h264->buf_, bufSize_);
+    env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvVideoMtd, jlong(long(uid)), jint(iVideoFrameType), buf, bufSize_);
+  }else if(iVideoFrameType == 2){
+    bufSize_ = frame->frame.jpg->bufSize_;
+    jobject buf = env->NewDirectByteBuffer((void*)frame->frame.jpg->buf_, bufSize_);
+    env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvVideoMtd, jlong(long(uid)), jint(iVideoFrameType), buf, bufSize_);
+  }else{
+    LOG_DIR(m_logdir.c_str(), ERROR,"audioFrameReceived type is unknown");
+  }
+  if(buf)
+    env->DeleteLocalRef(buf);
   return;
 }
 //TODO  use the same parameter
@@ -717,6 +739,7 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
+#if 0
   jobject jobAudioFrame = newJObject(env, mJavaAudioFrameClass, mJavaAudioFrameInitMtd);
   if(!jobAudioFrame){
     LOG_DIR(m_logdir.c_str(), ERROR,"new audio frame object failed!");
@@ -738,7 +761,25 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvAudioMtd, jlong(long(uid)), jobAudioFrame);
   env->DeleteLocalRef(jobAudioFrame);
   env->DeleteLocalRef(job);
+#else
+  int iAudioFrameType = static_cast<int>(frame->type);
+  jobject buf = NULL;
+  long bufSize = 0;
+  if(iAudioFrameType == 0){//pcm
+    bufSize = frame->frame.pcm->pcmBufSize_;
+    buf = env->NewDirectByteBuffer((void*)frame->frame.pcm->pcmBuf_, bufSize);
+    env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvAudioMtd, jlong(long(uid)), jint(iAudioFrameType), buf, bufSize);
+  }else if(iAudioFrameType == 1){//aac
+    bufSize = frame->frame.pcm->pcmBufSize_;
+    buf = env->NewDirectByteBuffer((void*)frame->frame.pcm->pcmBuf_, bufSize);
+    env->CallVoidMethod(mJavaAgoraJavaRecordingObject, mJavaRecvAudioMtd, jlong(long(uid)), jint(iAudioFrameType), buf, bufSize);
+  }else {
+    LOG_DIR(m_logdir.c_str(), ERROR,"audioFrameReceived type is unknown");
+  }
+  if(buf)
+    env->DeleteLocalRef(buf);
   return;
+  #endif  
 }
 
 void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk::UserJoinInfos &infos) {

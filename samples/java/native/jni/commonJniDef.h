@@ -43,10 +43,10 @@
 #define VIDEO_FRAME_SIGNATURE "(Lio/agora/recording/common/Common;)V"
 #define MTD_INIT_VIDEO_FRAME "(Lio/agora/recording/common/Common;)V"
 
-#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JLio/agora/recording/common/Common$VideoFrame;)V"
+//#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JLio/agora/recording/common/Common$VideoFrame;)V"
+#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JILjava/nio/ByteBuffer;J)V"
 //declare java callback function
 #define CB_FUNC_RECEIVE_VIDEOFRAME "videoFrameReceived"
-
 #define CB_FUNC_RECEIVE_AUDIOFRAME "audioFrameReceived"
 
 //declare filedIDs
@@ -68,7 +68,8 @@ static jmethodID mJavaVideoYuvFrameInitMtd;
 #define CN_AUDIO_FRAME_TYPE "io/agora/recording/common/Common$AUDIO_FRAME_TYPE"
 #define CN_AUDIO_AAC_FRAME "io/agora/recording/common/Common$AudioAacFrame"
 #define CN_AUDIO_PCM_FRAME "io/agora/recording/common/Common$AudioPcmFrame"
-#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JLio/agora/recording/common/Common$AudioFrame;)V"
+//#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JLio/agora/recording/common/Common$AudioFrame;)V"
+#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JILjava/nio/ByteBuffer;J)V"
 
 #define SN_AUDIO_FRAME_TYPE "Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;"
 #define SN_INIT_MTD_AUDIO_FRAME "(Lio/agora/recording/common/Common;JJJ)V"

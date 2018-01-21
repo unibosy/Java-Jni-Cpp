@@ -76,7 +76,7 @@
 #define SN_INIT_MTD_AUDIO_FRAME "(Lio/agora/recording/common/Common;JJJ)V"
 
 #define SN_AUDIO_PCM_FRAME "Lio/agora/recording/common/Common$AudioPcmFrame;"
-
+#define SN_AUDIO_AAC_FRAME "Lio/agora/recording/common/Common$AudioAacFrame;"
 
 //-----------------Audio End-------------------
 
@@ -85,11 +85,18 @@
 #define FID_CHANNELS "channels_"
 #define FID_SAMPLE_BITS "sample_bits_"
 #define FID_SAMPLE_RATES "sample_rates_"
-#define FID_PCM_BUF "pcmBuf_"
-#define FID_PCM_BUFFER_SIZE "pcmBufSize_"
+#define FID_SAMPLE "samples_"
+#define FID_PCMBUF "pcmBuf_"
+#define FID_PCMBUFFERSIZE "pcmBufSize_"
 #define FID_PCM "pcm"
+#define FID_AAC "aac"
+
 //-----------------Callback Java method----------------
 
+enum GETID_TYPE{
+  MTDID,
+  FIDID
+};
 struct JavaObjectMethod {
   int id;
   const char* name;
@@ -141,6 +148,7 @@ enum FID_VIDEOYUVFRAME{
   FID_YUVHEIGHT = 4,
   FID_YUVNUM = 5,
 };
+
 static JavaObjectMethod jVideoYuvFrameFields[] = {
   {FID_FRAMEMS, "frame_ms_", "J"},
   {FID_YUVBUF, "buf_", "Ljava/nio/ByteBuffer;"},
@@ -160,14 +168,35 @@ static JavaObjectMethod jVideoJPGFrameMethods[] = {
   {},
 };
 //audio
-static JavaObjectMethod jAudioFrameMethods[] = {
-  {},
-  {},
-  {},
-  {}
+enum FID_AUDIOFRAME{
+  FID_AF_PCM = 0,
+  FID_AF_AAC = 1,
+  FID_AF_NUM= 2
 };
-static JavaObjectMethod jAudioPcmFrameMethods[] = {
-  {},{},{},{}};
+static JavaObjectMethod jAudioFrameFields[] = {
+  {FID_AF_PCM, FID_PCM, SN_AUDIO_PCM_FRAME},
+  {FID_AF_AAC, FID_AAC, SN_AUDIO_AAC_FRAME}
+};
+enum FID_PCMFRAME{
+  FID_PCM_FRAMEMS = 0,
+  FID_PCM_CHANNELS = 1,
+  FID_PCM_SAMPLEBITS = 2,
+  FID_PCM_SAMPLERATES = 3,
+  FID_PCM_SAMPLES = 4,
+  FID_PCM_BUF = 5,
+  FID_PCM_BUFSIZE = 6,
+  FID_PCMNUM = 7
+};
+static JavaObjectMethod jAudioPcmFrameFields[] = {
+  {FID_PCM_FRAMEMS, FID_FRAME_MS,LONG_SIGNATURE},
+  {FID_PCM_CHANNELS, FID_CHANNELS, LONG_SIGNATURE},
+  {FID_PCM_SAMPLEBITS, FID_SAMPLE_BITS, LONG_SIGNATURE},
+  {FID_PCM_SAMPLERATES, FID_SAMPLE_RATES, LONG_SIGNATURE},
+  {FID_PCM_SAMPLES, FID_SAMPLE, LONG_SIGNATURE},
+  {FID_PCM_BUF, FID_PCMBUF, BYTEARRAY},
+  {FID_PCM_BUFSIZE, FID_PCMBUFFERSIZE, LONG_SIGNATURE},
+};
+
 static JavaObjectMethod jAudioAacFrameMethods[] = {
   {},{},{},{}
 };

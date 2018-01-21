@@ -60,6 +60,10 @@ private:
   void initJavaObjects(JNIEnv* env, bool init);
   int staticInitCBFuncMid(JNIEnv* env, jclass jclazz);
   int staticInitVideoYuvFrameFid(JNIEnv* env, jclass jclazz);
+  
+  template<typename T1, typename T2 >
+  int staticInitCommonFrameFid(JNIEnv* env, jclass clazz, GETID_TYPE type, T1& src, T2& dest);
+
 private:
   static jmethodID mJavaRecvVideoMtd;
   static jmethodID mJavaRecvAudioMtd;
@@ -67,7 +71,9 @@ private:
   static jmethodID mJavaVideoYuvFrameInitMtd;
 
   static jmethodID m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
-  static jfieldID m_VideoYuvFrameMethodIDs[FID_YUVNUM];
+  static jfieldID m_VideoYuvFrameFieldIDs[FID_YUVNUM];
+  static jfieldID m_AudioPcmFrameFieldIDs[FID_PCMNUM];
+  static jfieldID m_AudioFrameFieldIDs[FID_AF_NUM];
 private:
   //audio
   bool fillJAudioFrameByFields(JNIEnv* env, const agora::linuxsdk::AudioFrame*& frame, jclass jcAudioFrame, jobject& jobAudioFrame) const;
@@ -112,16 +118,6 @@ private:
   jobject mJavaAudioFrameObject;
 
   //pcm field
-  jfieldID mJavaAudioPcmFrameFid;
-
-  jfieldID mJavaAudioFrameMsFid;
-  jfieldID mJavaAudioPcmFrameChannelsFid;
-  jfieldID mJavaAudioPcmFrameSampleBitsFid;
-  jfieldID mJavaAudioPcmFrameSampleRatesFid;
-  jfieldID mJavaAudioPcmFrameBufFid;
-  jfieldID mJavaAudioPcmFrameBufferSizeFid;
-
-  //aac field
   jfieldID mJavaAudioAacFrameFid;
 
   //pcm
@@ -142,19 +138,8 @@ private:
   jfieldID mJavaAudioFrameTypeTypeFid;
 
   jfieldID mJavaVideoFrameYuvFid;
-  //callback function jmethodIDs
-  //java class jmethod IDs
-  //static jmethodID mJavaVideoFrameInitMtd;
-  //static jmethodID mJavaVideoYuvFrameInitMtd;
   jmethodID mJavaAudioFrameInitMtd;
 
-  //static 
-  /*static jmethodID mJavaRecvVideoMtd;
-  static jmethodID mJavaRecvAudioMtd;
-  static jmethodID mJavaVideoFrameInitMtd;
-  static jmethodID mJavaVideoYuvFrameInitMtd;
-*/
-  //pcm fields
 private:
   jclass mJavaAgoraJavaRecordingClass;
   jobject mJavaAgoraJavaRecordingObject;

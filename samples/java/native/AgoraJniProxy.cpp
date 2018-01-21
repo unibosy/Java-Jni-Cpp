@@ -22,14 +22,40 @@ void signal_handler(int signo) {
   cerr << "Signal " << signo<<endl;
   g_bSignalStop = true;
 }
-
-jmethodID AgoraJniProxySdk::mJavaRecvVideoMtd = NULL;
 jmethodID AgoraJniProxySdk::mJavaRecvAudioMtd = NULL;
 jmethodID AgoraJniProxySdk::mJavaVideoFrameInitMtd = NULL;
 jmethodID AgoraJniProxySdk::mJavaVideoYuvFrameInitMtd = NULL;
 
 jmethodID AgoraJniProxySdk::m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
-jfieldID AgoraJniProxySdk::m_VideoYuvFrameMethodIDs[FID_YUVNUM];
+jfieldID AgoraJniProxySdk::m_VideoYuvFrameFieldIDs[FID_YUVNUM];
+jfieldID AgoraJniProxySdk::m_AudioPcmFrameFieldIDs[FID_PCMNUM];
+jfieldID AgoraJniProxySdk::m_AudioFrameFieldIDs[FID_AF_NUM];
+
+template<typename T1, typename T2>
+int AgoraJniProxySdk::staticInitCommonFrameFid(JNIEnv* env, jclass clazz, GETID_TYPE type, T1& src, T2& dest){
+  for (int i = 0; i < sizeof(src) / sizeof(src[0]); i++){
+     const JavaObjectMethod& m = src[i];
+     //if(type == MTDID){
+       jfieldID id = safeGetFieldID(env, clazz, m.name, m.signature);
+       if(!id){
+        cout<<"staticInitCommonFrameFid failed,name:"<<m.name<<",m.signature:"<<m.signature<<endl;
+        continue;
+        //return -1;
+       }
+       dest[m.id] = id;
+#if 0
+  }else{
+       jmethodID id = safeGetMethodID(env, clazz, m.name, m.signature);
+       if(!id){
+        cout<<"staticInitCommonFrameFid failed,name:"<<m.name<<endl;
+        return -1;
+       }
+       dest[m.id] = id;
+     }
+#endif
+  }
+  return 0;
+}
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,8 +127,6 @@ AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   mJavaVideoFrameTypeObject = NULL;
   mJavaAudioFrameInitMtd = NULL;
 
-  //AgoraJavaRecording callback function jmethodIDs
-  //mJavaRecvVideoMtd = NULL;
 }
 AgoraJniProxySdk::~AgoraJniProxySdk(){
   AttachThreadScoped ats(g_jvm);
@@ -112,6 +136,7 @@ AgoraJniProxySdk::~AgoraJniProxySdk(){
   initJavaObjects(env, false);
   cout<<"AgoraJniProxySdk destructor end"<<endl;
 }
+extern "C++" {
 void AgoraJniProxySdk::initialize(){
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
@@ -119,10 +144,14 @@ void AgoraJniProxySdk::initialize(){
   initJavaObjects(env, true);
   cacheJavaCBFuncMethodIDs4Video(env, CN_VIDEO_FRAME);
   cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
-  cacheAudioPcmFrame(env);
+  //cacheAudioPcmFrame(env);
   cacheJavaObject(env);
   staticInitCBFuncMid(env, mJavaAgoraJavaRecordingClass);
-  staticInitVideoYuvFrameFid(env,mJavaVideoYuvFrameClass);
+  //staticInitVideoYuvFrameFid(env,mJavaVideoYuvFrameClass);
+  staticInitCommonFrameFid(env, mJavaVideoYuvFrameClass, FIDID,jVideoYuvFrameFields, m_VideoYuvFrameFieldIDs);
+  staticInitCommonFrameFid(env, mJavaAudioPcmFrameClass, FIDID,jAudioPcmFrameFields, m_AudioPcmFrameFieldIDs);
+  staticInitCommonFrameFid(env, mJavaAudioFrameClass, FIDID,jAudioFrameFields, m_AudioFrameFieldIDs);
+}
 }
 int AgoraJniProxySdk::staticInitVideoYuvFrameFid(JNIEnv* env, jclass clazz){
   for (int i = 0; i < sizeof(jVideoYuvFrameFields) / sizeof(jVideoYuvFrameFields[0]); i++){
@@ -130,9 +159,11 @@ int AgoraJniProxySdk::staticInitVideoYuvFrameFid(JNIEnv* env, jclass clazz){
     jfieldID fid = safeGetFieldID(env, clazz, m.name, m.signature);
     if (!fid){
       cout<<"AgoraJniProxySdk::staticInitCBFuncMid failed get methid:"<<m.name<<endl;
+      return -1;
     }
-    m_VideoYuvFrameMethodIDs[m.id] = fid;
+    m_VideoYuvFrameFieldIDs[m.id] = fid;
   }
+  return 0;
 }
 
 int AgoraJniProxySdk::staticInitCBFuncMid(JNIEnv* env, jclass clazz){
@@ -216,20 +247,22 @@ jfieldID AgoraJniProxySdk::safeGetFieldID2(JNIEnv* env, jclass clazz, const char
   return fid;
 }
 void AgoraJniProxySdk::cacheAudioPcmFrame(JNIEnv* env){
+  /*
   mJavaAudioFrameMsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_FRAME_MS, LONG_SIGNATURE);
   CP(mJavaAudioFrameMsFid);
   mJavaAudioPcmFrameFid = safeGetFieldID(env, mJavaAudioFrameClass, FID_PCM, SN_AUDIO_PCM_FRAME);
   CP(mJavaAudioPcmFrameFid);
-  mJavaAudioPcmFrameChannelsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_CHANNELS, LONG_SIGNATURE);
+  mJavaAudioPcmFrameChannelsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_CHANNELS2, LONG_SIGNATURE);
   CP(mJavaAudioPcmFrameChannelsFid);
   mJavaAudioPcmFrameSampleBitsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_SAMPLE_BITS, LONG_SIGNATURE);
   CP(mJavaAudioPcmFrameSampleBitsFid);
   mJavaAudioPcmFrameSampleRatesFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_SAMPLE_RATES, LONG_SIGNATURE);
   CP(mJavaAudioPcmFrameSampleRatesFid);
-  mJavaAudioPcmFrameBufFid =safeGetFieldID(env, mJavaAudioPcmFrameClass,FID_PCM_BUF, BYTEARRAY);
+  mJavaAudioPcmFrameBufFid =safeGetFieldID(env, mJavaAudioPcmFrameClass,FID_PCMBUF, BYTEARRAY);
   CP(mJavaAudioPcmFrameBufFid);
-  mJavaAudioPcmFrameBufferSizeFid =safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_PCM_BUFFER_SIZE, LONG_SIGNATURE);
+  mJavaAudioPcmFrameBufferSizeFid =safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_PCMBUFFERSIZE, LONG_SIGNATURE);
   CP(mJavaAudioPcmFrameBufferSizeFid);
+  */
 }
 void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className){
   //AV init jmethodIDs
@@ -251,22 +284,12 @@ void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* cla
 void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* className){
   if (!env) return;
   //AV class
-  jclass localRef = env->FindClass(className);
-  if(!localRef) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJClass cannot find class:%s", className);
-    return ;
-  }
-  mJavaRecvVideoMtd = safeGetMethodID(env, mJavaAgoraJavaRecordingClass, CB_FUNC_RECEIVE_VIDEOFRAME, SN_CB_FUNC_RECEIVE_VIDEOFRAME);
-  if(!mJavaRecvVideoMtd) {
-     LOG_DIR(m_logdir.c_str(), ERROR, "get receive video frame jmethodid failed ");
-     return;
-  }
-   mJavaVideoFrameInitMtd = safeGetMethodID(env, localRef, SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
+  mJavaVideoFrameInitMtd = safeGetMethodID(env, mJavaVideoFrameClass, SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
   if(!mJavaVideoFrameInitMtd) {
     LOG_DIR(m_logdir.c_str(), ERROR,"cannot get videoinit methodid");
     return;
   }
-  mJavaVideoFrameYuvFid = env->GetFieldID(localRef, FID_VIDEO_FRAME_YUV, VIDEOFRAME_YUV_SIGNATURE);
+  mJavaVideoFrameYuvFid = env->GetFieldID(mJavaVideoFrameClass, FID_VIDEO_FRAME_YUV, VIDEOFRAME_YUV_SIGNATURE);
   if(!mJavaVideoFrameYuvFid){
     cout<<"mJavaVideoFrameYuvFid is null"<<endl;
     return;
@@ -371,23 +394,25 @@ bool AgoraJniProxySdk::fillPcmAllFields(JNIEnv* env, jobject& job, jclass& jc, c
   agora::linuxsdk::AudioPcmFrame *f = frame->frame.pcm;
   //frame_ms_
   long frame_ms_ = f->frame_ms_;
-  env->SetLongField(job, mJavaAudioFrameMsFid, jlong(frame_ms_));
+  env->SetLongField(job, m_AudioPcmFrameFieldIDs[FID_PCM_FRAMEMS], jlong(frame_ms_));
   //channels_
   long channels_ = f->channels_;
-  env->SetLongField(job, mJavaAudioPcmFrameChannelsFid, jlong(channels_));
+  env->SetLongField(job, m_AudioPcmFrameFieldIDs[FID_PCM_CHANNELS], jlong(channels_));
   long sample_bits_ = f->sample_bits_;
-  env->SetLongField(job, mJavaAudioPcmFrameSampleBitsFid, jlong(sample_bits_));
+  env->SetLongField(job, m_AudioPcmFrameFieldIDs[FID_PCM_SAMPLEBITS], jlong(sample_bits_));
   //sample_rates_
   long sample_rates_ = f->sample_rates_;
-  env->SetLongField(job, mJavaAudioPcmFrameSampleRatesFid, jlong(sample_rates_));
+  env->SetLongField(job, m_AudioPcmFrameFieldIDs[FID_PCM_SAMPLERATES], jlong(sample_rates_));
+  //sampel
+  long samples__ = f->samples_;
+  env->SetLongField(job, m_AudioPcmFrameFieldIDs[FID_PCM_SAMPLES], jlong(samples__));
   //pcmBuf_
   long pcmBufSize_ = f->pcmBufSize_;
-  jobject jbArr = env->NewDirectByteBuffer((void*)f->pcmBuf_, pcmBufSize_);
-  CPB(mJavaAudioPcmFrameBufFid);
-  env->SetObjectField(job, mJavaAudioPcmFrameBufFid, jbArr);
+  jobject buf = env->NewDirectByteBuffer((void*)f->pcmBuf_, pcmBufSize_);
+  env->SetObjectField(job, m_AudioPcmFrameFieldIDs[FID_PCM_BUF], buf);
   //pcmBufSize_
-  env->SetLongField(job, mJavaAudioPcmFrameBufferSizeFid, jlong(pcmBufSize_));
-  env->DeleteLocalRef(jbArr);
+  env->SetLongField(job, m_AudioPcmFrameFieldIDs[FID_PCM_BUFSIZE], jlong(pcmBufSize_));
+  env->DeleteLocalRef(buf);
   return true;
 }
 
@@ -469,7 +494,7 @@ bool AgoraJniProxySdk::fillAudioPcmFrame(JNIEnv* env, const agora::linuxsdk::Aud
     return false;
   }
   //Fill in the jobAdudioFrame
-  env->SetObjectField(jobAudioFrame, mJavaAudioPcmFrameFid, job);
+  env->SetObjectField(jobAudioFrame, m_AudioFrameFieldIDs[FID_AF_PCM], job);
   env->DeleteLocalRef(job);
   return true;
 }
@@ -488,11 +513,11 @@ bool AgoraJniProxySdk::fillVideoOfYUV(JNIEnv* env, const agora::linuxsdk::VideoF
     return false;
   }
   long frame_ms_ = f->frame_ms_;
-  env->SetLongField(job, m_VideoYuvFrameMethodIDs[FID_FRAMEMS], jlong(frame_ms_));
+  env->SetLongField(job, m_VideoYuvFrameFieldIDs[FID_FRAMEMS], jlong(frame_ms_));
   long bufSize_ = f->bufSize_;
   jobject buf  = env->NewDirectByteBuffer((void*)(f->buf_), bufSize_);
-  env->SetObjectField(job, m_VideoYuvFrameMethodIDs[FID_YUVBUF], buf);
-  env->SetLongField(job, m_VideoYuvFrameMethodIDs[FID_YUVBUFSIZE], jlong(bufSize_));
+  env->SetObjectField(job, m_VideoYuvFrameFieldIDs[FID_YUVBUF], buf);
+  env->SetLongField(job, m_VideoYuvFrameFieldIDs[FID_YUVBUFSIZE], jlong(bufSize_));
   env->SetObjectField(jobVideoFrame, mJavaVideoFrameYuvFid, job);
   env->DeleteLocalRef(buf);
   env->DeleteLocalRef(job);
@@ -695,7 +720,7 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-  jobject job = newJObject(env, mJavaVideoFrameClass, mJavaVideoFrameInitMtd);
+  jobject job = newJObject(env, mJavaVideoFrameClass,mJavaVideoFrameInitMtd);
   if(!fillVideoFrameByFields(env, frame, mJavaVideoFrameClass, job))
   {
     LOG_DIR(m_logdir.c_str(), ERROR,"jni fillVideoFrameByFields failed!" );

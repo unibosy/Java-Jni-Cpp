@@ -42,7 +42,8 @@ public:
   jobject newGlobalJObject(JNIEnv* env, jclass jc, const char* signature);
   //cache field ids & method ids
   void cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* className);
-  void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
+  //yuv,h264,jpg init method
+  void cacheJavaVideoFrameInitMethodIDs(JNIEnv* env, const char* className);
   void cacheAudioPcmFrame(JNIEnv* env);
   void cacheJavaObject(JNIEnv* env);
   //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
@@ -68,7 +69,10 @@ private:
   static jmethodID mJavaRecvVideoMtd;
   static jmethodID mJavaRecvAudioMtd;
   static jmethodID mJavaVideoFrameInitMtd;
+  //yuv jpg h264 init method
   static jmethodID mJavaVideoYuvFrameInitMtd;
+  static jmethodID mJavaVideoJpgFrameInitMtd;
+  static jmethodID mJavaVideoH264FrameInitMtd;
 
   static jmethodID m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
   static jfieldID m_VideoYuvFrameFieldIDs[FID_YUVNUM];
@@ -104,12 +108,10 @@ private:
   jclass mJavaVideoYuvFrameClass;
   jobject mJavaVideoYuvFrameObject;
   
-  jclass mJavaVideoJPGFrameClass;
-  jmethodID mJavaVideoJPGFrameInitMtd;
-  jobject mJavaVideoJPGFrameObject;
+  jclass mJavaVideoJpgFrameClass;
+  jobject mJavaVideoJpgFrameObject;
   
   jclass mJavaVideoH264FrameClass;
-  jmethodID mJavaVideoH264FrameInitMtd;
   jobject mJavaVideoH264FrameObject;
   
   //type

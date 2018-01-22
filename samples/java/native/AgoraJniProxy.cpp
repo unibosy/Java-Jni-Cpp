@@ -25,6 +25,8 @@ void signal_handler(int signo) {
 jmethodID AgoraJniProxySdk::mJavaRecvAudioMtd = NULL;
 jmethodID AgoraJniProxySdk::mJavaVideoFrameInitMtd = NULL;
 jmethodID AgoraJniProxySdk::mJavaVideoYuvFrameInitMtd = NULL;
+jmethodID AgoraJniProxySdk::mJavaVideoH264FrameInitMtd = NULL;
+jmethodID AgoraJniProxySdk::mJavaVideoJpgFrameInitMtd = NULL;
 
 jmethodID AgoraJniProxySdk::m_CBObjectMethodIDs[MID_CBOBJECT_NUM];
 jfieldID AgoraJniProxySdk::m_VideoYuvFrameFieldIDs[FID_YUVNUM];
@@ -107,8 +109,8 @@ AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   mJavaVideoFrameObject = NULL;
   mJavaVideoYuvFrameClass = NULL;
   mJavaVideoYuvFrameObject = NULL;
-  mJavaVideoJPGFrameClass = NULL;
-  mJavaVideoJPGFrameObject = NULL;
+  mJavaVideoJpgFrameClass = NULL;
+  mJavaVideoJpgFrameObject = NULL;
   mJavaVideoH264FrameClass = NULL;
   mJavaVideoH264FrameObject = NULL;
   //audio
@@ -122,8 +124,8 @@ AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   //java videoframe jmethodIDs
   //mJavaVideoFrameInitMtd = NULL;
   //mJavaVideoYuvFrameInitMtd = NULL;
-  mJavaVideoJPGFrameInitMtd = NULL;
-  mJavaVideoH264FrameInitMtd = NULL;
+  //mJavaVideoJpgFrameInitMtd = NULL;
+  //mJavaVideoH264FrameInitMtd = NULL;
   //java audioframe jmethodIDs
   mJavaAudioFrameInitMtd = NULL;
   mJavaAudioAacFrameInitMtd = NULL;
@@ -149,7 +151,9 @@ void AgoraJniProxySdk::initialize(){
   if(!env) return;
   initJavaObjects(env, true);
   cacheJavaCBFuncMethodIDs4Video(env, CN_VIDEO_FRAME);
-  cacheJavaCBFuncMethodIDs4YUV(env, CN_VIDEO_YUV_FRAME);
+  cacheJavaVideoFrameInitMethodIDs(env, CN_VIDEO_YUV_FRAME);
+  cacheJavaVideoFrameInitMethodIDs(env, CN_VIDEO_H264_FRAME);
+  cacheJavaVideoFrameInitMethodIDs(env, CN_VIDEO_JPG_FRAME);
   //cacheAudioPcmFrame(env);
   cacheJavaObject(env);
   staticInitCBFuncMid(env, mJavaAgoraJavaRecordingClass);
@@ -157,12 +161,11 @@ void AgoraJniProxySdk::initialize(){
   //video
   staticInitCommonFrameFid(env, mJavaVideoYuvFrameClass, FIDID,jVideoYuvFrameFields, m_VideoYuvFrameFieldIDs);
   staticInitCommonFrameFid(env, mJavaVideoH264FrameClass, FIDID,jVideoH264FrameFields, m_VideoH264FrameFieldIDs);
-  staticInitCommonFrameFid(env, mJavaVideoJPGFrameClass, FIDID,jVideoJpgFrameFields, m_VideoJpgFrameFieldIDs);
+  staticInitCommonFrameFid(env, mJavaVideoJpgFrameClass, FIDID,jVideoJpgFrameFields, m_VideoJpgFrameFieldIDs);
   //audio
-  staticInitCommonFrameFid(env, mJavaAudioPcmFrameClass, FIDID,jAudioPcmFrameFields, m_AudioPcmFrameFieldIDs);
   staticInitCommonFrameFid(env, mJavaAudioFrameClass, FIDID,jAudioFrameFields, m_AudioFrameFieldIDs);
+  staticInitCommonFrameFid(env, mJavaAudioPcmFrameClass, FIDID,jAudioPcmFrameFields, m_AudioPcmFrameFieldIDs);
   staticInitCommonFrameFid(env, mJavaAudioAacFrameClass, FIDID, jAudioAacFrameFields, m_AudioAacFrameFieldIDs);
-
   }
 }
 int AgoraJniProxySdk::staticInitVideoYuvFrameFid(JNIEnv* env, jclass clazz){
@@ -276,21 +279,33 @@ void AgoraJniProxySdk::cacheAudioPcmFrame(JNIEnv* env){
   CP(mJavaAudioPcmFrameBufferSizeFid);
   */
 }
-void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className){
-  //AV init jmethodIDs
-  jclass localRef = env->FindClass(className);
-  if(!localRef) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJClass cannot find class:%s", className);
-    return ;
+void AgoraJniProxySdk::cacheJavaVideoFrameInitMethodIDs(JNIEnv* env, const char* className){
+  if(className && !strcmp(className,CN_VIDEO_H264_FRAME)){
+    CP(mJavaVideoYuvFrameClass);
+    mJavaVideoYuvFrameInitMtd = safeGetMethodID(env, mJavaVideoYuvFrameClass, SG_MTD_INIT, SN_MTD_VIDEO_YUV_FRAME_INIT);
+    CP(mJavaVideoYuvFrameInitMtd);
+    if(!mJavaVideoYuvFrameInitMtd) {
+      LOG_DIR(m_logdir.c_str(), ERROR,"cannot get video yuv init methodid");
+      return;
+    }
   }
-  if(!mJavaVideoYuvFrameClass){
-    cout<<"mJavaVideoYuvFrameClass is NULL"<<endl;
-    return;
+  if(className && !strcmp(className,CN_VIDEO_H264_FRAME)){
+    CP(mJavaVideoH264FrameClass);
+    mJavaVideoH264FrameInitMtd = safeGetMethodID(env, mJavaVideoH264FrameClass, SG_MTD_INIT, SN_MTD_VIDEO_H264_FRAME_INIT);
+    CP(mJavaVideoH264FrameInitMtd);
+    if(!mJavaVideoH264FrameInitMtd) {
+      LOG_DIR(m_logdir.c_str(), ERROR,"cannot get video h264 init methodid");
+      return;
+    }
   }
-  mJavaVideoYuvFrameInitMtd = safeGetMethodID(env, localRef, SG_MTD_INIT, SN_MTD_VIDEO_YUV_FRAME_INIT);
-  if(!mJavaVideoYuvFrameInitMtd) {
-    LOG_DIR(m_logdir.c_str(), ERROR,"cannot get video yuv init methodid");
-    return;
+  if(className && !strcmp(className,CN_VIDEO_JPG_FRAME)){
+    CP(mJavaVideoJpgFrameClass);
+    mJavaVideoJpgFrameInitMtd = safeGetMethodID(env, mJavaVideoJpgFrameClass, SG_MTD_INIT, SN_MTD_VIDEO_JPG_FRAME_INIT);
+    CP(mJavaVideoJpgFrameInitMtd);
+    if(!mJavaVideoJpgFrameInitMtd) {
+      LOG_DIR(m_logdir.c_str(), ERROR,"cannot get video Jpg init methodid");
+      return;
+    }
   }
 }
 void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* className){
@@ -322,10 +337,10 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   CP(mJavaVideoYuvFrameClass);
   mJavaVideoYuvFrameObject = newGlobalJObject(env, mJavaVideoYuvFrameClass, SN_MTD_VIDEO_YUV_FRAME_INIT); 
   CP(mJavaVideoYuvFrameObject);
-  mJavaVideoJPGFrameClass = newGlobalJClass(env, CN_VIDEO_JPG_FRAME);
-  CP(mJavaVideoJPGFrameClass);
-  mJavaVideoJPGFrameObject = newGlobalJObject(env, mJavaVideoJPGFrameClass, SN_MTD_COMMON_INIT);
-  CP(mJavaVideoJPGFrameObject);
+  mJavaVideoJpgFrameClass = newGlobalJClass(env, CN_VIDEO_JPG_FRAME);
+  CP(mJavaVideoJpgFrameClass);
+  mJavaVideoJpgFrameObject = newGlobalJObject(env, mJavaVideoJpgFrameClass, SN_MTD_COMMON_INIT);
+  CP(mJavaVideoJpgFrameObject);
   mJavaVideoH264FrameClass = newGlobalJClass(env, CN_VIDEO_H264_FRAME);
   CP(mJavaVideoH264FrameClass);
   mJavaVideoH264FrameObject = newGlobalJObject(env, mJavaVideoH264FrameClass, SN_MTD_COMMON_INIT);
@@ -368,6 +383,13 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   CP(mJavaAudioPcmFrameInitMtd);
   mJavaAudioPcmFrameObject = newGlobalJObject2(env, mJavaAudioPcmFrameClass,  mJavaAudioPcmFrameInitMtd);
   CP(mJavaAudioPcmFrameObject);
+  //aac
+  mJavaAudioAacFrameClass = newGlobalJClass(env, CN_AUDIO_PCM_FRAME);
+  CP(mJavaAudioAacFrameClass);
+  mJavaAudioAacFrameInitMtd = safeGetMethodID(env, mJavaAudioAacFrameClass, SG_MTD_INIT, SN_INIT_MTD_AUDIO_FRAME);
+  CP(mJavaAudioAacFrameInitMtd);
+  mJavaAudioAacFrameObject = newGlobalJObject2(env, mJavaAudioAacFrameClass,  mJavaAudioAacFrameInitMtd);
+  CP(mJavaAudioAacFrameObject);
 }
 
 bool AgoraJniProxySdk::fillAacAllFields(JNIEnv* env, jobject& job, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const {
@@ -548,7 +570,7 @@ bool AgoraJniProxySdk::fillVideoOfJPG(JNIEnv* env, const agora::linuxsdk::VideoF
   jobject job = NULL;
 
   //3.new VideoXXXXXFrame object
-  job = env->NewObject(mJavaVideoJPGFrameClass, mJavaVideoJPGFrameInitMtd);
+  job = env->NewObject(mJavaVideoJpgFrameClass, mJavaVideoJpgFrameInitMtd);
   if(!job){
     LOG_DIR(m_logdir.c_str(), ERROR,"new subclass  failed! no memory?");
     return false;
@@ -584,8 +606,9 @@ bool AgoraJniProxySdk::fillVideoOfH264(JNIEnv* env, const agora::linuxsdk::Video
   jobject job = NULL;
   jfieldID fid = NULL;
   int fieldId = 0; //TODO
-  jobject jbArr = NULL;
   //3.new VideoH264Frame object
+  CPB(mJavaVideoH264FrameClass);
+  CPB(mJavaVideoH264FrameInitMtd);
   job = env->NewObject(mJavaVideoH264FrameClass, mJavaVideoH264FrameInitMtd);
   if(!job){
     LOG_DIR(m_logdir.c_str(), ERROR,"new subclass  failed! no memory?");
@@ -602,16 +625,14 @@ bool AgoraJniProxySdk::fillVideoOfH264(JNIEnv* env, const agora::linuxsdk::Video
   //buf_
   const unsigned char* buf_ = f->buf_;
   long bufSize_ = f->bufSize_;
-  
-  jbArr = env->NewDirectByteBuffer((void*)f->buf_, bufSize_);
-
-  env->SetObjectField(job, m_VideoH264FrameFieldIDs[FID_H264_BUF], jbArr);
+  jobject buf = env->NewDirectByteBuffer((void*)f->buf_, bufSize_);
+  env->SetObjectField(job, m_VideoH264FrameFieldIDs[FID_H264_BUF], buf);
   //bufSize_
   env->SetLongField(job, m_VideoH264FrameFieldIDs[FID_H264_BUF_SIZE], jlong(bufSize_));
   //5.get subclass field
   env->SetObjectField(jobVideoFrame, mJavaVideoFrameH264Fid, job);
   env->DeleteLocalRef(job);
-  env->DeleteLocalRef(jbArr);
+  env->DeleteLocalRef(buf);
   return  true;
 }
 bool AgoraJniProxySdk::fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk::VideoFrame*& frame, jclass jcVideoFrame, jobject jobVideoFrame) const{

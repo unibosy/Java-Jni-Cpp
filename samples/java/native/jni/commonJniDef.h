@@ -24,6 +24,8 @@
 #define SN_MTD_COMMON_INIT "(Lio/agora/recording/common/Common;)V"
 //video  init jmethodID 
 #define SN_MTD_VIDEO_YUV_FRAME_INIT "(Lio/agora/recording/common/Common;JIIIII)V"
+#define SN_MTD_VIDEO_H264_FRAME_INIT "(Lio/agora/recording/common/Common;)V"
+#define SN_MTD_VIDEO_JPG_FRAME_INIT "(Lio/agora/recording/common/Common;)V"
 //class name
 //VIDEO
 #define CN_REP "io/agora/recording/common/RecordingEngineProperties"

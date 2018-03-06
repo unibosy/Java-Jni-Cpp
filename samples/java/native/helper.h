@@ -42,15 +42,3 @@ using namespace std;
       return NULL;         \
     }                      \
   }                        \
-
-/**
- *
- * Cache java objects' field/method ids
- *
- */
-
-
-class Helper{
-public:
-  static jmethodID safeGetMethodID(JNIEnv* env, jclass clazz, const char* name, const char* sig);
-};

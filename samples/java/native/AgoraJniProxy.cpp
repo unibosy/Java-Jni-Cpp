@@ -42,25 +42,13 @@ jfieldID AgoraJniProxySdk::m_AudioAacFrameFieldIDs[FID_AACNUM];
 template<typename T1, typename T2>
 int AgoraJniProxySdk::staticInitCommonFrameFid(JNIEnv* env, jclass clazz, GETID_TYPE type, T1& src, T2& dest){
   for (int i = 0; i < sizeof(src) / sizeof(src[0]); i++){
-     const JavaObjectMethod& m = src[i];
-     //if(type == MTDID){
-       jfieldID id = safeGetFieldID(env, clazz, m.name, m.signature);
-       if(!id){
-        cout<<"staticInitCommonFrameFid failed,name:"<<m.name<<",m.signature:"<<m.signature<<endl;
-        continue;
-        //return -1;
-       }
-       dest[m.id] = id;
-#if 0
-  }else{
-       jmethodID id = safeGetMethodID(env, clazz, m.name, m.signature);
-       if(!id){
-        cout<<"staticInitCommonFrameFid failed,name:"<<m.name<<endl;
-        return -1;
-       }
-       dest[m.id] = id;
-     }
-#endif
+    const JavaObjectMethod& m = src[i];
+    jfieldID id = safeGetFieldID(env, clazz, m.name, m.signature);
+    if(!id){
+      cout<<"staticInitCommonFrameFid failed,name:"<<m.name<<",m.signature:"<<m.signature<<endl;
+      continue;
+    }
+    dest[m.id] = id;
   }
   return 0;
 }
@@ -121,12 +109,6 @@ AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   mJavaAudioPcmFrameClass =NULL;
   mJavaAudioPcmFrameObject =NULL;
 
-  //java videoframe jmethodIDs
-  //mJavaVideoFrameInitMtd = NULL;
-  //mJavaVideoYuvFrameInitMtd = NULL;
-  //mJavaVideoJpgFrameInitMtd = NULL;
-  //mJavaVideoH264FrameInitMtd = NULL;
-  //java audioframe jmethodIDs
   mJavaAudioFrameInitMtd = NULL;
   mJavaAudioAacFrameInitMtd = NULL;
   mJavaAudioPcmFrameInitMtd = NULL;
@@ -262,22 +244,6 @@ jfieldID AgoraJniProxySdk::safeGetFieldID2(JNIEnv* env, jclass clazz, const char
   return fid;
 }
 void AgoraJniProxySdk::cacheAudioPcmFrame(JNIEnv* env){
-  /*
-  mJavaAudioFrameMsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_FRAME_MS, LONG_SIGNATURE);
-  CP(mJavaAudioFrameMsFid);
-  mJavaAudioPcmFrameFid = safeGetFieldID(env, mJavaAudioFrameClass, FID_PCM, SN_AUDIO_PCM_FRAME);
-  CP(mJavaAudioPcmFrameFid);
-  mJavaAudioPcmFrameChannelsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_CHANNELS2, LONG_SIGNATURE);
-  CP(mJavaAudioPcmFrameChannelsFid);
-  mJavaAudioPcmFrameSampleBitsFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_SAMPLE_BITS, LONG_SIGNATURE);
-  CP(mJavaAudioPcmFrameSampleBitsFid);
-  mJavaAudioPcmFrameSampleRatesFid = safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_SAMPLE_RATES, LONG_SIGNATURE);
-  CP(mJavaAudioPcmFrameSampleRatesFid);
-  mJavaAudioPcmFrameBufFid =safeGetFieldID(env, mJavaAudioPcmFrameClass,FID_PCMBUF, BYTEARRAY);
-  CP(mJavaAudioPcmFrameBufFid);
-  mJavaAudioPcmFrameBufferSizeFid =safeGetFieldID(env, mJavaAudioPcmFrameClass, FID_PCMBUFFERSIZE, LONG_SIGNATURE);
-  CP(mJavaAudioPcmFrameBufferSizeFid);
-  */
 }
 void AgoraJniProxySdk::cacheJavaVideoFrameInitMethodIDs(JNIEnv* env, const char* className){
   if(className && !strcmp(className,CN_VIDEO_H264_FRAME)){
@@ -395,35 +361,17 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
 bool AgoraJniProxySdk::fillAacAllFields(JNIEnv* env, jobject& job, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const {
   CHECK_PTR_RETURN_BOOL(mJavaAgoraJavaRecordingClass);
   if(frame->type != agora::linuxsdk::AUDIO_FRAME_AAC) return false;
-  jfieldID fid = NULL;
-  jobject jbArr = NULL;
   agora::linuxsdk::AudioAacFrame *f = frame->frame.aac;
   //frame_ms_
-  fid = env->GetFieldID(jc, "frame_ms_", LONG_SIGNATURE);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get frame_ms_ value of audioAacFrame");
-    return false;
-  }
   long frame_ms_ = f->frame_ms_;
-  env->SetLongField(job, fid, jlong(frame_ms_));
+  env->SetLongField(job, m_AudioPcmFrameFieldIDs[FID_AAC_FRAMEMS], jlong(frame_ms_));
   //aacBuf_
-  fid = env->GetFieldID(jc, "aacBuf_", BYTEARRAY);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get frame_ms_ value of audioAacFrame");
-    return false;
-  }
-  const unsigned char* aacBuf_ = f->aacBuf_;
   long aacBufSize_ = f->aacBufSize_;
-  jbArr = env->NewDirectByteBuffer((void*)aacBuf_, aacBufSize_); 
-  env->SetObjectField(job, fid, jbArr);
+  jobject buf = env->NewDirectByteBuffer((void*)f->aacBuf_, aacBufSize_);
+  env->SetObjectField(job, m_AudioAacFrameFieldIDs[FID_AAC_BUF], buf);
   //aacBufSize_
-  fid = env->GetFieldID(jc, "aacBufSize_", LONG_SIGNATURE);
-  if(fid == NULL) {
-    LOG_DIR(m_logdir.c_str(), INFO, "cannot get aacBufSize_ value of audioPcmFrame");
-    return false;
-  }
-  env->SetLongField(job, fid, jlong(aacBufSize_));
-  env->DeleteLocalRef(jbArr);
+  env->SetLongField(job, m_AudioAacFrameFieldIDs[FID_AAC_BUFSIZE], jlong(aacBufSize_));
+  env->DeleteLocalRef(buf);
   return true;
 }
 
@@ -477,43 +425,18 @@ bool AgoraJniProxySdk::fillAudioAacFrame(JNIEnv* env, const agora::linuxsdk::Aud
             jclass& jcAudioFrame, jobject& jobAudioFrame) const  {
   CHECK_PTR_RETURN_BOOL(mJavaAgoraJavaRecordingClass);
   if(frame->type != agora::linuxsdk::AUDIO_FRAME_AAC) return false;
-  jmethodID jmid = NULL;
-  jclass jc = NULL;
-  jfieldID fid = NULL;
-  jmethodID initMid = NULL;
-  jobject job = NULL;
-
-  //get pcm frame by find class
-  jc = env->FindClass("Lio/agora/recording/common/Common$AudioAacFrame;");
-  if(!jc) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get AudioAccFrame jclass");
-    return false;
-  }
-  //new AudioAacFrame
-  //TODO  place these to one function
-  initMid = env->GetMethodID(jc,SG_MTD_INIT,"(Lio/agora/recording/common/Common;J)V");
-  if(!initMid) {
-    LOG_DIR(m_logdir.c_str(), INFO,"get AudioAacFrame init methid failed!");
-    return false;
-  }
-  job = env->NewObject(jc, initMid);
+  jobject job = newJObject(env, mJavaAudioAacFrameClass, mJavaAudioAacFrameInitMtd);
+  CPB(job);
   if(!job){
-    LOG_DIR(m_logdir.c_str(), INFO,"new AudioAacFrame failed! no memory?");
+    LOG_DIR(m_logdir.c_str(), ERROR,"new AudioAacFrame failed! no memory?");
     return false;
   }
-  fid = env->GetFieldID(jcAudioFrame, "aac", "Lio/agora/recording/common/Common$AudioAacFrame;");
-  if(!fid) {
-    LOG_DIR(m_logdir.c_str(), INFO,"cannot get aac AUDIO_FRAME_TYPE field");
-    return false;
-  }
-  //fill all fields of AudioAacFrame jobject
-  if(!fillAacAllFields(env, job, jc, frame)){
-    LOG_DIR(m_logdir.c_str(), ERROR,"fillAacAllFields failed!");
+  if(!fillAacAllFields(env, job, jcAudioFrame, frame)){
+    LOG_DIR(m_logdir.c_str(), INFO,"fillAacAllFields failed!");
     return false;
   }
   //Fill in the jobAdudioFrame
-  env->SetObjectField(jobAudioFrame, fid, job);
-  env->DeleteLocalRef(jc);
+  env->SetObjectField(jobAudioFrame, m_AudioFrameFieldIDs[FID_AF_AAC], job);
   env->DeleteLocalRef(job);
   return true;
 }
@@ -662,12 +585,6 @@ bool AgoraJniProxySdk::fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk
   return true;
 }
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
-#if 0
-  struct  timeval  start;
-  struct  timeval  end;
-  unsigned long duration;
-  gettimeofday(&start,NULL);
-#endif  
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
@@ -678,13 +595,8 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
     LOG_DIR(m_logdir.c_str(), ERROR,"jni fillVideoFrameByFields failed!" );
     return;
   }
-  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_VIDEOFRAME_RECEIVED], jlong(long(uid)),frame->type, job, 0);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_VIDEOFRAME_RECEIVED], jlong(long(uid)),frame->type, job, frame->rotation_);
   env->DeleteLocalRef(job);
-#if 0 
-  gettimeofday(&end,NULL);
-  duration = 1000000 * (end.tv_sec-start.tv_sec)+ end.tv_usec-start.tv_usec;
-  cout << "Totle Time : " <<duration << " us" << endl;
-#endif
   return;
 }
 //TODO  use the same parameter
@@ -984,22 +896,24 @@ JNIEXPORT jobject JNICALL Java_AgoraJavaRecording_getProperties(JNIEnv * env, jo
  * Method:    startService
  * Signature: (J)V
  */
- JNIEXPORT void JNICALL Java_AgoraJavaRecording_startService(JNIEnv * env, jobject job, jlong nativeObjectRef){
+ JNIEXPORT jint JNICALL Java_AgoraJavaRecording_startService(JNIEnv * env, jobject job, jlong nativeObjectRef){
    jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
    if(nativeHandle){
-     nativeHandle->startService();
+     return nativeHandle->startService();
    }
+   return -1;
  }
 /*
  * Class:     AgoraJavaRecording
  * Method:    stopService
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_AgoraJavaRecording_stopService(JNIEnv * env, jobject job, jlong nativeObjectRef){
+JNIEXPORT jint JNICALL Java_AgoraJavaRecording_stopService(JNIEnv * env, jobject job, jlong nativeObjectRef){
   jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
   if(nativeHandle){
-    nativeHandle->stopService();
+    return nativeHandle->stopService();
   }
+  return -1;
 }
 
 
@@ -1056,6 +970,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   uint32_t streamType = agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH;
   int captureInterval = 5;
   int triggerMode = 0;
+  int lang = 1;
   
   g_bSignalStop = false;
 
@@ -1119,18 +1034,18 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   jfieldID decodeAudioFieldID = env->GetFieldID(jRecordingJavaConfig, "decodeAudio", AUDIO_FORMAT_TYPE_SIGNATURE);
   jfieldID decodeVideoFieldID = env->GetFieldID(jRecordingJavaConfig, "decodeVideo", VIDEO_FORMAT_TYPE_SIGNATURE);
   jfieldID triggerModeFid = env->GetFieldID(jRecordingJavaConfig, "triggerMode", INT_SIGNATURE);
-  if (idleLimitSecFieldID == NULL ||appliteDirFieldID == NULL || channelProfileFieldID == NULL 
-						|| streamTypeFieldID == NULL ||decodeAudioFieldID ==NULL ||decodeVideoFieldID ==NULL || !isMixingEnabledFid) { 
+  if (!idleLimitSecFieldID || !appliteDirFieldID || !channelProfileFieldID 
+						|| !streamTypeFieldID || !decodeAudioFieldID || !decodeVideoFieldID || !isMixingEnabledFid) { 
             cout<<"get fieldID failed!";return JNI_FALSE;}
-  //1.idle
+  //idle
   idleLimitSec = (int)env->GetIntField(jni_recordingConfig, idleLimitSecFieldID); 
-  //2.appliteDir
+  //appliteDir
   jstring appliteDir = (jstring)env->GetObjectField(jni_recordingConfig, appliteDirFieldID);
   const char * c_appliteDir = env->GetStringUTFChars(appliteDir, JNI_FALSE);
   applitePath = c_appliteDir;
   env->ReleaseStringUTFChars(appliteDir,c_appliteDir);
   env->DeleteLocalRef(appliteDir);
-  //3.CHANNEL_PROFILE_TYPE
+  //CHANNEL_PROFILE_TYPE
   jobject channelProfileObject = (env)->GetObjectField(jni_recordingConfig, channelProfileFieldID);
   //assert(channelProfileObject);
   jclass enumClass = env->GetObjectClass(channelProfileObject);
@@ -1145,15 +1060,15 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   }
   jint channelProfileValue = env->CallIntMethod(channelProfileObject, getValue);
   channelProfile=int(channelProfileValue);
-  //4.streamType
+  //streamType
   jobject streamTypeObject = (env)->GetObjectField(jni_recordingConfig, streamTypeFieldID);
   jclass streamTypeClass = env->GetObjectClass(streamTypeObject);
   assert(streamTypeObject);
-  if(streamTypeObject == NULL){cout<<"streamTypeEnum is NULL"; return JNI_FALSE;}
+  if(!streamTypeObject){cout<<"streamTypeEnum is NULL"; return JNI_FALSE;}
   jmethodID getValue2 = env->GetMethodID(streamTypeClass, "getValue", EMPTY_PARA_INT_RETURN);
   jint streamTypeValue = env->CallIntMethod(streamTypeObject, getValue2);
   streamType = int(streamTypeValue);
-  //5.decodeAudio
+  //decodeAudio
   jobject jobDecodeAudio = (env)->GetObjectField(jni_recordingConfig, decodeAudioFieldID);
   jclass jcdecodeAudio = env->GetObjectClass(jobDecodeAudio);
   if(!jcdecodeAudio) {
@@ -1168,7 +1083,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   getAudioFrame = int(decodeAudioValue);
   env->DeleteLocalRef(jobDecodeAudio);
   env->DeleteLocalRef(jcdecodeAudio);
-  //6.decodeVideo
+  //decodeVideo
   jobject jobDecodeVideo = (env)->GetObjectField(jni_recordingConfig, decodeVideoFieldID);
   jclass jcdecodeVideo = env->GetObjectClass(jobDecodeVideo);
   if(!jcdecodeVideo) {
@@ -1181,58 +1096,58 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   }
   jint decodeVideoValue = env->CallIntMethod(jobDecodeVideo, jmidGetValue);
   getVideoFrame = int(decodeVideoValue);
-  //7.isMixingEnabled
+  //isMixingEnabled
   jboolean isMixingEnabledValue = env->GetBooleanField(jni_recordingConfig, isMixingEnabledFid);
   isMixingEnabled = bool(isMixingEnabledValue);
-  //8.isVideoOnly
+  //isVideoOnly
   jboolean jisVideoOnly = (int)env->GetIntField(jni_recordingConfig, isVideoOnlyFid); 
   isVideoOnly = bool(jisVideoOnly);
-  //9.isAudioOnly
+  //isAudioOnly
   jboolean jisAudioOnly = (int)env->GetIntField(jni_recordingConfig, isAudioOnlyFid); 
   isAudioOnly = bool(jisAudioOnly);
-  //10.mixResolution
+  //mixResolution
   jstring jmixResolution = (jstring)env->GetObjectField(jni_recordingConfig, mixResolutionFid);
   const char * c_mixResolution = env->GetStringUTFChars(jmixResolution, JNI_FALSE);
   mixResolution = c_mixResolution;
   env->ReleaseStringUTFChars(jmixResolution, c_mixResolution);
   env->DeleteLocalRef(jmixResolution);
 
-  //11.mixedVideoAudio
+  //mixedVideoAudio
   jboolean jmixedVideoAudio = env->GetBooleanField(jni_recordingConfig, mixedVideoAudioFid);
   mixedVideoAudio = bool(jmixedVideoAudio);
 
-  //12.recordFileRootDir
+  //recordFileRootDir
   jstring jrecordFileRootDir = (jstring)env->GetObjectField(jni_recordingConfig, recordFileRootDirFid);
   const char * c_recordFileRootDir = env->GetStringUTFChars(jrecordFileRootDir, JNI_FALSE);
   recordFileRootDir = c_recordFileRootDir;
   env->ReleaseStringUTFChars(jrecordFileRootDir, c_recordFileRootDir);
   env->DeleteLocalRef(jrecordFileRootDir);
-  //14.cfgFilePath
+  //cfgFilePath
   jstring jcfgFilePath = (jstring)env->GetObjectField(jni_recordingConfig, cfgFilePathFid);
   const char * c_cfgFilePath = env->GetStringUTFChars(jcfgFilePath, JNI_FALSE);
   cfgFilePath = c_cfgFilePath;
   env->ReleaseStringUTFChars(jcfgFilePath, c_cfgFilePath);
   env->DeleteLocalRef(jcfgFilePath);
-  //15.secret
+  //secret
   jstring jsecret = (jstring)env->GetObjectField(jni_recordingConfig, secretFid);
   const char * c_secret = env->GetStringUTFChars(jsecret, JNI_FALSE);
   secret = c_secret;
   env->ReleaseStringUTFChars(jsecret, c_secret);
   env->DeleteLocalRef(jsecret);
 
-  //16.decryptionMode
+  //decryptionMode
   jstring jdecryptionMode = (jstring)env->GetObjectField(jni_recordingConfig, decryptionModeFid);
   const char * c_decryptionMode = env->GetStringUTFChars(jdecryptionMode, JNI_FALSE);
   decryptionMode = c_decryptionMode;
   env->ReleaseStringUTFChars(jdecryptionMode, c_decryptionMode);
   env->DeleteLocalRef(jdecryptionMode);
-  //17.lowUdpPort
+  //lowUdpPort
   lowUdpPort = (int)env->GetIntField(jni_recordingConfig, lowUdpPortFid); 
-  //18.highUdpPort
+  //highUdpPort
   highUdpPort = (int)env->GetIntField(jni_recordingConfig, highUdpPortFid); 
-  //19.captureInterval
+  //captureInterval
   captureInterval = (int)env->GetIntField(jni_recordingConfig, captureIntervalFid); 
-  //20.triggerMode
+  //triggerMode
   triggerMode = (int)env->GetIntField(jni_recordingConfig, triggerModeFid); 
   //paser parameters end
   env->DeleteLocalRef(jni_recordingConfig);
@@ -1275,6 +1190,7 @@ JNIEXPORT jboolean JNICALL Java_AgoraJavaRecording_createChannel(JNIEnv * env, j
   config.decodeVideo = static_cast<agora::linuxsdk::VIDEO_FORMAT_TYPE>(getVideoFrame);
   config.streamType = static_cast<agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE>(streamType);
   config.triggerMode = static_cast<agora::linuxsdk::TRIGGER_MODE_TYPE>(triggerMode);
+  config.lang = static_cast<agora::linuxsdk::LANGUAGE_TYPE>(lang);
 
   cout<<"appId:"<<appId<<",uid:"<<uid<<",channelKey:"<<channelKey<<",channelName:"<<channelName<<",applitePath:"
     <<applitePath<<",channelProfile:"<<channelProfile<<",getAudioFrame:"

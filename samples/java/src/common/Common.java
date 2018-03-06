@@ -11,38 +11,23 @@ public class Common{
     private ERROR_CODE_TYPE(int value){}
   }
 
-  public class STAT_CODE_TYPE {
-    private final int STAT_ERR_FROM_ENGINE = 1;
-    public final int STAT_ERR_ARS_JOIN_CHANNEL = 2;
-    public final int STAT_ERR_CREATE_PROCESS = 3;
-    public final int STAT_ERR_MIXED_INVALID_VIDEO_PARAM= 4;
-    public final int STAT_POLL_ERR= 0x8;
-    public final int STAT_POLL_HANG_UP= 0x10;
-    public final int STAT_POLL_NVAL = 0x20;
-    private int value;
-    public STAT_CODE_TYPE(int value) {
-      this.value = value;
-    }
-    public int getValue() {
-      return value;
-    }
+  public enum STAT_CODE_TYPE {
+    STAT_ERR_FROM_ENGINE(1),
+    STAT_ERR_ARS_JOIN_CHANNEL(2),
+    STAT_ERR_CREATE_PROCESS(3),
+    STAT_ERR_MIXED_INVALID_VIDEO_PARAM(4),
+    STAT_POLL_ERR(8),
+    STAT_POLL_HANG_UP(16),
+    STAT_POLL_NVAL(32);
+    private STAT_CODE_TYPE(int value) {}
   }
-  public class LEAVE_PATH_CODE {
-    public final int LEAVE_CODE_INIT = 0; 
-    public final int LEAVE_CODE_SIG = 1<<1;
-    public final int LEAVE_CODE_NO_USERS= 1<<2 ;
-    public final int LEAVE_CODE_TIMER_CATCH = 1<<3;
-    public final int LEAVE_CODE_CLIENT_LEAVE = 1 << 4;
-    private int value;
-    public LEAVE_PATH_CODE(int code) {
-      this.value = code;
-    }
-    public int getValue() {
-      return value;
-    }
-    /*public void setValue(int code) {
-      value = code;
-      }*/
+  public enum LEAVE_PATH_CODE {
+    LEAVE_CODE_INIT(0), 
+    LEAVE_CODE_SIG(1<<1),
+    LEAVE_CODE_NO_USERS(1<<2),
+    LEAVE_CODE_TIMER_CATCH(1<<3),
+    LEAVE_CODE_CLIENT_LEAVE(1<<4);
+    private LEAVE_PATH_CODE(int code) {}
   }
 
   public enum WARN_CODE_TYPE {
@@ -55,7 +40,6 @@ public class Common{
   }
 
   public enum CHANNEL_PROFILE_TYPE {
-
     CHANNEL_PROFILE_COMMUNICATION(0),
     CHANNEL_PROFILE_LIVE_BROADCASTING(1);
     private int value;
@@ -66,20 +50,11 @@ public class Common{
       return value;
     }
   }
-  public class USER_OFFLINE_REASON_TYPE  {
-    public static final int USER_OFFLINE_QUIT = 0;
-    public static final int USER_OFFLINE_DROPPED = 1;
-    public static final int USER_OFFLINE_BECOME_AUDIENCE = 2;
-    private int value;
-    public USER_OFFLINE_REASON_TYPE(int code) {
-      this.value = code;
-    }
-    public int getValue() {
-      return value;
-    }
-    /*public void setValue(int code) {
-      value = code;
-      }*/
+  public enum USER_OFFLINE_REASON_TYPE  {
+    USER_OFFLINE_QUIT(0),
+    USER_OFFLINE_DROPPED(1),
+    USER_OFFLINE_BECOME_AUDIENCE(2);
+    private USER_OFFLINE_REASON_TYPE(int code) {}
   }
   public enum REMOTE_VIDEO_STREAM_TYPE {
     REMOTE_VIDEO_STREAM_HIGH(0),
@@ -92,6 +67,13 @@ public class Common{
       return value;
     }
   }
+  public enum SERVICE_MODE {
+    RECORDING_MODE(0),//down stream
+    SERVER_MODE(1),//up-down stream
+    IOT_MODE(2);//up-down stream
+    private SERVICE_MODE(int value){}
+  }
+
   public enum VIDEO_FORMAT_TYPE {
     VIDEO_FORMAT_DEFAULT_TYPE(0),
     VIDEO_FORMAT_H264_FRAME_TYPE(1),
@@ -99,14 +81,13 @@ public class Common{
     VIDEO_FORMAT_JPG_FRAME_TYPE(3),
     VIDEO_FORMAT_JPG_FILE_TYPE(4),
     VIDEO_FORMAT_JPG_VIDEO_FILE_TYPE(5);
-    private int value = 0;
+    private int value;
     private VIDEO_FORMAT_TYPE(int value) {
-      this.value = value;
+    this.value = value;
     }
-    public int getValue() {
-      return value;
+    private int getValue(){
+      return value; 
     }
-
   }
 
   public enum AUDIO_FORMAT_TYPE {
@@ -118,7 +99,7 @@ public class Common{
     private AUDIO_FORMAT_TYPE(int value) {
       this.value = value;
     }
-    public int getValue() {
+    private int getValue(){
       return value;
     }
   }
@@ -141,12 +122,6 @@ public class Common{
     }
   }
 
-  public enum SERVICE_MODE {
-    RECORDING_MODE(0),//down stream
-    SERVER_MODE(1),//up-down stream
-    IOT_MODE(2);//up-down stream
-    private SERVICE_MODE(int value){}
-  }
   public class AudioFrame {
     public AUDIO_FRAME_TYPE type;
     public AudioPcmFrame pcm;
@@ -155,76 +130,76 @@ public class Common{
   public class AudioPcmFrame {
     public AudioPcmFrame(long frame_ms, long sample_rates, long samples) {
     }
-    public long frame_ms_;
-    public long channels_; // 1
-    public long sample_bits_; // 16
-    public long sample_rates_; // 8k, 16k, 32k
-    public long samples_;
+    public long frame_ms;
+    public long channels; // 1
+    public long sample_bits; // 16
+    public long sample_rates; // 8k, 16k, 32k
+    public long samples;
 
-    public ByteBuffer pcmBuf_;
-    public long pcmBufSize_;
+    public ByteBuffer pcmBuf;
+    public long pcmBufSize;
   }
   public class AudioAacFrame {
-    public AudioAacFrame(long frame_ms) {
-      frame_ms_ = frame_ms;
-      aacBufSize_ = 0;
+    public AudioAacFrame(long framems) {
+      frame_ms = framems;
+      aacBufSize = 0;
     }
-    public ByteBuffer aacBuf_;
-    public long frame_ms_;
-    public long aacBufSize_;
+    public ByteBuffer aacBuf;
+    public long frame_ms;
+    public long aacBufSize;
   }
   public class VideoYuvFrame {
-    VideoYuvFrame(long frame_ms, int width, int height, int ystride,int ustride, int vstride){
-      frame_ms_ = frame_ms;
-      width_ = width;
-      height_ = height;
-      ystride_ = ystride;
-      ustride_ = ustride;
-      vstride_ = vstride;
+    VideoYuvFrame(long framems, int width, int height, int ystride,int ustride, int vstride){
+      this.frame_ms = framems;
+      this.width = width;
+      this.height = height;
+      this.ystride = ystride;
+      this.ustride = ustride;
+      this.vstride = vstride;
     }
-    public long frame_ms_;
+    public long frame_ms;
 
-    public ByteBuffer ybuf_;
-    public ByteBuffer ubuf_;
-    public ByteBuffer vbuf_;
+    public ByteBuffer ybuf;
+    public ByteBuffer ubuf;
+    public ByteBuffer vbuf;
 
-    public int width_;
-    public int height_;
+    public int width;
+    public int height;
 
-    public int ystride_;
-    public int ustride_;
-    public int vstride_;
+    public int ystride;
+    public int ustride;
+    public int vstride;
     //all
-    public ByteBuffer buf_;
-    public long bufSize_;
+    public ByteBuffer buf;
+    public long bufSize;
   }
   public class VideoH264Frame {
     VideoH264Frame(){
-      frame_ms_ = 0;
-      frame_num_ = 0;
-      bufSize_ = 0; 
+      frame_ms = 0;
+      frame_num = 0;
+      bufSize = 0; 
     }
-    public long frame_ms_;
-    public long frame_num_;
+    public long frame_ms;
+    public long frame_num;
     //all
-    public ByteBuffer buf_;
-    public long bufSize_;
+    public ByteBuffer buf;
+    public long bufSize;
   }
-  public class  VideoJpgFrame {
+  public class VideoJpgFrame {
     VideoJpgFrame(){
-      frame_ms_ = 0;
-      bufSize_ = 0;
+      frame_ms = 0;
+      bufSize = 0;
     }
-    public long frame_ms_;
+    public long frame_ms;
     //all
-    public ByteBuffer buf_;
-    public long bufSize_;
+    public ByteBuffer buf;
+    public long bufSize;
   }
   public class VideoFrame {
     public VideoYuvFrame yuv;
     public VideoH264Frame h264;
     public VideoJpgFrame jpg;
-    public int rotation_; // 0, 90, 180, 270
+    public int rotation; // 0, 90, 180, 270
   }
 
   public class UserJoinInfos {

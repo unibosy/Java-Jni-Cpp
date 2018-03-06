@@ -53,12 +53,12 @@
 #define CB_FUNC_RECEIVE_AUDIOFRAME "audioFrameReceived"
 
 //declare filedIDs
-#define FID_VIDEO_YUV_FRAME_BUF "buf_"
-#define FID_VIDEO_YUV_FRAME_BUFSIZE "bufSize_"
+#define FID_VIDEO_YUV_FRAME_BUF "buf"
+#define FID_VIDEO_YUV_FRAME_BUFSIZE "bufSize"
 #define FID_VIDEO_FRAME_YUV "yuv"
 #define FID_VIDEO_FRAME_JPG "jpg"
 #define FID_VIDEO_FRAME_H264 "h264"
-#define FID_FRAME_MS "frame_ms_"
+#define FID_FRAME_MS "frame_ms"
 
 //static java class init jmethodIDs
 //static jmethodID mJavaVideoFrameInitMtd;
@@ -86,15 +86,15 @@
 
 //common
 //audio pcm 
-#define FID_CHANNELS "channels_"
-#define FID_SAMPLE_BITS "sample_bits_"
-#define FID_SAMPLE_RATES "sample_rates_"
-#define FID_SAMPLE "samples_"
-#define FID_PCMBUF "pcmBuf_"
-#define FID_PCMBUFFERSIZE "pcmBufSize_"
+#define FID_CHANNELS "channels"
+#define FID_SAMPLE_BITS "sample_bits"
+#define FID_SAMPLE_RATES "sample_rates"
+#define FID_SAMPLE "samples"
+#define FID_PCMBUF "pcmBuf"
+#define FID_PCMBUFFERSIZE "pcmBufSize"
 #define FID_PCM "pcm"
 #define FID_AAC "aac"
-#define FID_CHANNELNUM "frame_num_"
+#define FID_CHANNELNUM "frame_num"
 
 //-----------------Callback Java method----------------
 
@@ -158,8 +158,8 @@ static JavaObjectMethod jVideoYuvFrameFields[] = {
   {FID_FRAMEMS, FID_FRAME_MS, LONG_SIGNATURE},
   {FID_YUVBUF, FID_VIDEO_YUV_FRAME_BUF, "Ljava/nio/ByteBuffer;"},
   {FID_YUVBUFSIZE,FID_VIDEO_YUV_FRAME_BUFSIZE, LONG_SIGNATURE},
-  {FID_YUVWIDTH,"width_", "I"},
-  {FID_YUVHEIGHT, "height_", "I"},
+  {FID_YUVWIDTH,"width", "I"},
+  {FID_YUVHEIGHT, "height", "I"},
 };
 enum FID_VIDEOH264FRAME{
   FID_H264_FRAMEMS = 0 ,

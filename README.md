@@ -12,11 +12,11 @@
         - 使得java中的CLASSPATH和LD_LIBRARY_PATH环境变量生效.
     - build使用:
       ```
-      - ./build.sh build ;
+      ./build.sh build ;
       ```
     - clean使用:
       ```
-      - ./build clean
+      ./build clean
       ```
 4. 注意:
     - bin文件夹是生成java可执行文件和C++ so的地方,在执行clean的时候,会把bin下面的so,.class,headers删除.

@@ -7,12 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef AgoraJavaRecording_MIN_PRIORITY
-#define AgoraJavaRecording_MIN_PRIORITY 1L
-#undef AgoraJavaRecording_NORM_PRIORITY
-#define AgoraJavaRecording_NORM_PRIORITY 5L
-#undef AgoraJavaRecording_MAX_PRIORITY
-#define AgoraJavaRecording_MAX_PRIORITY 10L
 /*
  * Class:     AgoraJavaRecording
  * Method:    createChannel

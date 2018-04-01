@@ -19,6 +19,7 @@ class IEngineConfig {
 typedef unsigned char uchar_t;
 typedef unsigned int uint_t;
 typedef unsigned int uid_t;
+typedef uint64_t u64_t;
 
 enum ERROR_CODE_TYPE {
     ERR_OK = 0,
@@ -119,13 +120,16 @@ enum TRIGGER_MODE_TYPE {
     AUTOMATICALLY_MODE = 0,
     MANUALLY_MODE = 1
 };
-
+enum LANGUAGE_TYPE {
+    CPP_LANG = 0,
+    JAVA_LANG = 1
+};
 class AudioPcmFrame {
     public:
-    AudioPcmFrame(uint_t frame_ms, uint_t sample_rates, uint_t samples);
+    AudioPcmFrame(u64_t frame_ms, uint_t sample_rates, uint_t samples);
     ~AudioPcmFrame();
     public:
-    uint_t frame_ms_;
+    u64_t frame_ms_;
     uint_t channels_; // 1
     uint_t sample_bits_; // 16
     uint_t sample_rates_; // 8k, 16k, 32k
@@ -137,11 +141,11 @@ class AudioPcmFrame {
 
 class AudioAacFrame {
     public:
-    explicit AudioAacFrame(uint_t frame_ms);
+    explicit AudioAacFrame(u64_t frame_ms);
     ~AudioAacFrame();
 
     const uchar_t *aacBuf_;
-    uint_t frame_ms_;
+    u64_t frame_ms_;
     uint_t aacBufSize_;
 
 };
@@ -161,11 +165,11 @@ struct AudioFrame {
 
 class VideoYuvFrame {
     public:
-    VideoYuvFrame(uint_t frame_ms, uint_t width, uint_t height, uint_t ystride,
+    VideoYuvFrame(u64_t frame_ms, uint_t width, uint_t height, uint_t ystride,
             uint_t ustride, uint_t vstride);
     ~VideoYuvFrame();
 
-    uint_t frame_ms_;
+    u64_t frame_ms_;
 
     const uchar_t *ybuf_;
     const uchar_t *ubuf_;
@@ -193,7 +197,7 @@ struct VideoH264Frame {
     {}
 
     ~VideoH264Frame(){}
-    uint_t frame_ms_;
+    u64_t frame_ms_;
     uint_t frame_num_;
 
     //all
@@ -209,7 +213,7 @@ struct VideoJpgFrame {
         bufSize_(0){}
 
    ~VideoJpgFrame() {}
-    uint_t frame_ms_;
+    u64_t frame_ms_;
 
     //all
     const uchar_t *buf_;

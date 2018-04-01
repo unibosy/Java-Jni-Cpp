@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 class AgoraJavaRecording{
   //java run status flag
@@ -35,16 +37,19 @@ class AgoraJavaRecording{
   }
 
   //load Cpp library
-  static{
-    System.loadLibrary("recording");
+  void loadLibrary() throws URISyntaxException{
+      URI uri = getClass().getResource("./librecording.so").toURI() ; 
+      String realPath = new File(uri).getAbsolutePath() ;
+      System.load(realPath);
   }
+
 
   //Native method declaration
   private native boolean createChannel(String appId, String channelKey, String name,  int uid, RecordingConfig config);
   private native boolean leaveChannel(long nativeHandle);
   private native int setVideoMixingLayout(long nativeHandle, VideoMixingLayout layout);
-  private native void startService(long nativeHandle);
-  private native void stopService(long nativeHandle);
+  private native int startService(long nativeHandle);
+  private native int stopService(long nativeHandle);
   private native RecordingEngineProperties getProperties(long nativeHandle);
   //Called by C++
   //get native handle
@@ -52,9 +57,7 @@ class AgoraJavaRecording{
     mNativeHandle = nativeHandle;
   }
   private void onLeaveChannel(int reason){
-    Common ei = new Common();
-    Common.LEAVE_PATH_CODE lpc = ei.new LEAVE_PATH_CODE(reason);
-    System.out.println("AgoraJavaRecording onLeaveChannel,code:"+lpc.getValue());
+    System.out.println("AgoraJavaRecording onLeaveChannel,code:"+reason);
     stopped = true;
   }
   private void onError(int error, int stat_code) {
@@ -87,10 +90,10 @@ class AgoraJavaRecording{
     String path = storageDir + Long.toString(uid);
     if(type == 0) {//pcm
       path += ".pcm";
-      buf = frame.pcm.pcmBuf_;
+      buf = frame.pcm.pcmBuf;
     }else if(type == 1){//aac
       path += ".aac";
-      buf = frame.aac.aacBuf_;
+      buf = frame.aac.aacBuf;
     }
     WriteBytesToFileClassic(buf, path,false);
     buf = null;
@@ -104,16 +107,16 @@ class AgoraJavaRecording{
     //System.out.println("java demo videoFrameReceived,uid:"+uid+",VIDEO_FRAME_TYPE:"+frame.type.getValue());
     if(type == 0){//yuv
       path += ".yuv";
-      buf = frame.yuv.buf_;
+      buf = frame.yuv.buf;
       if(buf == null){
         System.out.println("java demo videoFrameReceived null");
       }
     }else if(type == 1) {//h264
       path +=  ".h264";
-      buf = frame.h264.buf_;
+      buf = frame.h264.buf;
     }else if(type == 2) { // jpg
       path += "_"+GetNowDate() + ".jpg";
-      buf = frame.jpg.buf_;
+      buf = frame.jpg.buf;
     }
     WriteBytesToFileClassic(buf, path, true);
     buf = null;
@@ -391,7 +394,12 @@ class AgoraJavaRecording{
      *
      * ars.setFacility(LOCAL5_LOG_FCLT);
      */
-
+    try {
+        ars.loadLibrary();
+    } catch (URISyntaxException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    }
     System.out.println(System.getProperty("java.library.path"));
 
     ars.isMixMode = isMixingEnabled; 

@@ -111,6 +111,7 @@ typedef struct RecordingConfig {
     agora::linuxsdk::CHANNEL_PROFILE_TYPE channelProfile;
     agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE streamType;
     agora::linuxsdk::TRIGGER_MODE_TYPE triggerMode;
+    agora::linuxsdk::LANGUAGE_TYPE lang;
 
     RecordingConfig(): channelProfile(agora::linuxsdk::CHANNEL_PROFILE_COMMUNICATION),
         isAudioOnly(false),
@@ -130,7 +131,8 @@ typedef struct RecordingConfig {
         decodeVideo(agora::linuxsdk::VIDEO_FORMAT_DEFAULT_TYPE),
         mixedVideoAudio(false),
         streamType(agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH),
-        triggerMode(agora::linuxsdk::AUTOMATICALLY_MODE)
+        triggerMode(agora::linuxsdk::AUTOMATICALLY_MODE),
+        lang(agora::linuxsdk::CPP_LANG)
     {}
 
     virtual ~RecordingConfig() {}

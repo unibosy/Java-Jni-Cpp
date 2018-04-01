@@ -7,12 +7,12 @@
 
 3. demo简单使用说明:
   编译后bin文件夹下会生成librecording.so,此动态库是封装了samples下agorasdk APIs后生成的动态库文件,java demo可以通过JNI的方式调用.下面是具体的编译步骤及简单说明.
-    - 
-      使用 source build.sh pre_set xxxx 来进行预设值,有两个作用:
-          - 设置本机JNI的路径,其中xxx是jni.h所在的文件绝对路径,可以使用locate jni.h 或者 find /usr -name jni.h 等方式来找到jni.h所在路径,如source build.sh pre_set /usr/lib/jvm/java-xxxxx-amd64/include;
-          - 使得java中的CLASSPATH和LD_LIBRARY_PATH环境变量生效.
-    - 
-      build使用: ./build.sh build ; clean使用./build clean 
+    - 使用 source build.sh pre_set xxxx 来进行预设值,有两个作用:
+        - 设置本机JNI的路径,其中xxx是jni.h所在的文件绝对路径,可以使用locate jni.h 或者 find /usr -name jni.h 等方式来找到jni.h所在路径,如source build.sh pre_set /usr/lib/jvm/java-xxxxx-amd64/include;
+        - 使得java中的CLASSPATH和LD_LIBRARY_PATH环境变量生效.
+    - build使用: 
+        ./build.sh build ; 
+        clean使用./build clean 
 4. 注意:
     - bin文件夹是生成java可执行文件和C++ so的地方,在执行clean的时候,会把bin下面的so,.class,headers删除.
     - Java调用so时会根据LD_LIBRARY_PATH环境变量来寻找,此值已经在build.sh脚本中临时指定到bin文件夹下;CLASSPATH也是临时指定到bin文件夹下,但这个两个环境变量只是临时设置,在其他窗口打开不会生效,需要再执行第一步方可,您也可以根据需要自行设置成全局变量.

@@ -104,7 +104,7 @@ if [ $# -eq "0" ];then
 elif [ $# -eq "1" ];then
   run $1
 elif [ $# -eq "2" ];then
-  if [ $1 == "pre_set" ];then
+  if [ "$1" = 'pre_set' ];then
     pre_set $2
   else
     cmdhelp $0

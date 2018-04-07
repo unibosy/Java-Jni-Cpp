@@ -1,5 +1,5 @@
 #include "IAgoraLinuxSdkCommon.h"
-#include "./jni/AgoraJavaRecording.h"
+#include "./jni/com_Agora_Recording_AgoraJavaRecording.h"
 #include "AgoraJniProxy.h"
 #include <pthread.h>
 #include <sys/types.h>

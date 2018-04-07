@@ -14,8 +14,8 @@ build_java()
    
   jniLayer="./native/jni"
   javaClassPath="./bin"
-  javac src/common/*.java -d bin
-  javac src/*.java -d bin -Xlint:unchecked
+  javac src/com/Agora/common/*.java -d bin
+  javac src/com/Agora/Recording/*.java -d bin -Xlint:unchecked
   javah -d $jniLayer -classpath $javaClassPath AgoraJavaRecording
 }
 
@@ -53,8 +53,8 @@ pre_set()
   CLASSPATH=`pwd`/bin
   export CLASSPATH
   
-#  LD_LIBRARY_PATH=`pwd`/bin
-#  export LD_LIBRARY_PATH
+  LD_LIBRARY_PATH=`pwd`/bin
+  export LD_LIBRARY_PATH
 
 }
 

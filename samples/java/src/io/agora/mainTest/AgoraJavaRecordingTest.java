@@ -114,10 +114,10 @@ public class AgoraJavaRecordingTest implements RecordingOberserver {
 	{
 		String path = storageDir + Long.toString(uid);
 		ByteBuffer buf = null;
-		// System.out.println("java demo
-		// videoFrameReceived,uid:"+uid+",type:"+type);
+		// System.out.println("java demovideoFrameReceived,uid:"+uid+",type:"+type);
 		if (type == 0) {// yuv
-			path += ".			buf = frame.yuv.buf;
+			path += ".yuv";
+            buf = frame.yuv.buf;
 			if (buf == null) {
 				System.out.println("java demo videoFrameReceived null");
 			}

@@ -1,4 +1,6 @@
-package com.Agora.Recording;
+package io.agora.record;
+
+
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,17 +11,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
-import com.Agora.common.Common;
-import com.Agora.common.Common.AUDIO_FORMAT_TYPE;
-import com.Agora.common.Common.AudioFrame;
-import com.Agora.common.Common.CHANNEL_PROFILE_TYPE;
-import com.Agora.common.Common.REMOTE_VIDEO_STREAM_TYPE;
-import com.Agora.common.Common.VIDEO_FORMAT_TYPE;
-import com.Agora.common.Common.VideoFrame;
-import com.Agora.common.Common.VideoMixingLayout;
-import com.Agora.common.RecordingConfig;
-
-import com.Agora.common.RecordingEngineProperties;
+import io.agora.common.Common;
+import io.agora.common.RecordingConfig;
+import io.agora.common.RecordingEngineProperties;
+import io.agora.common.Common.AUDIO_FORMAT_TYPE;
+import io.agora.common.Common.AudioFrame;
+import io.agora.common.Common.CHANNEL_PROFILE_TYPE;
+import io.agora.common.Common.REMOTE_VIDEO_STREAM_TYPE;
+import io.agora.common.Common.VIDEO_FORMAT_TYPE;
+import io.agora.common.Common.VideoFrame;
+import io.agora.common.Common.VideoMixingLayout;
 
 
 
@@ -46,7 +47,7 @@ class AgoraJavaRecording{
    * Brief: load Cpp library
    */
   static{
-    System.loadLibrary("recording");
+	  System.loadLibrary("recording");
   }
 
   /*

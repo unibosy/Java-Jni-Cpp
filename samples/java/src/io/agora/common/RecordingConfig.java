@@ -1,6 +1,6 @@
-package com.Agora.common;
+package io.agora.common;
 
-import com.Agora.common.Common.*;
+import io.agora.common.Common.*;
 
 public class RecordingConfig { 
   public boolean isAudioOnly;

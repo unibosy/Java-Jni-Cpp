@@ -22,7 +22,8 @@ import io.agora.common.Common.VIDEO_FORMAT_TYPE;
 import io.agora.common.Common.VideoFrame;
 import io.agora.common.Common.VideoMixingLayout;
 
-
+import java.net.URI;
+import java.net.URISyntaxException;
 
 class AgoraJavaRecording{
   //java run status flag
@@ -46,8 +47,10 @@ class AgoraJavaRecording{
   /*
    * Brief: load Cpp library
    */
-  static{
-	  System.loadLibrary("recording");
+  void loadLibrary() throws URISyntaxException{
+      URI uri = getClass().getResource("./librecording.so").toURI() ; 
+      String realPath = new File(uri).getAbsolutePath() ;
+      System.load(realPath);
   }
 
   /*
@@ -440,7 +443,12 @@ class AgoraJavaRecording{
      *
      * ars.setFacility(LOCAL5_LOG_FCLT);
      */
-
+    try {
+        ars.loadLibrary();
+    } catch (URISyntaxException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    }
     System.out.println(System.getProperty("java.library.path"));
 
     ars.isMixMode = isMixingEnabled; 

@@ -1,4 +1,5 @@
 package io.agora.common;
+
 import java.nio.ByteBuffer;
 
 public class Common{

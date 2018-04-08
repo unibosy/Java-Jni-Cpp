@@ -1,6 +1,10 @@
 package io.agora.common;
 
-import io.agora.common.Common.*;
+
+import io.agora.common.Common.AUDIO_FORMAT_TYPE;
+import io.agora.common.Common.CHANNEL_PROFILE_TYPE;
+import io.agora.common.Common.REMOTE_VIDEO_STREAM_TYPE;
+import io.agora.common.Common.VIDEO_FORMAT_TYPE;
 
 public class RecordingConfig { 
   public boolean isAudioOnly;

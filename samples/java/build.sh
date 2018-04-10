@@ -51,7 +51,7 @@ pre_set()
   JNI_PATH=$1
   export JNI_PATH
     
-  CLASSPATH=`pwd`/bin
+  CLASSPATH=`pwd`/bin/mainTest
   export CLASSPATH
   
   LD_LIBRARY_PATH=`pwd`/bin

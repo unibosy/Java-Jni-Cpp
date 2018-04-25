@@ -46,8 +46,8 @@ class AgoraJavaRecording extends Thread{
   private native boolean createChannel(String appId, String channelKey, String name,  int uid, RecordingConfig config);
   private native boolean leaveChannel(long nativeHandle);
   private native int setVideoMixingLayout(long nativeHandle, VideoMixingLayout layout);
-  private native void startService(long nativeHandle);
-  private native void stopService(long nativeHandle);
+  private native int startService(long nativeHandle);
+  private native int stopService(long nativeHandle);
   private native RecordingEngineProperties getProperties(long nativeHandle);
   //Called by C++
   //get native handle
@@ -55,9 +55,7 @@ class AgoraJavaRecording extends Thread{
     mNativeHandle = nativeHandle;
   }
   private void onLeaveChannel(int reason){
-  Common ei = new Common();
-  Common.LEAVE_PATH_CODE lpc = ei.new LEAVE_PATH_CODE(reason);
-    System.out.println("AgoraJavaRecording onLeaveChannel,code:"+lpc.getValue());
+    System.out.println("AgoraJavaRecording onLeaveChannel,code:"+reason);
     stopped = true;
   }
   private void onError(int error, int stat_code) {
@@ -84,34 +82,34 @@ class AgoraJavaRecording extends Thread{
     //When the user joined, we can re-layout the canvas
     SetVideoMixingLayout();
   }
-  private void audioFrameReceived(long uid, AudioFrame aFrame)
+  private void audioFrameReceived(long uid, int type, AudioFrame frame)
   {
-    System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+aFrame.type.getValue());
+    System.out.println("java demo audioFrameReceived,uid:"+uid+",AUDIO_FRAME_TYPE:"+type);
     ByteBuffer buf = null;
     String path = storageDir + Long.toString(uid);
-    if(aFrame.type.getValue() == 0) {//pcm
+    if(type == 0) {//pcm
       path += ".pcm";
-      buf = aFrame.pcm.pcmBuf_;
-    }else if(aFrame.type.getValue() == 1){//aac
+      buf = frame.pcm.pcmBuf;
+    }else if(type == 1){//aac
       path += ".aac";
-      buf = aFrame.aac.aacBuf_;
+      buf = frame.aac.aacBuf;
     }
     WriteBytesToFileClassic(buf, path);
   }
-  private void videoFrameReceived(long uid, VideoFrame frame)
+  private void videoFrameReceived(long uid, int type, VideoFrame frame, int rotation)//rotation:0, 90, 180, 270
   {
     String path = storageDir + Long.toString(uid);
     ByteBuffer buf = null;
-    System.out.println("java demo videoFrameReceived,uid:"+uid+",VIDEO_FRAME_TYPE:"+frame.type.getValue());
-    if(frame.type.getValue() == 0){//yuv
+    System.out.println("java demo videoFrameReceived,uid:"+uid+",VIDEO_FRAME_TYPE:"+type);
+    if(type == 0){//yuv
       path += ".yuv";
-      buf = frame.yuv.buf_;
-    }else if(frame.type.getValue() == 1) {//h264
+      buf = frame.yuv.buf;
+    }else if(type == 1) {//h264
       path +=  ".h264";
-      buf = frame.h264.buf_;
-    }else if(frame.type.getValue() == 2) { // jpg
+      buf = frame.h264.buf;
+    }else if(type == 2) { // jpg
       path += "_"+GetNowDate() + ".jpg";
-      buf = frame.jpg.buf_;
+      buf = frame.jpg.buf;
     }
     WriteBytesToFileClassic(buf, path);
   }
@@ -265,6 +263,7 @@ class AgoraJavaRecording extends Thread{
     String applitePath = "";
     String recordFileRootDir = ".";
     String cfgFilePath = "";
+    String proxyServer = "";
 
     int lowUdpPort = 0;//40000;
     int highUdpPort = 0;//40004;
@@ -379,6 +378,7 @@ class AgoraJavaRecording extends Thread{
     config.decodeVideo = VIDEO_FORMAT_TYPE.values()[getVideoFrame];
     config.streamType = REMOTE_VIDEO_STREAM_TYPE.values()[streamType];
     config.triggerMode = triggerMode;
+    config.proxyServer = proxyServer;
     /*
      * change log_config Facility per your specific purpose like agora::base::LOCAL5_LOG_FCLT
      * Default:USER_LOG_FCLT.

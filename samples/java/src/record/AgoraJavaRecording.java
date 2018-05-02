@@ -1,4 +1,7 @@
+package io.agora.recording.record;
 import io.agora.recording.common.*;
+import io.agora.recording.common.RecordingConfig;
+import io.agora.recording.common.RecordingEngineProperties;
 import io.agora.recording.common.Common.*;
 import java.lang.InterruptedException;
 import java.io.FileWriter;
@@ -17,19 +20,19 @@ import java.nio.channels.FileChannel;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-class AgoraJavaRecording{
+public class AgoraJavaRecording{
   //java run status flag
-  private boolean stopped = false;
-  private boolean isMixMode = false;
-  private int width = 0;
-  private int height = 0;
-  private int fps = 0;
-  private int kbps = 0;
-  private String storageDir = "./";
-  private long aCount = 0;
-  private long count = 0;
-  private long size = 0;
-  private CHANNEL_PROFILE_TYPE profile_type;
+  public boolean stopped = false;
+  public boolean isMixMode = false;
+  public int width = 0;
+  public int height = 0;
+  public int fps = 0;
+  public int kbps = 0;
+  public String storageDir = "./";
+  public long aCount = 0;
+  public long count = 0;
+  public long size = 0;
+  public CHANNEL_PROFILE_TYPE profile_type;
   Vector<Long> m_peers = new Vector<Long>();
   private long mNativeHandle = 0;
   private boolean IsMixMode(){
@@ -37,7 +40,7 @@ class AgoraJavaRecording{
   }
 
   //load Cpp library
-  void loadLibrary() throws URISyntaxException{
+  public void loadLibrary() throws URISyntaxException{
       URI uri = getClass().getResource("./librecording.so").toURI() ; 
       String realPath = new File(uri).getAbsolutePath() ;
       System.load(realPath);
@@ -45,22 +48,22 @@ class AgoraJavaRecording{
 
 
   //Native method declaration
-  private native boolean createChannel(String appId, String channelKey, String name,  int uid, RecordingConfig config);
-  private native boolean leaveChannel(long nativeHandle);
-  private native int setVideoMixingLayout(long nativeHandle, VideoMixingLayout layout);
-  private native int startService(long nativeHandle);
-  private native int stopService(long nativeHandle);
-  private native RecordingEngineProperties getProperties(long nativeHandle);
+  public native boolean createChannel(String appId, String channelKey, String name,  int uid, RecordingConfig config);
+  public native boolean leaveChannel(long nativeHandle);
+  public native int setVideoMixingLayout(long nativeHandle, VideoMixingLayout layout);
+  public native int startService(long nativeHandle);
+  public native int stopService(long nativeHandle);
+  public native RecordingEngineProperties getProperties(long nativeHandle);
   //Called by C++
   //get native handle
   private void nativeObjectRef(long nativeHandle){
     mNativeHandle = nativeHandle;
   }
-  private void onLeaveChannel(int reason){
+  public void onLeaveChannel(int reason){
     System.out.println("AgoraJavaRecording onLeaveChannel,code:"+reason);
     stopped = true;
   }
-  private void onError(int error, int stat_code) {
+  public void onError(int error, int stat_code) {
     System.out.println("AgoraJavaRecording onError,error:"+error+",stat code:"+stat_code);
     stopped = true;
   }
@@ -256,4 +259,5 @@ class AgoraJavaRecording{
       System.out.println("user:"+l);
     }
   }
+}
   

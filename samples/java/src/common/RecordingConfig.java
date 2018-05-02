@@ -1,15 +1,8 @@
+package io.agora.recording.common;
 import io.agora.recording.common.*;
 import io.agora.recording.common.Common.*;
 
-class RecordingEngineProperties{
-  private String storageDir;
-  public String GetStorageDir(){
-    return storageDir;
-  }
-}
-
-
-class RecordingConfig { 
+public class RecordingConfig { 
   public boolean isAudioOnly;
   public boolean isVideoOnly;
   public boolean isMixingEnabled;

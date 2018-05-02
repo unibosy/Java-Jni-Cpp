@@ -15,8 +15,9 @@ build_java()
   jniLayer="./native/jni"
   javaClassPath="./bin"
   javac src/common/*.java -d bin
-  javac src/*.java -d bin -Xlint:unchecked
-  javah -d $jniLayer -classpath $javaClassPath AgoraJavaRecording
+  javac src/record/*.java -d bin
+  javac src/mainTest/*.java -d bin -Xlint:unchecked
+  javah -d $jniLayer -classpath $javaClassPath io.agora.recording.record.AgoraJavaRecording
 }
 
 build_cpp()

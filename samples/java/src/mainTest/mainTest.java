@@ -1,6 +1,5 @@
 import io.agora.recording.common.*;
 import io.agora.recording.common.Common.*;
-//import io.agora.recording.record.AgoraJavaRecording;
 import io.agora.recording.record.*;
 import java.lang.InterruptedException;
 import java.io.FileWriter;
@@ -23,6 +22,8 @@ public class mainTest
 {
     public static void main(String[] args) 
     {
+        System.out.println("enter main");
+        System.out.println("enter main-2");
         int uid = 0;
         String appId = "";
         String channelKey = "";
@@ -159,6 +160,7 @@ public class mainTest
          *
          * ars.setFacility(LOCAL5_LOG_FCLT);
          */
+        System.out.println("java.library.path 7");
         try {
             ars.loadLibrary();
         } catch (URISyntaxException e) {

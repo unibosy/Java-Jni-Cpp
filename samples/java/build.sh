@@ -23,6 +23,7 @@ build_java()
 build_cpp()
 {
   make -f ./native/.makefile JNIINCLUDEPATH=$JNI_PATH
+  mv ./bin/librecording.so ./bin/io/agora/recording/record/.
 }
 clean_java()
 {

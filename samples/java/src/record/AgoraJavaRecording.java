@@ -41,6 +41,8 @@ public class AgoraJavaRecording{
 
   //load Cpp library
   public void loadLibrary() throws URISyntaxException{
+      System.out.println("getClass:"+getClass()+",getClass().getRes:"+getClass().getResource("./librecording.so"));
+
       URI uri = getClass().getResource("./librecording.so").toURI() ; 
       String realPath = new File(uri).getAbsolutePath() ;
       System.load(realPath);

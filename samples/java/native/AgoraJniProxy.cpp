@@ -652,6 +652,7 @@ void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk
   return;
 }
 void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
+  cout<<"enter onLeaveChanenl"<<endl;
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onLeaveChannel");
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
 
@@ -662,7 +663,9 @@ void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
     LOG_DIR(m_logdir.c_str(), ERROR,"MID_ON_LEAVECHANNEL not inited" );
     return;
   }
+  cout<<"enter onLeaveChanenl -1"<<endl;
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_LEAVECHANNEL], jint((int)(code)));
+  cout<<"enter onLeaveChanenl -2"<<endl;
   return;
 }
 void AgoraJniProxySdk::onWarning(int warn) {
@@ -923,6 +926,7 @@ void AgoraJniProxySdk::stopJavaProc(JNIEnv* env) {
   jmethodID jStopCB =  env->GetMethodID(mJavaAgoraJavaRecordingClass,"stopCallBack","()V");
   assert(jStopCB);
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jStopCB);
+  cout<<"stopJavaPro end"<<endl;
 }
 
 void AgoraJniProxySdk::setJavaRecordingPath(JNIEnv* env, std::string& storeDir){

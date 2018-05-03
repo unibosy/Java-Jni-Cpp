@@ -28,6 +28,8 @@ public class AgoraJavaRecording {
 		recordingOberservers = new ArrayList<RecordingOberserver>();
 	}
 
+    public AgoraJavaRecording() {
+    }
 	private void loadLibrary(String libraryPath) throws URISyntaxException {
         System.out.println("load library path:"+libraryPath+", getClass():"+getClass()+",getResource:"+getClass().getResource(libraryPath));
 		URI uri = getClass().getResource(libraryPath).toURI();
@@ -132,6 +134,7 @@ public class AgoraJavaRecording {
 	 * LEAVE_PATH_CODE
 	 */
 	private void onLeaveChannel(int reason) {
+        System.out.println("java on leave channel");
 		for (RecordingOberserver oberserver : recordingOberservers) {
 			oberserver.onLeaveChannel(reason);
 		}
@@ -227,8 +230,10 @@ public class AgoraJavaRecording {
 	 * Brief: Callback when JNI layer exited
 	 */
 	private void stopCallBack() {
+        System.out.println("java stop call back");
 		for (RecordingOberserver oberserver : recordingOberservers) {
 			oberserver.stopCallBack();
+        System.out.println("java stop call back end");
 		}
 	}
 

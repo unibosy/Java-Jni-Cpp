@@ -1,5 +1,5 @@
 #include "IAgoraLinuxSdkCommon.h"
-#include "./jni/io_agora_recording_record_AgoraJavaRecording.h"
+#include "./jni/io_agora_recording_NativeMethods_AgoraJavaRecording.h"
 #include "AgoraJniProxy.h"
 #include <pthread.h>
 #include <sys/types.h>
@@ -705,7 +705,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
  * Method:    leaveChannel
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_io_agora_recording_record_AgoraJavaRecording_leaveChannel
+JNIEXPORT jboolean JNICALL Java_io_agora_recording_NativeMethods_AgoraJavaRecording_leaveChannel
   (JNIEnv *, jobject, jlong nativeObjectRef) {
   cout<<"java call leaveChannel"<<endl;
   jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
@@ -723,7 +723,7 @@ JNIEXPORT jboolean JNICALL Java_io_agora_recording_record_AgoraJavaRecording_lea
  * Method:    setVideoMixingLayout
  * Signature: (JLio/agora/recording/common/Common/VideoMixingLayout;)I
  */
-JNIEXPORT jint JNICALL Java_io_agora_recording_record_AgoraJavaRecording_setVideoMixingLayout
+JNIEXPORT jint JNICALL Java_io_agora_recording_NativeMethods_AgoraJavaRecording_setVideoMixingLayout
   (JNIEnv * env, jobject job, jlong nativeObjectRef, jobject jVideoMixLayout)
 {
   jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
@@ -859,7 +859,7 @@ JNIEXPORT jint JNICALL Java_io_agora_recording_record_AgoraJavaRecording_setVide
  * Method:    getProperties
  * Signature: (J)LRecordingEngineProperties;
  */
-JNIEXPORT jobject JNICALL Java_io_agora_recording_record_AgoraJavaRecording_getProperties(JNIEnv * env, jobject, jlong nativeObjectRef){
+JNIEXPORT jobject JNICALL Java_io_agora_recording_NativeMethods_AgoraJavaRecording_getProperties(JNIEnv * env, jobject, jlong nativeObjectRef){
   jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
   if(!nativeHandle){
     return JNI_FALSE;
@@ -896,7 +896,7 @@ JNIEXPORT jobject JNICALL Java_io_agora_recording_record_AgoraJavaRecording_getP
  * Method:    startService
  * Signature: (J)V
  */
- JNIEXPORT jint JNICALL Java_io_agora_recording_record_AgoraJavaRecording_startService(JNIEnv * env, jobject job, jlong nativeObjectRef){
+ JNIEXPORT jint JNICALL Java_io_agora_recording_NativeMethods_AgoraJavaRecording_startService(JNIEnv * env, jobject job, jlong nativeObjectRef){
    jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
    if(nativeHandle){
      return nativeHandle->startService();
@@ -908,7 +908,7 @@ JNIEXPORT jobject JNICALL Java_io_agora_recording_record_AgoraJavaRecording_getP
  * Method:    stopService
  * Signature: (J)V
  */
-JNIEXPORT jint JNICALL Java_io_agora_recording_record_AgoraJavaRecording_stopService(JNIEnv * env, jobject job, jlong nativeObjectRef){
+JNIEXPORT jint JNICALL Java_io_agora_recording_NativeMethods_AgoraJavaRecording_stopService(JNIEnv * env, jobject job, jlong nativeObjectRef){
   jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
   if(nativeHandle){
     return nativeHandle->stopService();
@@ -937,7 +937,7 @@ void AgoraJniProxySdk::setJavaRecordingPath(JNIEnv* env, std::string& storeDir){
     
 }*/
 
-JNIEXPORT jboolean JNICALL Java_io_agora_recording_record_AgoraJavaRecording_createChannel(JNIEnv * env, jobject thisObj, jstring jni_appid, jstring jni_channelKey, 
+JNIEXPORT jboolean JNICALL Java_io_agora_recording_NativeMethods_AgoraJavaRecording_createChannel(JNIEnv * env, jobject thisObj, jstring jni_appid, jstring jni_channelKey, 
       jstring jni_channelName, jint jni_uid, jobject jni_recordingConfig)
 {
   uint32_t uid = 0;

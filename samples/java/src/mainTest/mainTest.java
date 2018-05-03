@@ -1,6 +1,6 @@
 import io.agora.recording.common.*;
 import io.agora.recording.common.Common.*;
-import io.agora.recording.record.*;
+import io.agora.recording.NativeMethods.AgoraJavaRecording;
 import java.lang.InterruptedException;
 import java.io.FileWriter;
 import java.io.IOException;

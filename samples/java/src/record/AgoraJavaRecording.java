@@ -1,4 +1,4 @@
-package io.agora.recording.record;
+package io.agora.recording.NativeMethods;
 import io.agora.recording.common.*;
 import io.agora.recording.common.RecordingConfig;
 import io.agora.recording.common.RecordingEngineProperties;

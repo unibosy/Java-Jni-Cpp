@@ -70,6 +70,8 @@ public class AgoraJavaRecording {
 	 */
 	public native boolean createChannel(String appId, String channelKey, String name, int uid, RecordingConfig config);
 
+    public native void test();
+
 	/*
 	 * Brief: Stop recording
 	 * 

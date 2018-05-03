@@ -14,5 +14,8 @@ public class Main {
 		ars.createChannel2(args);
         System.out.println("ars.createChannel(args) -2");
 		ars.unRegister();
+        System.out.println("ars.createChannel(args) -3");
+        
+		//System.exit(0);
 	}
 }

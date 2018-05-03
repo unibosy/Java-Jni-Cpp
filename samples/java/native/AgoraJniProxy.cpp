@@ -585,10 +585,10 @@ bool AgoraJniProxySdk::fillVideoFrameByFields(JNIEnv* env, const agora::linuxsdk
   return true;
 }
 void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
-  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
+  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   jobject job = newJObject(env, mJavaVideoFrameClass,mJavaVideoFrameInitMtd);
   if(!fillVideoFrameByFields(env, frame, mJavaVideoFrameClass, job))
   {
@@ -601,10 +601,10 @@ void AgoraJniProxySdk::videoFrameReceived(unsigned int uid, const agora::linuxsd
 }
 //TODO  use the same parameter
 void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const {
-  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
+  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   jobject jobAudioFrame = newJObject(env, mJavaAudioFrameClass, mJavaAudioFrameInitMtd);
   if(!jobAudioFrame){
     LOG_DIR(m_logdir.c_str(), ERROR,"new audio frame object failed!");
@@ -621,14 +621,17 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
 }
 
 void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk::UserJoinInfos &infos) {
-  LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk User:%u" ,uid , " joined, RecordingDir:%s" , (infos.storageDir? infos.storageDir:"NULL") );
-  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
-  std::string store_dir = std::string(infos.storageDir);
-  m_logdir = store_dir;
-  
+    
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
+  
+  LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk User:%u" ,uid , " joined, RecordingDir:%s" , (infos.storageDir? infos.storageDir:"NULL") );
+  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
+  
+  std::string store_dir = std::string(infos.storageDir);
+  m_logdir = store_dir;
+
   if(!m_CBObjectMethodIDs[MID_ON_USERJOINED]){
     LOG_DIR(m_logdir.c_str(), ERROR,"MID_ON_USERJOINED not inited");
     return;
@@ -638,12 +641,13 @@ void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk:
   return;
 }
 void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk::USER_OFFLINE_REASON_TYPE reason) {
-  LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onUserOffline User:%u",uid, ",reason:%d",static_cast<int>(reason));
-  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-  if(!m_CBObjectMethodIDs[MID_ON_USEROFFLINE]){
+
+  LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onUserOffline User:%u",uid, ",reason:%d",static_cast<int>(reason));
+  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
+   if(!m_CBObjectMethodIDs[MID_ON_USEROFFLINE]){
     LOG_DIR(m_logdir.c_str(), ERROR,"MID_ON_USEROFFLINE not inited" );
     return;
   }
@@ -652,14 +656,15 @@ void AgoraJniProxySdk::onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk
   return;
 }
 void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
+  AttachThreadScoped ats(g_jvm);
+  JNIEnv* env = ats.env();
+  if (!env) return;
+
   cout<<"enter onLeaveChanenl"<<endl;
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onLeaveChannel");
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
 
-  AttachThreadScoped ats(g_jvm);
-  JNIEnv* env = ats.env();
-  if (!env) return;
-  if(!m_CBObjectMethodIDs[MID_ON_LEAVECHANNEL]){
+    if(!m_CBObjectMethodIDs[MID_ON_LEAVECHANNEL]){
     LOG_DIR(m_logdir.c_str(), ERROR,"MID_ON_LEAVECHANNEL not inited" );
     return;
   }
@@ -669,11 +674,12 @@ void AgoraJniProxySdk::onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code) {
   return;
 }
 void AgoraJniProxySdk::onWarning(int warn) {
-  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
-  
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
+  
+  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
+  
   if(!m_CBObjectMethodIDs[MID_ON_WARNING]){
     LOG_DIR(m_logdir.c_str(), ERROR,"MID_ON_WARNING not inited" );
     return;
@@ -683,19 +689,20 @@ void AgoraJniProxySdk::onWarning(int warn) {
 }
 
 void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code) {
-  LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onError");
-  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
 
+  LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onError");
+  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
+  
   if(!m_CBObjectMethodIDs[MID_ON_ERROR]) {
     LOG_DIR(m_logdir.c_str(), INFO,"MID_ON_ERROR not inited!");
     return;
   }
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_ERROR], error, jint((int)(stat_code)));
   leaveChannel();
-  ats.detach();
+  //ats.detach();
   return;
 }
 JNIEXPORT jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
@@ -1233,6 +1240,10 @@ JNIEXPORT jboolean JNICALL Java_io_agora_record_AgoraJavaRecording_createChannel
   cout<<"Java_AgoraJavaRecording_createChannel  end"<<endl;
   return JNI_TRUE;
 }
+JNIEXPORT void JNICALL Java_io_agora_record_AgoraJavaRecording_test(JNIEnv *, jobject) {
+    cout<<"test-----------------------------------------------------------------------------"<<endl;
+}
+
 
 #ifdef __cplusplus
 }

@@ -418,7 +418,8 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 		// run jni event loop , or start a new thread to do it
         System.out.println("jni layer agoraJavaRecordingInstance.createChannel");
 		agoraJavaRecordingInstance.createChannel(appId, channelKey, name, uid, config);
+		//agoraJavaRecordingInstance.test();
 		System.out.println("jni layer has been exited...");
-		System.exit(0);
+		//System.exit(0);
 	}
 }

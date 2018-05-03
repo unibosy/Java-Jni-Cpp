@@ -17,6 +17,14 @@ JNIEXPORT jboolean JNICALL Java_io_agora_record_AgoraJavaRecording_createChannel
 
 /*
  * Class:     io_agora_record_AgoraJavaRecording
+ * Method:    test
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_io_agora_record_AgoraJavaRecording_test
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     io_agora_record_AgoraJavaRecording
  * Method:    leaveChannel
  * Signature: (J)Z
  */

@@ -12,11 +12,6 @@ public class Main {
 		AgoraJavaRecordingImp ars = new AgoraJavaRecordingImp(agoraJavaRecording);
         System.out.println("ars.createChannel(args) -1");
 		ars.createChannel2(args);
-        try{
-            System.out.println("ars.createChannel(args) -1.1");
-        Thread.sleep(4000);
-        }catch(Exception e){
-        }
         System.out.println("ars.createChannel(args) -2");
 		ars.unRegister();
 	}

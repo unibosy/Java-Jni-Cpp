@@ -277,7 +277,7 @@ void AgoraJniProxySdk::cacheJavaVideoFrameInitMethodIDs(JNIEnv* env, const char*
 void AgoraJniProxySdk::cacheJavaCBFuncMethodIDs4Video(JNIEnv* env, const char* className){
   if (!env) return;
   //AV class
-  mJavaVideoFrameInitMtd = safeGetMethodID(env, mJavaVideoFrameClass, SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
+  mJavaVideoFrameInitMtd = safeGetMethodID(env, mJavaVideoFrameClass, SG_MTD_INIT, VIDEO_FRAME_SIGNATURE);
   if(!mJavaVideoFrameInitMtd) {
     LOG_DIR(m_logdir.c_str(), ERROR,"cannot get videoinit methodid");
     return;
@@ -937,9 +937,6 @@ void AgoraJniProxySdk::setJavaRecordingPath(JNIEnv* env, std::string& storeDir){
 
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, jRecordingPathCB, jstrRecordingDir);
 }
-/*void AgoraJniProxySdk::setJavaObjects(bool init, jobject job){
-    
-}*/
 
 JNIEXPORT jboolean JNICALL Java_io_agora_record_AgoraJavaRecording_createChannel(JNIEnv * env, jobject thisObj, jstring jni_appid, jstring jni_channelKey, 
       jstring jni_channelName, jint jni_uid, jobject jni_recordingConfig)

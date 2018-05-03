@@ -17,7 +17,7 @@ build_java()
   javac src/io/agora/common/*.java -d bin
   javac src/io/agora/record/*.java -d bin -Xlint:unchecked
   javac src/io/agora/mainTest/*.java -d bin
-  #javah -d $jniLayer -classpath $javaClassPath AgoraJavaRecording
+  javah -d $jniLayer -classpath $javaClassPath AgoraJavaRecording
 }
 
 build_cpp()

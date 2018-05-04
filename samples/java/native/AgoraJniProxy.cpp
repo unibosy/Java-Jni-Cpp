@@ -72,11 +72,11 @@ public:
       assert(attached_);
     }
   }
-  /*~AttachThreadScoped() {
+  ~AttachThreadScoped() {
     if (attached_ && (jvm_->DetachCurrentThread() < 0)) {
       assert(false);
     }
-  }*/
+  }
   void detach(){
     if (!attached_ && jvm_->DetachCurrentThread() < 0) {
       assert(false);
@@ -621,7 +621,6 @@ void AgoraJniProxySdk::audioFrameReceived(unsigned int uid, const agora::linuxsd
 }
 
 void AgoraJniProxySdk::onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk::UserJoinInfos &infos) {
-    
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
@@ -692,7 +691,6 @@ void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_c
   AttachThreadScoped ats(g_jvm);
   JNIEnv* env = ats.env();
   if (!env) return;
-
   LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onError");
   CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
   
@@ -702,7 +700,6 @@ void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_c
   }
   env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_ERROR], error, jint((int)(stat_code)));
   leaveChannel();
-  //ats.detach();
   return;
 }
 JNIEXPORT jint JNI_OnLoad(JavaVM* jvm, void* reserved) {

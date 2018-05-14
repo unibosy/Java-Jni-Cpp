@@ -1,4 +1,4 @@
-package io.agora.common;
+package io.agora.recording.common;
 
 import java.nio.ByteBuffer;
 
@@ -17,6 +17,8 @@ public class Common{
     STAT_ERR_ARS_JOIN_CHANNEL(2),
     STAT_ERR_CREATE_PROCESS(3),
     STAT_ERR_MIXED_INVALID_VIDEO_PARAM(4),
+    STAT_ERR_NULL_POINTER(5),
+    STAT_ERR_PROXY_SERVER_INVALID_PARAM(6),
     STAT_POLL_ERR(8),
     STAT_POLL_HANG_UP(16),
     STAT_POLL_NVAL(32);

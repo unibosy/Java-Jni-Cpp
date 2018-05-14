@@ -26,6 +26,7 @@ public:
   virtual void onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk::USER_OFFLINE_REASON_TYPE reason);
   virtual void audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const;
   virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
+  virtual void onActiveSpeaker(unsigned int uid);
 
   void setJobAgoraJavaRecording(jobject job){
     mJavaAgoraJavaRecordingObject = job;

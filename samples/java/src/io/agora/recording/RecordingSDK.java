@@ -1,4 +1,4 @@
-package io.agora.record;
+package io.agora.recording;
 
 import java.io.File;
 import java.net.URI;
@@ -6,46 +6,43 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.agora.common.Common.AudioFrame;
-import io.agora.common.Common.VideoFrame;
-import io.agora.common.Common.VideoMixingLayout;
-import io.agora.common.RecordingConfig;
-import io.agora.common.RecordingEngineProperties;
+import io.agora.recording.common.Common.AudioFrame;
+import io.agora.recording.common.Common.VideoFrame;
+import io.agora.recording.common.Common.VideoMixingLayout;
+import io.agora.recording.common.RecordingConfig;
+import io.agora.recording.common.RecordingEngineProperties;
 
-public class AgoraJavaRecording {
+public class RecordingSDK {
 
-	private List<RecordingOberserver> recordingOberservers = null;
+	private List<RecordingEventHandler> recordingEventHandlers = null;
 
 	/*
 	 * Brief: load Cpp library
 	 */
-	public AgoraJavaRecording(String libraryPath) {
+	public RecordingSDK(String libraryPath) {
 		try {
 			this.loadLibrary(libraryPath);
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
-		recordingOberservers = new ArrayList<RecordingOberserver>();
+		recordingEventHandlers = new ArrayList<RecordingEventHandler>();
 	}
 
-    public AgoraJavaRecording() {
-    }
 	private void loadLibrary(String libraryPath) throws URISyntaxException {
-        System.out.println("load library path:"+libraryPath+", getClass():"+getClass()+",getResource:"+getClass().getResource(libraryPath));
 		URI uri = getClass().getResource(libraryPath).toURI();
 		String realPath = new File(uri).getAbsolutePath();
 		System.load(realPath);
 	}
 
-	public void registerOberserver(RecordingOberserver recordingOberserver) {
-		if (!recordingOberservers.contains(recordingOberserver)) {
-			recordingOberservers.add(recordingOberserver);
+	public void registerOberserver(RecordingEventHandler recordingEventHandler) {
+		if (!recordingEventHandlers.contains(recordingEventHandler)) {
+			recordingEventHandlers.add(recordingEventHandler);
 		}
 	}
 
-	public void unRegisterOberserver(RecordingOberserver recordingOberserver) {
-		if (recordingOberservers.contains(recordingOberserver)) {
-			recordingOberservers.remove(recordingOberserver);
+	public void unRegisterOberserver(RecordingEventHandler recordingEventHandler) {
+		if (recordingEventHandlers.contains(recordingEventHandler)) {
+			recordingEventHandlers.remove(recordingEventHandler);
 		}
 	}
 
@@ -68,7 +65,7 @@ public class AgoraJavaRecording {
 	 * 
 	 * @return true: Method call succeeded. false: Method call failed.
 	 */
-	public native boolean createChannel(String appId, String channelKey, String name, int uid, RecordingConfig config);
+	public native boolean createChannel(String appId, String channelKey, String name, int uid, RecordingConfig config, int logLevel, int logModules);
 
 	/*
 	 * Brief: Stop recording
@@ -115,17 +112,40 @@ public class AgoraJavaRecording {
 	 * 
 	 * @return RecordingEngineProperties
 	 */
-	public native RecordingEngineProperties getProperties(long nativeHandle);
+    public native RecordingEngineProperties getProperties(long nativeHandle);
 
-	/*
-	 * Brief: When call createChannel successfully, JNI will call back this
-	 * method to set the recording engine.
-	 */
-	private void nativeObjectRef(long nativeHandle) {
-		for (RecordingOberserver oberserver : recordingOberservers) {
-			oberserver.nativeObjectRef(nativeHandle);
-		}
-	}
+    /*
+     * Brief: set background image for specified user with uid
+     * @param uid : the uid whose background image to set
+     * @param image_path the image path to be used as background.
+     * @return 0: Method call succeeded. <0: Method call failed.
+     */
+    private native int setUserBackground(long nativeHandle, int uid, String image_path);
+    /*
+     * Brief: set recording engine log level.
+     * @param level : the intended level to be set.
+     */
+
+    private native void setLogLevel(long nativeHandle, int level);
+    /*
+     * Brief: set recording engine log enabled modules
+     * @param module : the modules to be enabled/disabled
+     * @param enabled : enable/disable the module log
+     */
+    private native void enableLogModule(long nativeHandle, int module, int enable);
+
+    /*
+     * Brief: When call createChannel successfully, JNI will call back this method to set the recording engine.
+     */
+    /*
+     * Brief: When call createChannel successfully, JNI will call back this
+     * method to set the recording engine.
+     */
+    private void nativeObjectRef(long nativeHandle) {
+        for (RecordingEventHandler oberserver : recordingEventHandlers) {
+            oberserver.nativeObjectRef(nativeHandle);
+        }
+    }
 
 	/*
 	 * Brief: Callback when recording application successfully left the channel
@@ -134,8 +154,7 @@ public class AgoraJavaRecording {
 	 * LEAVE_PATH_CODE
 	 */
 	private void onLeaveChannel(int reason) {
-        System.out.println("java on leave channel");
-		for (RecordingOberserver oberserver : recordingOberservers) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
 			oberserver.onLeaveChannel(reason);
 		}
 	}
@@ -149,7 +168,7 @@ public class AgoraJavaRecording {
 	 * @param error State code, please refer to the define of STAT_CODE_TYPE
 	 */
 	private void onError(int error, int stat_code) {
-		for (RecordingOberserver oberserver : recordingOberservers) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
 			oberserver.onError(error, stat_code);
 		}
 	}
@@ -161,7 +180,7 @@ public class AgoraJavaRecording {
 	 * @param warn Warning code, please refer to the define of WARN_CODE_TYPE
 	 */
 	private void onWarning(int warn) {
-		for (RecordingOberserver oberserver : recordingOberservers) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
 			oberserver.onWarning(warn);
 		}
 	}
@@ -175,7 +194,7 @@ public class AgoraJavaRecording {
 	 * USER_OFFLINE_REASON_TYPE
 	 */
 	private void onUserOffline(long uid, int reason) {
-		for (RecordingOberserver oberserver : recordingOberservers) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
 			oberserver.onUserOffline(uid, reason);
 		}
 	}
@@ -188,7 +207,7 @@ public class AgoraJavaRecording {
 	 * @param recordingDir user recorded file directory
 	 */
 	private void onUserJoined(long uid, String recordingDir) {
-		for (RecordingOberserver oberserver : recordingOberservers) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
 			oberserver.onUserJoined(uid, recordingDir);
 		}
 	}
@@ -203,13 +222,23 @@ public class AgoraJavaRecording {
 	 * @param frame reference of received audio frame
 	 */
 	private void audioFrameReceived(long uid, int type, AudioFrame frame) {
-		for (RecordingOberserver oberserver : recordingOberservers) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
 			oberserver.audioFrameReceived(uid, type, frame);
 		}
 	}
 
-	/*
-	 * Brief: Callback when received a video frame
+    /*
+     * Brief: Callback when user is the active speaker 
+     * @param uid  user ID
+     */
+    private void onActiveSpeaker(long uid) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
+            oberserver.onActiveSpeaker(uid);
+        }
+    }
+
+    /*
+     * Brief: Callback when received a video frame
 	 * 
 	 * @param uid user ID
 	 * 
@@ -219,9 +248,8 @@ public class AgoraJavaRecording {
 	 * 
 	 * @param rotation rotation of video
 	 */
-	private void videoFrameReceived(long uid, int type, VideoFrame frame, int rotation)// rotation:0,																					// 270
-	{
-		for (RecordingOberserver oberserver : recordingOberservers) {
+	private void videoFrameReceived(long uid, int type, VideoFrame frame, int rotation) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
 			oberserver.videoFrameReceived(uid, type, frame, rotation);
 		}
 	}
@@ -230,10 +258,8 @@ public class AgoraJavaRecording {
 	 * Brief: Callback when JNI layer exited
 	 */
 	private void stopCallBack() {
-        System.out.println("java stop call back");
-		for (RecordingOberserver oberserver : recordingOberservers) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
 			oberserver.stopCallBack();
-        System.out.println("java stop call back end");
 		}
 	}
 
@@ -243,7 +269,7 @@ public class AgoraJavaRecording {
 	 * @param path recording file directory
 	 */
 	private void recordingPathCallBack(String path) {
-		for (RecordingOberserver oberserver : recordingOberservers) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
 			oberserver.recordingPathCallBack(path);
 		}
 	}

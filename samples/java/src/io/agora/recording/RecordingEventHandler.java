@@ -1,9 +1,9 @@
-package io.agora.record;
+package io.agora.recording;
 
-import io.agora.common.Common.AudioFrame;
-import io.agora.common.Common.VideoFrame;
+import io.agora.recording.common.Common.AudioFrame;
+import io.agora.recording.common.Common.VideoFrame;
 
-public interface RecordingOberserver {
+public interface RecordingEventHandler {
 
 	void nativeObjectRef(long nativeHandle);
 
@@ -15,9 +15,11 @@ public interface RecordingOberserver {
 
 	void onUserOffline(long uid, int reason);
 
-	void onUserJoined(long uid, String recordingDir);
+    void onUserJoined(long uid, String recordingDir);
 
-	void audioFrameReceived(long uid, int type, AudioFrame frame);
+    void onActiveSpeaker(long uid);
+
+    void audioFrameReceived(long uid, int type, AudioFrame frame);
 
 	void videoFrameReceived(long uid, int type, VideoFrame frame, int rotation);
 

@@ -9,44 +9,44 @@
 #define SG_INT "I"
 #define STRING_SIGNATURE "Ljava/lang/String;"
 #define BYTEARRAY "Ljava/nio/ByteBuffer;"
-#define CHANNEL_PROFILE_SIGNATURE "Lio/agora/common/Common$CHANNEL_PROFILE_TYPE;"
-#define REMOTE_VIDEO_STREAM_SIGNATURE "Lio/agora/common/Common$REMOTE_VIDEO_STREAM_TYPE;"
+#define CHANNEL_PROFILE_SIGNATURE "Lio/agora/recording/common/Common$CHANNEL_PROFILE_TYPE;"
+#define REMOTE_VIDEO_STREAM_SIGNATURE "Lio/agora/recording/common/Common$REMOTE_VIDEO_STREAM_TYPE;"
 //-----------------Video Begin-------------------
-//#define VIDEOFRAME_SIGNATURE "io/agora/common/Common$VideoFrame"
-#define VIDEOFRAME_H264_SIGNATURE "Lio/agora/common/Common$VideoH264Frame;"
-#define VIDEOFRAME_YUV_SIGNATURE "Lio/agora/common/Common$VideoYuvFrame;"
-#define VIDEOFRAME_JPG_SIGNATURE "Lio/agora/common/Common$VideoJpgFrame;" 
-#define VIDEO_FRAME_TYPE_SIGNATURE "Lio/agora/common/Common$VIDEO_FRAME_TYPE;"
-#define AUDIO_FORMAT_TYPE_SIGNATURE "Lio/agora/common/Common$AUDIO_FORMAT_TYPE;"
-#define VIDEO_FORMAT_TYPE_SIGNATURE "Lio/agora/common/Common$VIDEO_FORMAT_TYPE;"
-#define VIDEOMIXLAYOUT_SIGNATURE "[Lio/agora/common/Common$VideoMixingLayout$Region;"
+//#define VIDEOFRAME_SIGNATURE "io/agora/recording/common/Common$VideoFrame"
+#define VIDEOFRAME_H264_SIGNATURE "Lio/agora/recording/common/Common$VideoH264Frame;"
+#define VIDEOFRAME_YUV_SIGNATURE "Lio/agora/recording/common/Common$VideoYuvFrame;"
+#define VIDEOFRAME_JPG_SIGNATURE "Lio/agora/recording/common/Common$VideoJpgFrame;" 
+#define VIDEO_FRAME_TYPE_SIGNATURE "Lio/agora/recording/common/Common$VIDEO_FRAME_TYPE;"
+#define AUDIO_FORMAT_TYPE_SIGNATURE "Lio/agora/recording/common/Common$AUDIO_FORMAT_TYPE;"
+#define VIDEO_FORMAT_TYPE_SIGNATURE "Lio/agora/recording/common/Common$VIDEO_FORMAT_TYPE;"
+#define VIDEOMIXLAYOUT_SIGNATURE "[Lio/agora/recording/common/Common$VideoMixingLayout$Region;"
 //jmethodID signature
-#define SN_MTD_COMMON_INIT "(Lio/agora/common/Common;)V"
+#define SN_MTD_COMMON_INIT "(Lio/agora/recording/common/Common;)V"
 //video  init jmethodID 
-#define SN_MTD_VIDEO_YUV_FRAME_INIT "(Lio/agora/common/Common;JIIIII)V"
-#define SN_MTD_VIDEO_H264_FRAME_INIT "(Lio/agora/common/Common;)V"
-#define SN_MTD_VIDEO_JPG_FRAME_INIT "(Lio/agora/common/Common;)V"
+#define SN_MTD_VIDEO_YUV_FRAME_INIT "(Lio/agora/recording/common/Common;JIIIII)V"
+#define SN_MTD_VIDEO_H264_FRAME_INIT "(Lio/agora/recording/common/Common;)V"
+#define SN_MTD_VIDEO_JPG_FRAME_INIT "(Lio/agora/recording/common/Common;)V"
 //class name
 //VIDEO
-#define CN_REP "io/agora/common/RecordingEngineProperties"
-#define CN_VIDEO_FRAME "io/agora/common/Common$VideoFrame"
-#define CN_VIDEO_YUV_FRAME "io/agora/common/Common$VideoYuvFrame"
-#define CN_VIDEO_JPG_FRAME "io/agora/common/Common$VideoJpgFrame"
-#define CN_VIDEO_H264_FRAME "io/agora/common/Common$VideoH264Frame"
+#define CN_REP "io/agora/recording/common/RecordingEngineProperties"
+#define CN_VIDEO_FRAME "io/agora/recording/common/Common$VideoFrame"
+#define CN_VIDEO_YUV_FRAME "io/agora/recording/common/Common$VideoYuvFrame"
+#define CN_VIDEO_JPG_FRAME "io/agora/recording/common/Common$VideoJpgFrame"
+#define CN_VIDEO_H264_FRAME "io/agora/recording/common/Common$VideoH264Frame"
 
 //video frame type clas
-#define CN_VIDEO_FRAME_TYPE "io/agora/common/Common$VIDEO_FRAME_TYPE"
+#define CN_VIDEO_FRAME_TYPE "io/agora/recording/common/Common$VIDEO_FRAME_TYPE"
 
 //init jmethodID
 #define SG_MTD_INIT "<init>"
 #define SG_COMMON_INIT "<init>"
 #define MTD_TYPE "type"
 
-#define VIDEO_FRAME_SIGNATURE "(Lio/agora/common/Common;)V"
-#define MTD_INIT_VIDEO_FRAME "(Lio/agora/common/Common;)V"
+#define VIDEO_FRAME_SIGNATURE "(Lio/agora/recording/common/Common;)V"
+#define MTD_INIT_VIDEO_FRAME "(Lio/agora/recording/common/Common;)V"
 
-//#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JLio/agora/common/Common$VideoFrame;)V"
-#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JILio/agora/common/Common$VideoFrame;I)V"
+//#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JLio/agora/recording/common/Common$VideoFrame;)V"
+#define SN_CB_FUNC_RECEIVE_VIDEOFRAME "(JILio/agora/recording/common/Common$VideoFrame;I)V"
 //declare java callback function
 #define CB_FUNC_RECEIVE_VIDEOFRAME "videoFrameReceived"
 
@@ -69,18 +69,18 @@
 //-----------------Audio Begin-------------------
 //class name
 //Audio
-#define CN_AUDIO_FRAME "io/agora/common/Common$AudioFrame"
-#define CN_AUDIO_FRAME_TYPE "io/agora/common/Common$AUDIO_FRAME_TYPE"
-#define CN_AUDIO_AAC_FRAME "io/agora/common/Common$AudioAacFrame"
-#define CN_AUDIO_PCM_FRAME "io/agora/common/Common$AudioPcmFrame"
-//#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JLio/agora/common/Common$AudioFrame;)V"
-#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JILio/agora/common/Common$AudioFrame;)V"
+#define CN_AUDIO_FRAME "io/agora/recording/common/Common$AudioFrame"
+#define CN_AUDIO_FRAME_TYPE "io/agora/recording/common/Common$AUDIO_FRAME_TYPE"
+#define CN_AUDIO_AAC_FRAME "io/agora/recording/common/Common$AudioAacFrame"
+#define CN_AUDIO_PCM_FRAME "io/agora/recording/common/Common$AudioPcmFrame"
+//#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JLio/agora/recording/common/Common$AudioFrame;)V"
+#define SN_CB_FUNC_RECEIVE_AUDIOFRAME "(JILio/agora/recording/common/Common$AudioFrame;)V"
 
-#define SN_AUDIO_FRAME_TYPE "Lio/agora/common/Common$AUDIO_FRAME_TYPE;"
-#define SN_INIT_MTD_AUDIO_FRAME "(Lio/agora/common/Common;JJJ)V"
+#define SN_AUDIO_FRAME_TYPE "Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;"
+#define SN_INIT_MTD_AUDIO_FRAME "(Lio/agora/recording/common/Common;JJJ)V"
 
-#define SN_AUDIO_PCM_FRAME "Lio/agora/common/Common$AudioPcmFrame;"
-#define SN_AUDIO_AAC_FRAME "Lio/agora/common/Common$AudioAacFrame;"
+#define SN_AUDIO_PCM_FRAME "Lio/agora/recording/common/Common$AudioPcmFrame;"
+#define SN_AUDIO_AAC_FRAME "Lio/agora/recording/common/Common$AudioAacFrame;"
 
 //-----------------Audio End-------------------
 
@@ -115,7 +115,8 @@ enum CBObjectMethodId {
   MID_ON_AUDIOFRAME_RECEIVED = 4,
   MID_ON_VIDEOFRAME_RECEIVED = 5,
   MID_ON_LEAVECHANNEL = 6,
-  MID_CBOBJECT_NUM = 7,
+  MID_ON_ACTIVE_SPEAKER = 7,
+  MID_CBOBJECT_NUM = 8,
 };
 enum ClassMethodId {
   MID_GET_RANDOM_UUID = 0,
@@ -128,9 +129,10 @@ static JavaObjectMethod jCBObjectMethods[] = {
   { MID_ON_WARNING, "onWarning", "(I)V" },
   { MID_ON_USEROFFLINE, "onUserOffline", "(JI)V" },
   { MID_ON_USERJOINED, "onUserJoined", "(JLjava/lang/String;)V"},
-  { MID_ON_AUDIOFRAME_RECEIVED, "audioFrameReceived", "(JILio/agora/common/Common$AudioFrame;)V"},
-  { MID_ON_VIDEOFRAME_RECEIVED, "videoFrameReceived","(JILio/agora/common/Common$VideoFrame;I)V"},
-  { MID_ON_LEAVECHANNEL, "onLeaveChannel", "(I)V"}
+  { MID_ON_AUDIOFRAME_RECEIVED, "audioFrameReceived", "(JILio/agora/recording/common/Common$AudioFrame;)V"},
+  { MID_ON_VIDEOFRAME_RECEIVED, "videoFrameReceived","(JILio/agora/recording/common/Common$VideoFrame;I)V"},
+  { MID_ON_LEAVECHANNEL, "onLeaveChannel", "(I)V"},
+  { MID_ON_ACTIVE_SPEAKER, "onActiveSpeaker", "(J)V"}
 };
 //video
 enum VIDEOFRAME{
@@ -140,10 +142,10 @@ enum VIDEOFRAME{
   MID_JPG = 3
 };
 static JavaObjectMethod jVideoFrameMethods[] = {
-  {MID_INIT, "<init>" "(Lio/agora/common/Common;)V"},
-  {MID_YUV, "yuv", "Lio/agora/common/Common$VideoYuvFrame;"},
-  {MID_H264,"h264","Lio/agora/common/Common$VideoH264Frame;"},
-  {MID_JPG, "jpg", "Lio/agora/common/Common$VideoJpgFrame;"}
+  {MID_INIT, "<init>" "(Lio/agora/recording/common/Common;)V"},
+  {MID_YUV, "yuv", "Lio/agora/recording/common/Common$VideoYuvFrame;"},
+  {MID_H264,"h264","Lio/agora/recording/common/Common$VideoH264Frame;"},
+  {MID_JPG, "jpg", "Lio/agora/recording/common/Common$VideoJpgFrame;"}
 };
 enum FID_VIDEOYUVFRAME{
   FID_FRAMEMS = 0,

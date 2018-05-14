@@ -1,5 +1,3 @@
-package demo;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,21 +13,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import io.agora.common.Common;
-import io.agora.common.Common.AUDIO_FORMAT_TYPE;
-import io.agora.common.Common.AudioFrame;
-import io.agora.common.Common.CHANNEL_PROFILE_TYPE;
-import io.agora.common.Common.REMOTE_VIDEO_STREAM_TYPE;
-import io.agora.common.Common.VIDEO_FORMAT_TYPE;
-import io.agora.common.Common.VideoFrame;
-import io.agora.common.Common.VideoMixingLayout;
-import io.agora.common.RecordingConfig;
-import io.agora.common.RecordingEngineProperties;
+import io.agora.recording.common.Common;
+import io.agora.recording.common.Common.AUDIO_FORMAT_TYPE;
+import io.agora.recording.common.Common.AudioFrame;
+import io.agora.recording.common.Common.CHANNEL_PROFILE_TYPE;
+import io.agora.recording.common.Common.REMOTE_VIDEO_STREAM_TYPE;
+import io.agora.recording.common.Common.VIDEO_FORMAT_TYPE;
+import io.agora.recording.common.Common.VideoFrame;
+import io.agora.recording.common.Common.VideoMixingLayout;
+import io.agora.recording.common.RecordingConfig;
+import io.agora.recording.common.RecordingEngineProperties;
 
-import io.agora.record.AgoraJavaRecording;
-import io.agora.record.RecordingOberserver;
+import io.agora.recording.RecordingSDK;
+import io.agora.recording.RecordingEventHandler;
 
-public class AgoraJavaRecordingImp implements RecordingOberserver {
+public class RecordingSample implements RecordingEventHandler {
 	// java run status flag
 	private boolean isMixMode = false;
 	private int width = 0;
@@ -43,17 +41,25 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 	private CHANNEL_PROFILE_TYPE profile_type;
 	Vector<Long> m_peers = new Vector<Long>();
 	private long mNativeHandle = 0;
-	private AgoraJavaRecording agoraJavaRecordingInstance = null;
+	private RecordingSDK RecordingSDKInstance = null;
 
-	public AgoraJavaRecordingImp(AgoraJavaRecording recording) {
-		this.agoraJavaRecordingInstance = recording;
-		agoraJavaRecordingInstance.registerOberserver(this);
+	public RecordingSample(RecordingSDK recording) {
+		this.RecordingSDKInstance = recording;
+		RecordingSDKInstance.registerOberserver(this);
 	}
-    public AgoraJavaRecordingImp() {
+
+    public static void main(String[] args) {
+        // TODO Auto-generated method stub
+        String libraryPath = "./librecording.so";
+        RecordingSDK RecordingSdk = new RecordingSDK(libraryPath);
+
+        RecordingSample ars = new RecordingSample(RecordingSdk);
+        ars.createChannel(args);
+        ars.unRegister();
     }
-	
+
 	public void unRegister(){
-		agoraJavaRecordingInstance.unRegisterOberserver(this);	
+		RecordingSDKInstance.unRegisterOberserver(this);	
 	}
 
 	private boolean IsMixMode() {
@@ -65,19 +71,19 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 	}
 
 	public void onLeaveChannel(int reason) {
-		System.out.println("AgoraJavaRecording onLeaveChannel,code:" + reason);
+		System.out.println("RecordingSDK onLeaveChannel,code:" + reason);
 	}
 
 	public void onError(int error, int stat_code) {
-		System.out.println("AgoraJavaRecording onError,error:" + error + ",stat code:" + stat_code);
+		System.out.println("RecordingSDK onError,error:" + error + ",stat code:" + stat_code);
 	}
 
 	public void onWarning(int warn) {
-		System.out.println("AgoraJavaRecording onWarning,warn:" + warn);
+		System.out.println("RecordingSDK onWarning,warn:" + warn);
 	}
 
 	public void onUserOffline(long uid, int reason) {
-		System.out.println("AgoraJavaRecording onUserOffline uid:" + uid + ",offline reason:" + reason);
+		System.out.println("RecordingSDK onUserOffline uid:" + uid + ",offline reason:" + reason);
 		m_peers.remove(uid);
 		PrintUsersInfo(m_peers);
 		SetVideoMixingLayout();
@@ -91,6 +97,10 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 		// When the user joined, we can re-layout the canvas
 		SetVideoMixingLayout();
 	}
+
+    public void onActiveSpeaker(long uid) {
+        System.out.println("User:"+uid+"is speaking");
+    }
 
 	public void audioFrameReceived(long uid, int type, AudioFrame frame) {
 		// System.out.println("java demo
@@ -205,7 +215,7 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 		} else {
 			layout.regions = null;
 		}
-		return agoraJavaRecordingInstance.setVideoMixingLayout(mNativeHandle, layout);
+		return RecordingSDKInstance.setVideoMixingLayout(mNativeHandle, layout);
 	}
 
 	private void WriteBytesToFileClassic(ByteBuffer byteBuffer, String fileDest) {
@@ -244,7 +254,7 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 		}
 	}
 
-	public void createChannel2(String[] args) {
+	public void createChannel(String[] args) {
 		int uid = 0;
 		String appId = "";
 		String channelKey = "";
@@ -258,8 +268,12 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 		int idleLimitSec = 5 * 60;// 300s
 
 		String applitePath = "";
-		String recordFileRootDir = "";
-		String cfgFilePath = "";
+        String recordFileRootDir = "";
+        String cfgFilePath = "";
+        String proxyServer = "";
+        String defaultVideoBgPath = "";
+        String defaultUserBgPath = "";
+
 
 		int lowUdpPort = 0;// 40000;
 		int highUdpPort = 0;// 40004;
@@ -272,14 +286,19 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 		int getAudioFrame = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_DEFAULT_TYPE.ordinal();
 		int getVideoFrame = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_DEFAULT_TYPE.ordinal();
 		int streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH.ordinal();
-		int captureInterval = 5;
-		int triggerMode = 0;
+        int captureInterval = 5;
+        int triggerMode = 0;
 
-		int width = 0;
-		int height = 0;
+        int audioIndicationInterval = 0;
+        int logLevel = 6;
+        int logModule = 0xFF;
+
+        int width = 0;
+        int height = 0;
 		int fps = 0;
-		int kbps = 0;
-		int count = 0;
+        int kbps = 0;
+        int count = 0;
+        int audioProfile = 0;
 
 		// paser command line parameters
 		if (args.length % 2 != 0) {
@@ -321,14 +340,22 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 		Object StreamType = map.get("--streamType");
 		Object TriggerMode = map.get("--triggerMode");
 
+        Object ProxyServer = map.get("--proxyServer");
+        Object AudioProfile = map.get("--audioProfile");
+        Object DefaultVideoBg = map.get("--defaultVideoBg");
+        Object DefaultUserBg = map.get("--defaultUserBg");
+        Object LogLevel = map.get("--logLevel");
+        Object LogModule = map.get("--logModule");
+        Object AudioIndicationInterval = map.get("--audioIndicationInterval");
+
+
 		if (Appid == null || Uid == null || Channel == null || AppliteDir == null) {
 			// print usage
-			String usage = "java AgoraJavaRecording --appId STRING --uid UINTEGER32 --channel STRING --appliteDir STRING --channelKey STRING --channelProfile UINTEGER32 --isAudioOnly --isVideoOnly --isMixingEnabled --mixResolution STRING --mixedVideoAudio --decryptionMode STRING --secret STRING --idle INTEGER32 --recordFileRootDir STRING --lowUdpPort INTEGER32 --highUdpPort INTEGER32 --getAudioFrame UINTEGER32 --getVideoFrame UINTEGER32 --captureInterval INTEGER32 --cfgFilePath STRING --streamType UINTEGER32 --triggerMode INTEGER32 \r\n --appId     (App Id/must) \r\n --uid     (User Id default is 0/must)  \r\n --channel     (Channel Id/must) \r\n --appliteDir     (directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Server_SDK_for_Linux_FULL/bin/' folder/must) \r\n --channelKey     (channelKey/option)\r\n --channelProfile     (channel_profile:(0:COMMUNICATION),(1:broadcast) default is 0/option)  \r\n --isAudioOnly     (Default 0:A/V, 1:AudioOnly (0:1)/option) \r\n --isVideoOnly     (Default 0:A/V, 1:VideoOnly (0:1)/option)\r\n --isMixingEnabled     (Mixing Enable? (0:1)/option)\r\n --mixResolution     (change default resolution for vdieo mix mode/option)                 \r\n --mixedVideoAudio     (mixVideoAudio:(0:seperated Audio,Video) (1:mixed Audio & Video), default is 0 /option)                 \r\n --decryptionMode     (decryption Mode, default is NULL/option)                 \r\n --secret     (input secret when enable decryptionMode/option)                 \r\n --idle     (Default 300s, should be above 3s/option)                 \r\n --recordFileRootDir     (recording file root dir/option)                 \r\n --lowUdpPort     (default is random value/option)                 \r\n --highUdpPort     (default is random value/option)                 \r\n --getAudioFrame     (default 0 (0:save as file, 1:aac frame, 2:pcm frame, 3:mixed pcm frame) (Can't combine with isMixingEnabled) /option)                 \r\n --getVideoFrame     (default 0 (0:save as file, 1:h.264, 2:yuv, 3:jpg buffer, 4:jpg file, 5:jpg file and video file) (Can't combine with isMixingEnabled) /option)              \r\n --captureInterval     (default 5 (Video snapshot interval (second)))                 \r\n --cfgFilePath     (config file path / option)                 \r\n --streamType     (remote video stream type(0:STREAM_HIGH,1:STREAM_LOW), default is 0/option)  \r\n --triggerMode     (triggerMode:(0: automatically mode, 1: manually mode) default is 0/option)";
-
-			System.out.println("Usage:" + usage);
-			return;
-		}
-		appId = String.valueOf(Appid);
+            String usage = "java RecordingSDK --appId STRING --uid UINTEGER32 --channel STRING --appliteDir STRING --channelKey STRING --channelProfile UINTEGER32 --isAudioOnly --isVideoOnly --isMixingEnabled --mixResolution STRING --mixedVideoAudio --decryptionMode STRING --secret STRING --idle INTEGER32 --recordFileRootDir STRING --lowUdpPort INTEGER32 --highUdpPort INTEGER32 --getAudioFrame UINTEGER32 --getVideoFrame UINTEGER32 --captureInterval INTEGER32 --cfgFilePath STRING --streamType UINTEGER32 --triggerMode INTEGER32 \r\n --appId     (App Id/must) \r\n --uid     (User Id default is 0/must)  \r\n --channel     (Channel Id/must) \r\n --appliteDir     (directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Server_SDK_for_Linux_FULL/bin/' folder/must) \r\n --channelKey     (channelKey/option)\r\n --channelProfile     (channel_profile:(0:COMMUNICATION),(1:broadcast) default is 0/option)  \r\n --isAudioOnly     (Default 0:A/V, 1:AudioOnly (0:1)/option) \r\n --isVideoOnly     (Default 0:A/V, 1:VideoOnly (0:1)/option)\r\n --isMixingEnabled     (Mixing Enable? (0:1)/option)\r\n --mixResolution     (change default resolution for vdieo mix mode/option)                 \r\n --mixedVideoAudio     (mixVideoAudio:(0:seperated Audio,Video) (1:mixed Audio & Video), default is 0 /option)                 \r\n --decryptionMode     (decryption Mode, default is NULL/option)                 \r\n --secret     (input secret when enable decryptionMode/option)                 \r\n --idle     (Default 300s, should be above 3s/option)                 \r\n --recordFileRootDir     (recording file root dir/option)                 \r\n --lowUdpPort     (default is random value/option)                 \r\n --highUdpPort     (default is random value/option)                 \r\n --getAudioFrame     (default 0 (0:save as file, 1:aac frame, 2:pcm frame, 3:mixed pcm frame) (Can't combine with isMixingEnabled) /option)                 \r\n --getVideoFrame     (default 0 (0:save as file, 1:h.264, 2:yuv, 3:jpg buffer, 4:jpg file, 5:jpg file and video file) (Can't combine with isMixingEnabled) /option)              \r\n --captureInterval     (default 5 (Video snapshot interval (second)))                 \r\n --cfgFilePath     (config file path / option)                 \r\n --streamType     (remote video stream type(0:STREAM_HIGH,1:STREAM_LOW), default is 0/option)  \r\n --triggerMode     (triggerMode:(0: automatically mode, 1: manually mode) default is 0/option) \r\n --proxyServer     proxyServer:format ip:port, eg,\"127.0.0.1:1080\"/option \r\n --defaultVideoBg    (default user background image path/option) \r\n --defaultUserBg (default user background image path/option))  \r\n --audioProfile (audio profile(0: standard single channel, 1: high quality single channel, 2: high quality two channels) defualt is 0/option)   \r\n --logLevel (log level default INFO/option) \r\n --logModule (log modules. default ALL/option) \r\n --audioIndicationInterval(0: no indication, audio indication interval(ms))efault is 0/option)";      
+            System.out.println("Usage:" + usage);
+            return;
+        }
+        appId = String.valueOf(Appid);
 		uid = Integer.parseInt(String.valueOf(Uid));
 		appId = String.valueOf(Appid);
 		name = String.valueOf(Channel);
@@ -367,32 +394,47 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 		if (GetVideoFrame != null)
 			getVideoFrame = Integer.parseInt(String.valueOf(GetVideoFrame));
 		if (StreamType != null)
-			streamType = Integer.parseInt(String.valueOf(StreamType));
-		if (CaptureInterval != null)
-			captureInterval = Integer.parseInt(String.valueOf(CaptureInterval));
-		if (TriggerMode != null)
-			triggerMode = Integer.parseInt(String.valueOf(TriggerMode));
+            streamType = Integer.parseInt(String.valueOf(StreamType));
+        if (CaptureInterval != null)
+            captureInterval = Integer.parseInt(String.valueOf(CaptureInterval));
+        if(AudioIndicationInterval != null) audioIndicationInterval = Integer.parseInt(String.valueOf(AudioIndicationInterval));
+        if(TriggerMode != null) triggerMode = Integer.parseInt(String.valueOf(TriggerMode));
+        if(ProxyServer != null) proxyServer = String.valueOf(ProxyServer);
+        if(AudioProfile != null) audioProfile = Integer.parseInt(String.valueOf(AudioProfile));
+        if(DefaultVideoBg != null) defaultVideoBgPath = String.valueOf(DefaultVideoBg);
+        if(DefaultUserBg != null) defaultUserBgPath = String.valueOf(DefaultUserBg);
+        if(LogLevel != null) logLevel = Integer.parseInt(String.valueOf(LogLevel));
+        if(LogModule != null) logModule = Integer.parseInt(String.valueOf(LogModule));
 
-		RecordingConfig config = new RecordingConfig();
-		config.channelProfile = CHANNEL_PROFILE_TYPE.values()[channelProfile];
-		config.idleLimitSec = idleLimitSec;
-		config.isVideoOnly = isVideoOnly;
-		config.isAudioOnly = isAudioOnly;
-		config.isMixingEnabled = isMixingEnabled;
-		config.mixResolution = mixResolution;
-		config.mixedVideoAudio = mixedVideoAudio;
-		config.appliteDir = applitePath;
-		config.recordFileRootDir = recordFileRootDir;
-		config.cfgFilePath = cfgFilePath;
-		config.secret = secret;
-		config.decryptionMode = decryptionMode;
-		config.lowUdpPort = lowUdpPort;
-		config.highUdpPort = highUdpPort;
-		config.captureInterval = captureInterval;
-		config.decodeAudio = AUDIO_FORMAT_TYPE.values()[getAudioFrame];
-		config.decodeVideo = VIDEO_FORMAT_TYPE.values()[getVideoFrame];
-		config.streamType = REMOTE_VIDEO_STREAM_TYPE.values()[streamType];
-		config.triggerMode = triggerMode;
+        if(audioProfile > 2) audioProfile = 2;
+        if(audioProfile < 0) audioProfile = 0;
+
+        RecordingConfig config = new RecordingConfig();
+        config.channelProfile = CHANNEL_PROFILE_TYPE.values()[channelProfile];
+        config.idleLimitSec = idleLimitSec;
+        config.isVideoOnly = isVideoOnly;
+        config.isAudioOnly = isAudioOnly;
+        config.isMixingEnabled = isMixingEnabled;
+        config.mixResolution = mixResolution;
+        config.mixedVideoAudio = mixedVideoAudio;
+        config.appliteDir = applitePath;
+        config.recordFileRootDir = recordFileRootDir;
+        config.cfgFilePath = cfgFilePath;
+        config.secret = secret;
+        config.decryptionMode = decryptionMode;
+        config.lowUdpPort = lowUdpPort;
+        config.highUdpPort = highUdpPort;
+        config.captureInterval = captureInterval;
+        config.audioIndicationInterval = audioIndicationInterval;
+        config.decodeAudio = AUDIO_FORMAT_TYPE.values()[getAudioFrame];
+        config.decodeVideo = VIDEO_FORMAT_TYPE.values()[getVideoFrame];
+        config.streamType = REMOTE_VIDEO_STREAM_TYPE.values()[streamType];
+        config.triggerMode = triggerMode;
+        config.proxyServer = proxyServer;
+        config.audioProfile = audioProfile;
+        config.defaultVideoBgPath = defaultVideoBgPath;
+        config.defaultUserBgPath = defaultUserBgPath;
+
 		/*
 		 * change log_config Facility per your specific purpose like
 		 * agora::base::LOCAL5_LOG_FCLT Default:USER_LOG_FCLT.
@@ -400,7 +442,10 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 		 * ars.setFacility(LOCAL5_LOG_FCLT);
 		 */
 
-		System.out.println(System.getProperty("java.library.path"));
+        System.out.println(System.getProperty("java.library.path"));
+
+        if(logLevel < 2) logLevel = 2;
+        if(logLevel > 7) logLevel = 7;
 
 		this.isMixMode = isMixingEnabled;
 		this.profile_type = CHANNEL_PROFILE_TYPE.values()[channelProfile];
@@ -416,9 +461,8 @@ public class AgoraJavaRecordingImp implements RecordingOberserver {
 			this.kbps = Integer.valueOf(sourceStrArray[3]).intValue();
 		}
 		// run jni event loop , or start a new thread to do it
-        System.out.println("jni layer agoraJavaRecordingInstance.createChannel");
-		agoraJavaRecordingInstance.createChannel(appId, channelKey, name, uid, config);
+		RecordingSDKInstance.createChannel(appId, channelKey, name, uid, config, logLevel, logModule);
 		System.out.println("jni layer has been exited...");
-		//System.exit(0);
 	}
+  
 }

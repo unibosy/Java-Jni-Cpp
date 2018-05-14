@@ -1,4 +1,4 @@
-package io.agora.common;
+package io.agora.recording.common;
 
 
 public class RecordingEngineProperties{

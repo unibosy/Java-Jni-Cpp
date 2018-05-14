@@ -1,10 +1,10 @@
-package io.agora.common;
+package io.agora.recording.common;
 
 
-import io.agora.common.Common.AUDIO_FORMAT_TYPE;
-import io.agora.common.Common.CHANNEL_PROFILE_TYPE;
-import io.agora.common.Common.REMOTE_VIDEO_STREAM_TYPE;
-import io.agora.common.Common.VIDEO_FORMAT_TYPE;
+import io.agora.recording.common.Common.AUDIO_FORMAT_TYPE;
+import io.agora.recording.common.Common.CHANNEL_PROFILE_TYPE;
+import io.agora.recording.common.Common.REMOTE_VIDEO_STREAM_TYPE;
+import io.agora.recording.common.Common.VIDEO_FORMAT_TYPE;
 
 public class RecordingConfig { 
   public boolean isAudioOnly;
@@ -25,9 +25,14 @@ public class RecordingConfig {
   public int highUdpPort;
   public int idleLimitSec;
   public int captureInterval;
+  public int audioIndicationInterval;
   //channelProfile:0 braodacast, 1:communicate; default is 1
   public CHANNEL_PROFILE_TYPE channelProfile;
   //streamType:0:get low stream 1:get high stream; default is 0
   public REMOTE_VIDEO_STREAM_TYPE streamType;
   public int triggerMode;
+  public String proxyServer; //format ipv4:port
+  public int audioProfile;
+  public String defaultVideoBgPath;
+  public String defaultUserBgPath;
 }

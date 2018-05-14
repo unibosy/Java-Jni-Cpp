@@ -30,7 +30,7 @@ import io.agora.recording.RecordingEventHandler;
 
 import java.util.Scanner;
 
-public class testStartStop implements RecordingEventHandler{
+class RecordingSample implements RecordingEventHandler{
 	// java run status flag
 	private boolean isMixMode = false;
 	private int width = 0;
@@ -47,7 +47,7 @@ public class testStartStop implements RecordingEventHandler{
 	private long mNativeHandle = 0;
 	private RecordingSDK RecordingSDKInstance = null;
 
-    public testStartStop(RecordingSDK recording) {
+    public RecordingSample(RecordingSDK recording) {
         this.RecordingSDKInstance = recording;
         RecordingSDKInstance.registerOberserver(this);
     }
@@ -64,7 +64,7 @@ public class testStartStop implements RecordingEventHandler{
         String libraryPath = "./librecording.so";
         RecordingSDK RecordingSdk = new RecordingSDK(libraryPath);
 
-        testStartStop ars = new testStartStop(RecordingSdk);
+        RecordingSample ars = new RecordingSample(RecordingSdk);
       
         new Thread() {
             @Override

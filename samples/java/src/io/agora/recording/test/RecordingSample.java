@@ -27,7 +27,7 @@ import io.agora.recording.common.RecordingEngineProperties;
 import io.agora.recording.RecordingSDK;
 import io.agora.recording.RecordingEventHandler;
 
-public class RecordingSample implements RecordingEventHandler {
+public class RecordingSample extends Thread implements RecordingEventHandler{
 	// java run status flag
 	private boolean isMixMode = false;
 	private int width = 0;

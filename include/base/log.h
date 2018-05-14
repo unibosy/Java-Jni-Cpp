@@ -12,17 +12,28 @@
 #include <syslog.h>
 #include "base/atomic.h"
 #include "base/mutexer.h"
+#include "IAgoraLinuxSdkCommon.h"
 
 namespace agora {
 namespace base {
 
-enum log_levels {
-    DEBUG_LOG  = LOG_DEBUG,    /* 7 debug-level messages */
-    INFO_LOG  = LOG_INFO,     /* 6 informational */
-    NOTICE_LOG  = LOG_NOTICE,   /* 5 normal but significant condition */
-    WARN_LOG  = LOG_WARNING,  /* 4 warning conditions */
-    ERROR_LOG  = LOG_ERR,      /* 3 error conditions */
-    FATAL_LOG  = LOG_CRIT,     /* 2 critical conditions */
+enum agora_log_module{
+    AGORA_LOG_MODULE_MEDIA_FILE = agora::linuxsdk::AGORA_LOG_MODULE_MEDIA_FILE,
+    AGORA_LOG_MODULE_RECORDING_ENGINE = agora::linuxsdk::AGORA_LOG_MODULE_RECORDING_ENGINE,
+    AGORA_LOG_MODULE_RTMP_RENDER = agora::linuxsdk::AGORA_LOG_MODULE_RTMP_RENDER,
+    AGORA_LOG_MODULE_IPC = agora::linuxsdk::AGORA_LOG_MODULE_IPC,
+    AGORA_LOG_MODULE_CORE_SERVICE_HANDLER = agora::linuxsdk::AGORA_LOG_MODULE_CORE_SERVICE_HANDLER,
+    AGORA_LOG_MODULE_COMMON = agora::linuxsdk::AGORA_LOG_MODULE_COMMON,
+    AGORA_LOG_MODULE_ANY = agora::linuxsdk::AGORA_LOG_MODULE_ANY 
+};
+
+enum log_levels{
+    DEBUG_LOG = agora::linuxsdk::AGORA_LOG_LEVEL_DEBUG,
+    INFO_LOG = agora::linuxsdk::AGORA_LOG_LEVEL_INFO,
+    NOTICE_LOG = agora::linuxsdk::AGORA_LOG_LEVEL_NOTICE, 
+    WARN_LOG = agora::linuxsdk::AGORA_LOG_LEVEL_WARN,
+    ERROR_LOG = agora::linuxsdk::AGORA_LOG_LEVEL_ERROR, 
+    FATAL_LOG = agora::linuxsdk::AGORA_LOG_LEVEL_FATAL 
 };
 
 enum log_facility {
@@ -50,12 +61,61 @@ enum log_facility {
 
 class log_config {
 public:
-    static inline void enable_debug(bool enabled) {
-        if (enabled) {
-            log_config::enabled_level = DEBUG_LOG;
-        } else {
-            log_config::enabled_level = INFO_LOG;
-        }
+    class config_lock 
+    {
+    public:
+        config_lock() { log_config::lock();}
+        ~config_lock() { log_config::unlock();}
+    };
+
+    static inline void set_log_level(log_levels level) {
+        if(level == enabled_level)
+            return;
+
+        config_lock lck;
+        enabled_level = level;
+    }
+
+    static inline agora::base::log_levels get_log_level() {
+        config_lock lck;
+        return enabled_level;
+    }
+
+    static inline uint32_t get_enabled_modules() {
+        config_lock lck;
+        return enabled_modules;
+    }
+
+    static inline void enable_all_modules() {
+        config_lock lck;
+        enabled_modules = AGORA_LOG_MODULE_ANY;
+    }
+
+    static inline void disable_all_modules() {
+        config_lock lck;
+        enabled_modules = 0;
+    }
+    
+    static inline void enable_module(uint32_t module) {
+        config_lock lck;
+        enabled_modules |= module;
+    }
+
+    static inline void disable_module(uint32_t module) {
+        config_lock lck;
+        enabled_modules &= ~module;
+    }
+
+    static inline void set_enabled_modules(uint32_t modules) {
+        config_lock lck;
+        enabled_modules = modules;
+    }
+    
+    static inline bool log_enabled(log_levels level, agora_log_module module) {
+        config_lock lck;
+        if((level > enabled_level) || ((enabled_modules & module) == 0))
+            return false;
+        return true;
     }
 
     static bool set_drop_cannel(uint32_t cancel) {
@@ -66,18 +126,6 @@ public:
 
         drop_cancel = cancel;
         return true;
-    }
-
-    static inline bool log_enabled(log_levels level) {
-        if (level <= enabled_level) {
-            return true;
-        } 
-        else
-            return false;// skip overflow to enable debug info ability
-
-
-        ++dropped_count;
-        return (dropped_count % DROP_COUNT < drop_cancel);
     }
 
     /**
@@ -103,9 +151,8 @@ public:
 
 private:
     static Mutexer logger_mutex;
-    static int enabled_level;
-    static uint64_t dropped_count;
-
+    static log_levels enabled_level;
+    static uint32_t enabled_modules;
     static uint32_t drop_cancel;
     const static uint32_t DROP_COUNT = 1000;
     static uint32_t facility;
@@ -117,36 +164,55 @@ void open_log();
 inline void close_log() {
     ::closelog();
 }
-void log_dir(const char* logdir, log_levels level, const char* format, ...);
-void log(log_levels level, const char* format, ...);
+void log_dir(const char* logdir, log_levels level, agora_log_module module, const char* format, ...);
+void log(log_levels level, agora_log_module module, const char* format, ...);
 
 
 }
 }
 
-#define LOG(level, fmt, ...) log(agora::base::level ## _LOG, \
+#define LOG(level, module, fmt, ...) log(agora::base::level ## _LOG,  module,\
         "(%d) %s:%d: " fmt, getpid(), __FILE__, __LINE__, ##__VA_ARGS__)
 
-#define LOG_DIR(logdir, level, fmt, ...) log_dir(logdir, agora::base::level ## _LOG, \
+#define LOG_DIR(logdir, level, module, fmt, ...) log_dir(logdir, agora::base::level ## _LOG,  module,\
         "(%d) %s:%d: " fmt, getpid(), __FILE__, __LINE__, ##__VA_ARGS__)
 
-#define LOG_DIR_IF(logdir, level, cond, fmt, ...) \
+#define LOG_DIR_IF(logdir, level, module, cond, fmt, ...) \
     if (cond) { \
-        log_dir(logdir, agora::base::level ## _LOG,  \
+        log_dir(logdir, agora::base::level ## _LOG,   module, \
                 "(%d) %s:%d: " fmt, getpid(), __FILE__, __LINE__, ##__VA_ARGS__); \
     }
 
-#define LOG_IF(level, cond, ...) \
+#define LOG_IF(level, module, cond, ...) \
     if (cond) { \
-        LOG(level,  __VA_ARGS__); \
+        LOG(level,  module, __VA_ARGS__); \
     }
 
-#define LOG_EVERY_N(level, N, ...) \
+#define LOG_EVERY_N(level, module, N, ...) \
 {  \
     static unsigned int count = 0; \
     if (++count % N == 0) \
-    LOG(level, __VA_ARGS__); \
+    LOG(level, module, __VA_ARGS__); \
 }
+
+
+#define MF_LOG(level, fmt, ...) LOG(level, agora::base::AGORA_LOG_MODULE_MEDIA_FILE, fmt, ##__VA_ARGS__)
+#define MF_LOG_DIR(logdir, level, fmt, ...) LOG_DIR(logdir, level, agora::base::AGORA_LOG_MODULE_MEDIA_FILE, fmt, ##__VA_ARGS__)
+
+#define RE_LOG(level, fmt, ...) LOG(level, agora::base::AGORA_LOG_MODULE_RECORDING_ENGINE, fmt, ##__VA_ARGS__)
+#define RE_LOG_DIR(logdir, level, fmt, ...) LOG_DIR(logdir, level, agora::base::AGORA_LOG_MODULE_RECORDING_ENGINE, fmt, ##__VA_ARGS__)
+
+#define RR_LOG(level, fmt, ...) LOG(level, agora::base::AGORA_LOG_MODULE_RTMP_RENDER, fmt, ##__VA_ARGS__)
+#define RR_LOG_DIR(logdir, level, fmt, ...) LOG_DIR(logdir, level, agora::base::AGORA_LOG_MODULE_RTMP_RENDER, fmt, ##__VA_ARGS__)
+
+#define IPC_LOG(level, fmt, ...) LOG(level, agora::base::AGORA_LOG_MODULE_IPC, fmt, ##__VA_ARGS__)
+#define IPC_LOG_DIR(logdir, level, fmt, ...) LOG_DIR(logdir, level, agora::base::AGORA_LOG_MODULE_IPC, fmt, ##__VA_ARGS__)
+
+#define CSH_LOG(level, fmt, ...) LOG(level, agora::base::AGORA_LOG_MODULE_CORE_SERVICE_HANDLER, fmt, ##__VA_ARGS__)
+#define CSH_LOG_DIR(logdir, level, fmt, ...) LOG_DIR(logdir, level, agora::base::AGORA_LOG_MODULE_CORE_SERVICE_HANDLER, fmt, ##__VA_ARGS__)
+
+#define CM_LOG(level, fmt, ...) LOG(level, agora::base::AGORA_LOG_MODULE_COMMON, fmt, ##__VA_ARGS__)
+#define CM_LOG_DIR(logdir, level, fmt, ...) LOG_DIR(logdir, level, agora::base::AGORA_LOG_MODULE_COMMON, fmt, ##__VA_ARGS__)
 
 
 
@@ -155,7 +221,7 @@ void log(log_levels level, const char* format, ...);
 #ifdef DEBUG_MODE
 
 #define SPLIT_ARR 50
-#define DEBUG_LOG_RAW_DATA(logdir, level, STR, msg, size, ...) do { \
+#define DEBUG_LOG_RAW_DATA(logdir, level, module, STR, msg, size, ...) do { \
     uint32_t i;    \
     std::string output(#STR);    \
     output.reserve(size*3);    \
@@ -170,7 +236,7 @@ void log(log_levels level, const char* format, ...);
         output.append("@"); \
     }    \
     output.append("\n"); \
-    log_dir(logdir, agora::base::level ## _LOG, \
+    log_dir(logdir, agora::base::level ## _LOG, ## module,\
             "(%d) %s:%d: %s" , getpid(), __FILE__, __LINE__,output.c_str(), ##__VA_ARGS__); \
 }while(0)
 
@@ -188,6 +254,6 @@ void log(log_levels level, const char* format, ...);
 }while(0)
 #else
 #define DEBUG_RAW_DATA(STR, msg, size)
-#define DEBUG_LOG_RAW_DATA(logdir, level, STR, msg, size, ...)
+#define DEBUG_LOG_RAW_DATA(logdir, level, module, STR, msg, size, ...)
 #endif
 

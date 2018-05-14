@@ -27,7 +27,10 @@ import io.agora.recording.common.RecordingEngineProperties;
 import io.agora.recording.RecordingSDK;
 import io.agora.recording.RecordingEventHandler;
 
-public class RecordingSample extends Thread implements RecordingEventHandler{
+
+import java.util.Scanner;
+
+public class RecordingSample implements RecordingEventHandler{
 	// java run status flag
 	private boolean isMixMode = false;
 	private int width = 0;
@@ -38,15 +41,29 @@ public class RecordingSample extends Thread implements RecordingEventHandler{
 	private long aCount = 0;
 	private long count = 0;
 	private long size = 0;
+    private boolean stopped = false;
 	private CHANNEL_PROFILE_TYPE profile_type;
 	Vector<Long> m_peers = new Vector<Long>();
 	private long mNativeHandle = 0;
 	private RecordingSDK RecordingSDKInstance = null;
 
-	public RecordingSample(RecordingSDK recording) {
-		this.RecordingSDKInstance = recording;
-		RecordingSDKInstance.registerOberserver(this);
-	}
+    public RecordingSample(RecordingSDK recording) {
+        this.RecordingSDKInstance = recording;
+        RecordingSDKInstance.registerOberserver(this);
+    }
+
+    private static void Help(){
+        System.out.println("Type \"start0\" to start thread 0 recording!(Only valid when \"triggerMode=1\")");
+        System.out.println("Type \"stop0\" to stop thread 0 recording!(Only valid when \"triggerMode=1\")");
+        System.out.println("Type \"getprop0\" to call thread 0 getProperties api!");
+        System.out.println("Type \"quit0\" to leave thread 0 recording channel!");
+
+        System.out.println("Type \"start1\" to start thread 1 recording!(Only valid when \"triggerMode=1\")");
+        System.out.println("Type \"stop1\" to stop thread 1 recording!(Only valid when \"triggerMode=1\")");
+        System.out.println("Type \"getprop1\" to call thread 1 getProperties api!");
+        System.out.println("Type \"quit1\" to leave thread 1 recording channel!");
+
+    }
 
     public static void main(String[] args) {
         // TODO Auto-generated method stub
@@ -54,7 +71,8 @@ public class RecordingSample extends Thread implements RecordingEventHandler{
         RecordingSDK RecordingSdk = new RecordingSDK(libraryPath);
 
         RecordingSample ars = new RecordingSample(RecordingSdk);
-        ars.createChannel(args);
+
+        System.out.println("exit java process...");
         ars.unRegister();
     }
 
@@ -75,6 +93,7 @@ public class RecordingSample extends Thread implements RecordingEventHandler{
 	}
 
 	public void onError(int error, int stat_code) {
+        stopped =true;
 		System.out.println("RecordingSDK onError,error:" + error + ",stat code:" + stat_code);
 	}
 
@@ -148,6 +167,7 @@ public class RecordingSample extends Thread implements RecordingEventHandler{
 	 * Brief: Callback when JNI layer exited
 	 */
 	public void stopCallBack() {
+        stopped =true;
 		System.out.println("java demo receive stop from JNI ");
 	}
 
@@ -464,5 +484,21 @@ public class RecordingSample extends Thread implements RecordingEventHandler{
 		RecordingSDKInstance.createChannel(appId, channelKey, name, uid, config, logLevel, logModule);
 		System.out.println("jni layer has been exited...");
 	}
+
+    public boolean leaveChannel(long nativeHandle) {
+        return RecordingSDKInstance.leaveChannel(nativeHandle);
+    }
+
+    public int startService(long nativeHandle) {
+        return RecordingSDKInstance.startService(nativeHandle);
+    }
+
+    public int stopService(long nativeHandle) {
+        return RecordingSDKInstance.stopService(nativeHandle);
+    }
+
+    public RecordingEngineProperties getProperties(long nativeHandle) {
+        return RecordingSDKInstance.getProperties(nativeHandle);
+    }
   
 }

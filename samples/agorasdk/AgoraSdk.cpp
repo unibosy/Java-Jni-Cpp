@@ -3,9 +3,8 @@
 #include <iostream>
 #include <sstream> 
 #include <string>
-#include <vector>
-#include <algorithm>
-
+#include <vector> 
+#include <algorithm> 
 #include "IAgoraLinuxSdkCommon.h"
 #include "IAgoraRecordingEngine.h"
 #include "AgoraSdk.h"
@@ -15,7 +14,10 @@
 #include "base/opt_parser.h" 
 namespace agora {
 
-AgoraSdk::AgoraSdk(): IRecordingEngineEventHandler() {
+AgoraSdk::AgoraSdk(): IRecordingEngineEventHandler() 
+    , m_level(agora::linuxsdk::AGORA_LOG_LEVEL_INFO)
+    , m_logModules(agora::linuxsdk::AGORA_LOG_MODULE_ANY)
+{
   m_engine = NULL;
   m_stopped.store(false);
   m_storage_dir = "./";
@@ -46,6 +48,10 @@ bool AgoraSdk::createChannel(const string &appid, const string &channelKey, cons
 {
     if ((m_engine = agora::recording::IRecordingEngine::createAgoraRecordingEngine(appid.c_str(), this)) == NULL)
         return false;
+
+    m_engine->setLogLevel(m_level);
+    m_engine->enableModuleLog(agora::linuxsdk::AGORA_LOG_MODULE_ANY, false);
+    m_engine->enableModuleLog(m_logModules, true);
 
     if(linuxsdk::ERR_OK != m_engine->joinChannel(channelKey.c_str(), name.c_str(), uid, config))
         return false;
@@ -84,7 +90,7 @@ int AgoraSdk::setVideoMixLayout()
     size_t max_peers = pConfig->channelProfile == linuxsdk::CHANNEL_PROFILE_COMMUNICATION ? 7:17;
     if(!m_mixRes.m_videoMix) return 0;
 
-    LOG_DIR(m_logdir.c_str(), INFO, "setVideoMixLayout: user size: %d, permitted max_peers:%d", m_peers.size(), max_peers);
+    CM_LOG_DIR(m_logdir.c_str(), INFO, "setVideoMixLayout: user size: %d, permitted max_peers:%d", m_peers.size(), max_peers);
 
     agora::linuxsdk::VideoMixingLayout layout;
     layout.canvasWidth = m_mixRes.m_width;
@@ -94,7 +100,7 @@ int AgoraSdk::setVideoMixLayout()
     layout.regionCount = static_cast<uint32_t>(m_peers.size());
 
     if (!m_peers.empty()) {
-        LOG_DIR(m_logdir.c_str(), INFO, "setVideoMixLayout: peers not empty");
+        CM_LOG_DIR(m_logdir.c_str(), INFO, "setVideoMixLayout: peers not empty");
         agora::linuxsdk::VideoMixingLayout::Region * regionList = new agora::linuxsdk::VideoMixingLayout::Region[m_peers.size()];
 
         regionList[0].uid = m_peers[0];
@@ -106,7 +112,7 @@ int AgoraSdk::setVideoMixLayout()
         regionList[0].alpha = 1.f;
         regionList[0].renderMode = 0;
 
-        LOG_DIR(m_logdir.c_str(), INFO, "region 0 uid: %u, x: %f, y: %f, width: %f, height: %f, zOrder: %d, alpha: %f", regionList[0].uid, regionList[0].x, regionList[0].y, regionList[0].width, regionList[0].height, regionList[0].zOrder, regionList[0].alpha);
+        CM_LOG_DIR(m_logdir.c_str(), INFO, "region 0 uid: %u, x: %f, y: %f, width: %f, height: %f, zOrder: %d, alpha: %f", regionList[0].uid, regionList[0].x, regionList[0].y, regionList[0].width, regionList[0].height, regionList[0].zOrder, regionList[0].alpha);
 
 
         float canvasWidth = static_cast<float>(m_mixRes.m_width);
@@ -135,7 +141,7 @@ int AgoraSdk::setVideoMixLayout()
         }
 
         layout.regions = regionList;
-//    LOG_DIR(m_logdir.c_str(), INFO, "region 0 uid: %d, x: %f, y: %f, width: %f, height: %f, zOrder: %d, alpha: %f", regionList[0].uid, regionList[0].x, regionList[0].y, regionList[0].width, regionList[0].height, regionList[0].zOrder, regionList[0].alpha);
+//    CM_LOG_DIR(m_logdir.c_str(), INFO, "region 0 uid: %d, x: %f, y: %f, width: %f, height: %f, zOrder: %d, alpha: %f", regionList[0].uid, regionList[0].x, regionList[0].y, regionList[0].width, regionList[0].height, regionList[0].zOrder, regionList[0].alpha);
     }
     else {
         layout.regions = NULL;
@@ -144,12 +150,30 @@ int AgoraSdk::setVideoMixLayout()
     return setVideoMixingLayout(layout);
 }
 
+void AgoraSdk::setLogLevel(agora::linuxsdk::agora_log_level level)
+{
+    m_level = level;
+}
+
+void AgoraSdk::enableLogModule(uint32_t module, bool enable)
+{
+    m_logModules = module;
+}
+
 int AgoraSdk::setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout)
 {
    int result = -agora::linuxsdk::ERR_INTERNAL_FAILED;
    if(m_engine)
       result = m_engine->setVideoMixingLayout(layout);
    return result;
+}
+
+int AgoraSdk::setUserBackground(agora::linuxsdk::uid_t uid, const char* image_path)
+{
+    int result = -agora::linuxsdk::ERR_INTERNAL_FAILED;
+    if(m_engine)
+        result = m_engine->setUserBackground(uid, image_path);
+    return result;
 }
 
 const agora::recording::RecordingEngineProperties* AgoraSdk::getRecorderProperties(){
@@ -225,6 +249,14 @@ void AgoraSdk::audioFrameReceivedImpl(unsigned int uid, const agora::linuxsdk::A
   }
 
   FILE *fp = fopen(info_name.c_str(), "a+b");
+  if(fp == NULL) {
+      cout << "failed to open: " << info_name;
+      cout<< " ";
+      cout << "errno: " << errno;
+      cout<< endl;
+      return;
+  }
+
   ::fwrite(data, 1, size, fp);
   ::fclose(fp);
 }
@@ -255,6 +287,14 @@ void AgoraSdk::videoFrameReceivedImpl(unsigned int uid, const agora::linuxsdk::V
     sprintf(timebuf, "%04d%02d%02d%02d%02d%02d", date.tm_year + 1900, date.tm_mon + 1, date.tm_mday, date.tm_hour, date.tm_min, date.tm_sec);
     std::string file_name = m_storage_dir + std::string(uidbuf) + "_" + std::string(timebuf) + suffix;
     FILE *fp = fopen(file_name.c_str(), "w");
+    if(fp == NULL) {
+        cout << "failed to open: " << file_name;
+        cout<< " ";
+        cout << "errno: " << errno;
+        cout<< endl;
+        return;
+    }
+
     ::fwrite(f->buf_, 1, f->bufSize_, fp);
     ::fclose(fp);
     return;
@@ -268,6 +308,14 @@ void AgoraSdk::videoFrameReceivedImpl(unsigned int uid, const agora::linuxsdk::V
 
   std::string info_name = m_storage_dir + std::string(uidbuf) /*+ timestamp_per_join_ */+ std::string(suffix);
   FILE *fp = fopen(info_name.c_str(), "a+b");
+  if(fp == NULL) {
+        cout << "failed to open: " << info_name;
+        cout<< " ";
+        cout << "errno: " << errno;
+        cout<< endl;
+        return;
+  }
+
 
   //store it as file
   if (pframe->type == agora::linuxsdk::VIDEO_FRAME_RAW_YUV) {
@@ -280,6 +328,10 @@ void AgoraSdk::videoFrameReceivedImpl(unsigned int uid, const agora::linuxsdk::V
   }
   ::fclose(fp);
 
+}
+
+void AgoraSdk::onActiveSpeakerImpl(uid_t uid) {
+    cout << "User: " << uid << " is speaking" << endl;
 }
 }
 

@@ -61,6 +61,9 @@ class AgoraSdk : virtual public agora::recording::IRecordingEngineEventHandler {
 
         virtual int setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout);
         virtual agora::recording::RecordingConfig* getConfigInfo() { return &m_config;}
+        virtual int setUserBackground(agora::linuxsdk::uid_t uid, const char* image_path);
+        virtual void setLogLevel(agora::linuxsdk::agora_log_level level);
+        virtual void enableLogModule(uint32_t modules, bool enable);
     protected:
         virtual void onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code) {
             onErrorImpl(error, stat_code);
@@ -89,7 +92,9 @@ class AgoraSdk : virtual public agora::recording::IRecordingEngineEventHandler {
         virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
             videoFrameReceivedImpl(uid, frame);
         }
-
+        virtual void onActiveSpeaker(uid_t uid) {
+            onActiveSpeakerImpl(uid);
+        }
 
     protected:
         void onErrorImpl(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code);
@@ -103,6 +108,7 @@ class AgoraSdk : virtual public agora::recording::IRecordingEngineEventHandler {
 
         void audioFrameReceivedImpl(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const;
         void videoFrameReceivedImpl(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
+        void onActiveSpeakerImpl(uid_t uid);
 
     protected:
         atomic_bool_t m_stopped;
@@ -112,6 +118,8 @@ class AgoraSdk : virtual public agora::recording::IRecordingEngineEventHandler {
         MixModeSettings m_mixRes;
         agora::recording::RecordingConfig m_config;
         agora::recording::IRecordingEngine *m_engine;
+        agora::linuxsdk::agora_log_level m_level;
+        uint32_t m_logModules;
 };
 
 

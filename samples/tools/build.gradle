@@ -1,0 +1,40 @@
+apply plugin: 'java'
+sourceSets {
+	//从哪个目录打包jar
+    main.java.srcDirs = ['src']
+    main.resources.srcDirs = ['src']
+	//class文件生成路径
+	main.output.classesDir = 'bin' 
+}
+
+jar {
+    configurations.runtime.each { println it.path }
+    println "=====try to make jar===="
+    configurations.compile.each { println it.path }
+    println "========="
+	//生成jar包名字
+	archiveName = 'agora.jar'
+	//打包jar包路径
+	destinationDir = file('output')
+
+    from {
+        //添加依懒到打包文件
+        //configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtime.collect { zipTree(it) }
+    }
+}
+
+task clearJar(type: Delete) {
+    println "=====clearJar===="
+    delete 'build/lib'
+    delete 'output'
+}
+
+task copyJar(type: Copy) {
+    println "=====copyJar===="
+    from configurations.runtime
+    into('build/lib')
+}
+
+task release(type: Copy, dependsOn: [build])
+

@@ -87,16 +87,9 @@ public:
      *
      */
     virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const = 0;
-
-    /**
-     * the speaker who is active in the channel 
-     *
-     *
-     *  @param uid          user ID
-     *
-     */
-    virtual void onActiveSpeaker(uid_t uid)  = 0;
 };
+
+ 
 
 typedef struct RecordingConfig {
     bool isAudioOnly;
@@ -115,16 +108,10 @@ typedef struct RecordingConfig {
     int highUdpPort;  
     int idleLimitSec;
     int captureInterval;
-    int audioIndicationInterval;
     agora::linuxsdk::CHANNEL_PROFILE_TYPE channelProfile;
     agora::linuxsdk::REMOTE_VIDEO_STREAM_TYPE streamType;
     agora::linuxsdk::TRIGGER_MODE_TYPE triggerMode;
     agora::linuxsdk::LANGUAGE_TYPE lang;
-    char * proxyServer;
-    agora::linuxsdk::AUDIO_PROFILE_TYPE audioProfile;
-    char * defaultVideoBg;
-    char * defaultUserBg;
-
 
     RecordingConfig(): channelProfile(agora::linuxsdk::CHANNEL_PROFILE_COMMUNICATION),
         isAudioOnly(false),
@@ -145,11 +132,7 @@ typedef struct RecordingConfig {
         mixedVideoAudio(false),
         streamType(agora::linuxsdk::REMOTE_VIDEO_STREAM_HIGH),
         triggerMode(agora::linuxsdk::AUTOMATICALLY_MODE),
-        lang(agora::linuxsdk::CPP_LANG),
-        proxyServer(NULL),
-        audioProfile(agora::linuxsdk::AUDIO_PROFILE_DEFAULT),
-        defaultVideoBg(NULL),
-        defaultUserBg(NULL)
+        lang(agora::linuxsdk::CPP_LANG)
     {}
 
     virtual ~RecordingConfig() {}
@@ -196,7 +179,7 @@ public:
      *  @return 0: Method call succeeded. <0: Method call failed.
      */
     virtual int setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout) = 0;
-   
+
     /**
      *  Stop recording
      *
@@ -229,36 +212,6 @@ public:
      *  @return 0: Method call succeeded. <0: Method call failed.
      */
     virtual int stopService() = 0;
-     
-    /**
-     * set the background image for specific user
-     *
-     * @param uid user id whose background image would be set
-     * 
-     * @param img_path the background image path.
-     *
-     * return 0: Method call succeeded. <0: Method call failed.
-     */
-    virtual int setUserBackground(uid_t uid, const char* img_path) = 0;
-
-    /**
-     * set the log level
-     *
-     * @param level the log level to be enabled
-     * 
-     * return 0: Method call succeeded. <0: Method call failed.
-     */
-    virtual int setLogLevel(agora::linuxsdk::agora_log_level level) = 0;
-
-    /**
-     * enable/disable log in specified modules
-     *
-     * @param enable enable/disable log in specified modules
-     *
-     * return 0: Method call succeeded. <0: Method call failed.
-     */
-    virtual int enableModuleLog(uint32_t module, bool enable) = 0;
-
 };
 
 }

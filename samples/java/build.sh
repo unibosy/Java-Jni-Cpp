@@ -14,26 +14,19 @@ build_java()
    
   jniLayer="./native/jni"
   javaClassPath="./bin"
-
-  javac src/io/agora/recording/common/*.java -d bin
-  javac src/io/agora/recording/*.java -d bin
-  javac src/io/agora/recording/test/*.java -d bin -Xlint:unchecked
-
-  #clean previous jni file
-  rm -f $jniLayer/io_agora_recording_RecordingSDK.h
-  javah -d $jniLayer -classpath $javaClassPath io.agora.recording.RecordingSDK
+  javac src/common/*.java -d bin
+  javac src/*.java -d bin -Xlint:unchecked
+  javah -d $jniLayer -classpath $javaClassPath AgoraJavaRecording
 }
 
 build_cpp()
 {
   make -f ./native/.makefile JNIINCLUDEPATH=$JNI_PATH
-  mv ./bin/librecording.so ./bin/io/agora/recording/.
 }
 clean_java()
 {
   rm -f bin/*.class
   rm -rf bin/io
-  rm -rf bin/demo
 }
 clean_cpp()
 {
@@ -60,8 +53,8 @@ pre_set()
   CLASSPATH=`pwd`/bin
   export CLASSPATH
   
-#  LD_LIBRARY_PATH=`pwd`/bin
-#  export LD_LIBRARY_PATH
+  LD_LIBRARY_PATH=`pwd`/bin
+  export LD_LIBRARY_PATH
 
 }
 

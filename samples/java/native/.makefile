@@ -30,7 +30,7 @@ $(TARGET): $(OBJ)
 	$(CXX) -c ./native $(CXXFLAGS) $(INCPATH) ${COMMONPATH}/samples/agorasdk/AgoraSdk.cpp
 	mv AgoraSdk.o ./bin
 	
-	$(LINK) ./native/RecordingJni.cpp -o $@ $(LDFLAGS) $(FPIC) $(INCPATH) $(JNIPATH) $(STDFLAGS) ./bin/AgoraSdk.o ./bin/opt_parser.o $(LIB) -I.
+	$(LINK) ./native/AgoraJniProxy.cpp -o $@ $(LDFLAGS) $(FPIC) $(INCPATH) $(JNIPATH) $(STDFLAGS) ./bin/AgoraSdk.o ./bin/opt_parser.o $(LIB) -I.
 	mv $@ ./bin
 
 $(OBJ):

@@ -69,10 +69,11 @@ public class RecordingSample implements RecordingEventHandler{
         // TODO Auto-generated method stub
         String libraryPath = "./librecording.so";
         RecordingSDK RecordingSdk = new RecordingSDK(libraryPath);
+        RecordingSDK RecordingSdk1 = new RecordingSDK(libraryPath);
 
         RecordingSample [] ars = new RecordingSample[2];
         ars[0] = new RecordingSample(RecordingSdk);
-        ars[1] = new RecordingSample(RecordingSdk);
+        ars[1] = new RecordingSample(RecordingSdk1);
       
         new Thread() {
             @Override

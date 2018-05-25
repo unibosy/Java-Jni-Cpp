@@ -724,11 +724,11 @@ JNIEXPORT jboolean JNICALL Java_io_agora_recording_RecordingSDK_leaveChannel
   (JNIEnv *, jobject, jlong nativeObjectRef) {
   cout<<"java call leaveChannel"<<endl;
   jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
-  /*if(!nativeHandle){
+  if(!nativeHandle){
     return JNI_FALSE;
   }
-  nativeHandle->leaveChannel();*/
-  g_bSignalStop = true;
+  nativeHandle->leaveChannel();
+  //g_bSignalStop = true;
   return JNI_TRUE;
 }
 
@@ -1335,14 +1335,14 @@ JNIEXPORT jboolean JNICALL Java_io_agora_recording_RecordingSDK_createChannel(JN
   std::string recordingDir = jniRecorder.getRecorderProperties()->storageDir;
   cout<<"Recording directory is "<<jniRecorder.getRecorderProperties()->storageDir<<endl;
   jniRecorder.setJavaRecordingPath(env, recordingDir);
-  while (!jniRecorder.stopped() && !g_bSignalStop) {
+  while (!jniRecorder.stopped() /*&& !g_bSignalStop*/) {
     usleep(1*1000*1000); //1s
   }
-  if (g_bSignalStop) {
+  /*if (g_bSignalStop) {
     jniRecorder.leaveChannel();
     jniRecorder.release();
     cout<<"jni layer stopped!";
-  }
+  }*/
   jniRecorder.stopJavaProc(env);
   cout<<"Java_io_agora_record_AgoraJavaRecording_createChannel  end"<<endl;
   return JNI_TRUE;

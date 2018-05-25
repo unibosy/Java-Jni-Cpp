@@ -24,6 +24,7 @@ AgoraSdk::AgoraSdk(): IRecordingEngineEventHandler()
 }
 
 AgoraSdk::~AgoraSdk() {
+  cout<<"destructor agorasdk"<<endl;
   if (m_engine) {
     m_engine->release();
   }

@@ -239,11 +239,6 @@ jfieldID AgoraJniProxySdk::safeGetFieldID(JNIEnv* env, jclass clazz, const char*
   jfieldID fid = env->GetFieldID(clazz, name, sig);
   return fid;
 }
-jfieldID AgoraJniProxySdk::safeGetFieldID2(JNIEnv* env, jclass clazz, const char* name, const char* sig) const {
-  jclass jc = env->FindClass("Lio/agora/recording/common/Common$AUDIO_FRAME_TYPE;");
-  jfieldID fid = env->GetFieldID(jc, "type", "I");
-  return fid;
-}
 void AgoraJniProxySdk::cacheAudioPcmFrame(JNIEnv* env){
 }
 void AgoraJniProxySdk::cacheJavaVideoFrameInitMethodIDs(JNIEnv* env, const char* className){
@@ -885,7 +880,7 @@ JNIEXPORT jobject JNICALL Java_io_agora_recording_RecordingSDK_getProperties(JNI
     cout<<"cannot get jclass RecordingEngineProperties!"<<endl;    
     return JNI_FALSE;
   }
-  jmethodID initMid = env->GetMethodID(jc,SG_MTD_INIT,"(Lio/agora/recording/common/Common;)V");
+  jmethodID initMid = env->GetMethodID(jc, SG_MTD_INIT, VOID_PARA_VOID_RETURN);
   if(!initMid){
     cout<<"cannot get RecordingEngineProperties init!"<<endl;
     return JNI_FALSE;
@@ -896,7 +891,7 @@ JNIEXPORT jobject JNICALL Java_io_agora_recording_RecordingSDK_getProperties(JNI
     cout<<"new object failed!"<<endl;
     return JNI_FALSE;
   }
-  jfieldID storageFid = env->GetFieldID(jc, "storageDir", "Ljava/lang/String;");
+  jfieldID storageFid = env->GetFieldID(jc, "storageDir", STRING_SIGNATURE);
   if(!storageFid){
     cout<<"storageDir fid not found!"<<endl;
     return JNI_FALSE;

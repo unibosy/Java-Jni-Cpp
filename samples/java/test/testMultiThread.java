@@ -104,7 +104,7 @@ public class RecordingSample implements RecordingEventHandler{
             }else if(input.equals("stop0")){
                 ars[0].stopService(ars[0].mNativeHandle);
             }else if(input.equals("getprop0")){
-                ars[0].getProperties(ars[0].mNativeHandle);
+                System.out.println(ars[0].getProperties(ars[0].mNativeHandle).GetStorageDir());
             }else if(input.equals("quit1")){
                 ars[1].leaveChannel(ars[1].mNativeHandle);
                 break;
@@ -113,7 +113,7 @@ public class RecordingSample implements RecordingEventHandler{
             }else if(input.equals("stop1")){
                 ars[1].stopService(ars[1].mNativeHandle);
             }else if(input.equals("getprop1")){
-                ars[1].getProperties(ars[1].mNativeHandle);
+                System.out.println(ars[1].getProperties(ars[1].mNativeHandle).GetStorageDir());
             }else if(input.equals("help")){
                 Help();      
             }else{

@@ -53,7 +53,6 @@ public:
   //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
   jmethodID safeGetMethodID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
   jfieldID safeGetFieldID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
-  jfieldID safeGetFieldID2(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
   jobject newGlobalJObject2(JNIEnv* env, jclass jc, jmethodID initMid) const;
 
 public:

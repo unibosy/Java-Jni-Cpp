@@ -5,6 +5,7 @@
 #define BOOL_SIGNATURE "Z"
 #define DOUBLE_SIGNATURE "D"
 #define LONG_PARA_VOID_RETURN "(J)V" 
+#define VOID_PARA_VOID_RETURN "()V" 
 #define EMPTY_PARA_INT_RETURN "()I"
 #define SG_INT "I"
 #define STRING_SIGNATURE "Ljava/lang/String;"

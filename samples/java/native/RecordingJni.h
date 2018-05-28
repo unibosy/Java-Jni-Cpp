@@ -104,15 +104,11 @@ private:
   //define java object
   //video
   jclass mJavaVideoFrameClass;
-  jobject mJavaVideoFrameObject;
   jclass mJavaVideoYuvFrameClass;
-  jobject mJavaVideoYuvFrameObject;
   
   jclass mJavaVideoJpgFrameClass;
-  jobject mJavaVideoJpgFrameObject;
   
   jclass mJavaVideoH264FrameClass;
-  jobject mJavaVideoH264FrameObject;
   
   //type
   jclass mJavaVideoFrameTypeClass;
@@ -122,7 +118,6 @@ private:
 
   //audio
   jclass mJavaAudioFrameClass;
-  jobject mJavaAudioFrameObject;
 
   //pcm field
   jfieldID mJavaAudioAacFrameFid;
@@ -130,17 +125,14 @@ private:
   //pcm
   jclass mJavaAudioPcmFrameClass;
   jmethodID mJavaAudioPcmFrameInitMtd;
-  jobject mJavaAudioPcmFrameObject;
 
   //aac
   jclass mJavaAudioAacFrameClass;
   jmethodID mJavaAudioAacFrameInitMtd;
-  jobject mJavaAudioAacFrameObject;
 
   //AudioFrameType
   jclass mJavaAudioFrameTypeClass;
   jmethodID mJavaAudioFrameTypeInitMtd;
-  jobject mJavaAudioFrameTypeObject;
   jfieldID mJavaAudioFrameTypeFid;
   jfieldID mJavaAudioFrameTypeTypeFid;
 

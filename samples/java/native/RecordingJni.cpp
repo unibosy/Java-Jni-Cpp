@@ -94,27 +94,19 @@ AgoraJniProxySdk::AgoraJniProxySdk():AgoraSdk(){
   mJavaAgoraJavaRecordingClass = NULL;
   mJavaAgoraJavaRecordingObject = NULL;
   mJavaVideoFrameClass = NULL;
-  mJavaVideoFrameObject = NULL;
   mJavaVideoYuvFrameClass = NULL;
-  mJavaVideoYuvFrameObject = NULL;
   mJavaVideoJpgFrameClass = NULL;
-  mJavaVideoJpgFrameObject = NULL;
   mJavaVideoH264FrameClass = NULL;
-  mJavaVideoH264FrameObject = NULL;
   //audio
   mJavaAudioFrameClass = NULL;
-  mJavaAudioFrameObject = NULL;
   mJavaAudioAacFrameClass = NULL;
-  mJavaAudioAacFrameObject = NULL;
   mJavaAudioPcmFrameClass =NULL;
-  mJavaAudioPcmFrameObject =NULL;
 
   mJavaAudioFrameInitMtd = NULL;
   mJavaAudioAacFrameInitMtd = NULL;
   mJavaAudioPcmFrameInitMtd = NULL;
 
   mJavaVideoFrameTypeClass = NULL;
-  mJavaVideoFrameTypeObject = NULL;
   mJavaAudioFrameInitMtd = NULL;
 
 }
@@ -208,7 +200,7 @@ jobject AgoraJniProxySdk::newGlobalJObject2(JNIEnv* env, jclass jc, jmethodID in
     CM_LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJObject but jc or initMid is NULL");
     return NULL;
   }
-  jobject globalJob = env->NewGlobalRef(env->NewObject(mJavaVideoFrameClass, initMid));
+  jobject globalJob = env->NewGlobalRef(env->AllocObject(mJavaVideoFrameClass));
   if(!globalJob){
     CM_LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJObject new global reference failed ");
     return NULL;
@@ -222,7 +214,7 @@ jobject AgoraJniProxySdk::newGlobalJObject(JNIEnv* env, jclass jc, const char* s
     CM_LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJObject cannot get init method for this signature:%s", signature);
     return NULL;
   }
-  jobject globalJob = env->NewGlobalRef(env->NewObject(mJavaVideoFrameClass, initMid));
+  jobject globalJob = env->NewGlobalRef(env->AllocObject(mJavaVideoFrameClass));
   if(!globalJob){
     CM_LOG_DIR(m_logdir.c_str(), ERROR,"newGlobalJObject new global reference failed ");
     return NULL;
@@ -293,26 +285,16 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   if(!init) return;
   mJavaVideoFrameClass = newGlobalJClass(env, CN_VIDEO_FRAME);
   CP(mJavaVideoFrameClass);
-  mJavaVideoFrameObject = newGlobalJObject(env, mJavaVideoFrameClass, SN_MTD_COMMON_INIT);
-  CP(mJavaVideoFrameObject);
   mJavaVideoYuvFrameClass = newGlobalJClass(env, CN_VIDEO_YUV_FRAME);
   CP(mJavaVideoYuvFrameClass);
-  mJavaVideoYuvFrameObject = newGlobalJObject(env, mJavaVideoYuvFrameClass, SN_MTD_VIDEO_YUV_FRAME_INIT); 
-  CP(mJavaVideoYuvFrameObject);
   mJavaVideoJpgFrameClass = newGlobalJClass(env, CN_VIDEO_JPG_FRAME);
   CP(mJavaVideoJpgFrameClass);
-  mJavaVideoJpgFrameObject = newGlobalJObject(env, mJavaVideoJpgFrameClass, SN_MTD_COMMON_INIT);
-  CP(mJavaVideoJpgFrameObject);
   mJavaVideoH264FrameClass = newGlobalJClass(env, CN_VIDEO_H264_FRAME);
   CP(mJavaVideoH264FrameClass);
-  mJavaVideoH264FrameObject = newGlobalJObject(env, mJavaVideoH264FrameClass, SN_MTD_COMMON_INIT);
-  CP(mJavaVideoH264FrameObject);
   mJavaVideoFrameTypeClass = newGlobalJClass(env, CN_VIDEO_FRAME_TYPE);
   CP(mJavaVideoFrameTypeClass);
   mJavaVideoFrameTypeInitMtd = safeGetMethodID(env, mJavaVideoFrameTypeClass, SG_MTD_INIT, SN_MTD_COMMON_INIT); 
   CP(mJavaVideoFrameTypeInitMtd);
-  mJavaVideoFrameTypeObject = newGlobalJObject2(env, mJavaVideoFrameTypeClass, mJavaVideoFrameTypeInitMtd);
-  CP(mJavaVideoFrameTypeObject);
   mJavaVideoFrameTypeTypeFid = safeGetFieldID(env, mJavaVideoFrameTypeClass, MTD_TYPE, SG_INT);
   CP(mJavaVideoFrameTypeTypeFid);
   //audio
@@ -320,8 +302,6 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   CP(mJavaAudioFrameClass);
   mJavaAudioFrameInitMtd = safeGetMethodID(env, mJavaAudioFrameClass, SG_MTD_INIT, SN_MTD_COMMON_INIT);
   CP(mJavaAudioFrameInitMtd);
-  mJavaAudioFrameObject = newGlobalJObject2(env, mJavaAudioFrameClass,  mJavaAudioFrameInitMtd);
-  CP(mJavaAudioFrameObject);
   //java audio receive func
   mJavaRecvAudioMtd = safeGetMethodID(env, mJavaAgoraJavaRecordingClass, CB_FUNC_RECEIVE_AUDIOFRAME, SN_CB_FUNC_RECEIVE_AUDIOFRAME);
   CP(mJavaRecvAudioMtd);
@@ -330,8 +310,6 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   CP(mJavaAudioFrameTypeClass);
   mJavaAudioFrameTypeInitMtd = safeGetMethodID(env, mJavaAudioFrameTypeClass, SG_MTD_INIT, SN_MTD_COMMON_INIT);
   CP(mJavaAudioFrameTypeInitMtd);
-  mJavaAudioFrameTypeObject = newGlobalJObject2(env, mJavaAudioFrameTypeClass,  mJavaAudioFrameTypeInitMtd);
-  CP(mJavaAudioFrameTypeObject);
   //audioFrameType class type fid
   mJavaAudioFrameTypeTypeFid = safeGetFieldID(env, mJavaAudioFrameTypeClass, MTD_TYPE, SG_INT);
   CP(mJavaAudioFrameTypeTypeFid);
@@ -343,15 +321,11 @@ void AgoraJniProxySdk::initJavaObjects(JNIEnv* env, bool init){
   CP(mJavaAudioPcmFrameClass);
   mJavaAudioPcmFrameInitMtd = safeGetMethodID(env, mJavaAudioPcmFrameClass, SG_MTD_INIT, SN_INIT_MTD_AUDIO_FRAME);
   CP(mJavaAudioPcmFrameInitMtd);
-  mJavaAudioPcmFrameObject = newGlobalJObject2(env, mJavaAudioPcmFrameClass,  mJavaAudioPcmFrameInitMtd);
-  CP(mJavaAudioPcmFrameObject);
   //aac
   mJavaAudioAacFrameClass = newGlobalJClass(env, CN_AUDIO_PCM_FRAME);
   CP(mJavaAudioAacFrameClass);
   mJavaAudioAacFrameInitMtd = safeGetMethodID(env, mJavaAudioAacFrameClass, SG_MTD_INIT, SN_INIT_MTD_AUDIO_FRAME);
   CP(mJavaAudioAacFrameInitMtd);
-  mJavaAudioAacFrameObject = newGlobalJObject2(env, mJavaAudioAacFrameClass,  mJavaAudioAacFrameInitMtd);
-  CP(mJavaAudioAacFrameObject);
 }
 
 bool AgoraJniProxySdk::fillAacAllFields(JNIEnv* env, jobject& job, jclass& jc, const agora::linuxsdk::AudioFrame*& frame) const {
@@ -719,11 +693,11 @@ JNIEXPORT jboolean JNICALL Java_io_agora_recording_RecordingSDK_leaveChannel
   (JNIEnv *, jobject, jlong nativeObjectRef) {
   cout<<"java call leaveChannel"<<endl;
   jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
-  if(!nativeHandle){
+  /*if(!nativeHandle){
     return JNI_FALSE;
   }
-  nativeHandle->leaveChannel();
-  //g_bSignalStop = true;
+  nativeHandle->leaveChannel();*/
+  g_bSignalStop = true;
   return JNI_TRUE;
 }
 
@@ -1330,14 +1304,14 @@ JNIEXPORT jboolean JNICALL Java_io_agora_recording_RecordingSDK_createChannel(JN
   std::string recordingDir = jniRecorder.getRecorderProperties()->storageDir;
   cout<<"Recording directory is "<<jniRecorder.getRecorderProperties()->storageDir<<endl;
   jniRecorder.setJavaRecordingPath(env, recordingDir);
-  while (!jniRecorder.stopped() /*&& !g_bSignalStop*/) {
+  while (!jniRecorder.stopped() && !g_bSignalStop) {
     usleep(1*1000*1000); //1s
   }
-  /*if (g_bSignalStop) {
+  if (g_bSignalStop) {
     jniRecorder.leaveChannel();
     jniRecorder.release();
     cout<<"jni layer stopped!";
-  }*/
+  }
   jniRecorder.stopJavaProc(env);
   cout<<"Java_io_agora_record_AgoraJavaRecording_createChannel  end"<<endl;
   return JNI_TRUE;

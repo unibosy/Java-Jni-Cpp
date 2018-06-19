@@ -151,6 +151,7 @@ enum agora_log_module {
     AGORA_LOG_MODULE_ANY = ~0
 };
 
+
 class AudioPcmFrame {
     public:
     AudioPcmFrame(u64_t frame_ms, uint_t sample_rates, uint_t samples);

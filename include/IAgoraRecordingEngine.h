@@ -150,6 +150,7 @@ typedef struct RecordingConfig {
         audioProfile(agora::linuxsdk::AUDIO_PROFILE_DEFAULT),
         defaultVideoBg(NULL),
         defaultUserBg(NULL)
+
     {}
 
     virtual ~RecordingConfig() {}

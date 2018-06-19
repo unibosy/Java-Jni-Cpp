@@ -117,7 +117,9 @@ enum CBObjectMethodId {
   MID_ON_VIDEOFRAME_RECEIVED = 5,
   MID_ON_LEAVECHANNEL = 6,
   MID_ON_ACTIVE_SPEAKER = 7,
-  MID_CBOBJECT_NUM = 8,
+   MID_ON_JOINCHANNEL_SUCCESS = 8,
+  MID_CBOBJECT_NUM = 9,
+ 
 };
 enum ClassMethodId {
   MID_GET_RANDOM_UUID = 0,
@@ -133,7 +135,8 @@ static JavaObjectMethod jCBObjectMethods[] = {
   { MID_ON_AUDIOFRAME_RECEIVED, "audioFrameReceived", "(JILio/agora/recording/common/Common$AudioFrame;)V"},
   { MID_ON_VIDEOFRAME_RECEIVED, "videoFrameReceived","(JILio/agora/recording/common/Common$VideoFrame;I)V"},
   { MID_ON_LEAVECHANNEL, "onLeaveChannel", "(I)V"},
-  { MID_ON_ACTIVE_SPEAKER, "onActiveSpeaker", "(J)V"}
+  { MID_ON_ACTIVE_SPEAKER, "onActiveSpeaker", "(J)V"},
+  { MID_ON_JOINCHANNEL_SUCCESS, "onJoinChannelSuccess", "(Ljava/lang/String;J)V"},
 };
 //video
 enum VIDEOFRAME{

@@ -15,13 +15,6 @@ using std::endl;
 using agora::base::log;
 using namespace jniproxy;
 
-atomic_bool_t g_bSignalStop;
-
-void signal_handler(int signo) {
-  (void)signo;
-  cerr << "Signal " << signo<<endl;
-  g_bSignalStop = true;
-}
 jmethodID AgoraJniProxySdk::mJavaRecvAudioMtd = NULL;
 jmethodID AgoraJniProxySdk::mJavaVideoFrameInitMtd = NULL;
 jmethodID AgoraJniProxySdk::mJavaVideoYuvFrameInitMtd = NULL;
@@ -37,7 +30,6 @@ jfieldID AgoraJniProxySdk::m_VideoJpgFrameFieldIDs[FID_JPGNUM];
 jfieldID AgoraJniProxySdk::m_AudioPcmFrameFieldIDs[FID_PCMNUM];
 jfieldID AgoraJniProxySdk::m_AudioAacFrameFieldIDs[FID_AACNUM];
   
-
 
 template<typename T1, typename T2>
 int AgoraJniProxySdk::staticInitCommonFrameFid(JNIEnv* env, jclass clazz, GETID_TYPE type, T1& src, T2& dest){
@@ -679,6 +671,24 @@ void AgoraJniProxySdk::onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_c
   leaveChannel();
   return;
 }
+
+void AgoraJniProxySdk::onJoinChannelSuccess(const char * channelId, agora::linuxsdk::uid_t uid) {
+  CM_LOG_DIR(m_logdir.c_str(), INFO,"AgoraJniProxySdk onJoinChannelSuccess,channel:%s, uid:%d", channelId, uid);
+  CHECK_PTR_RETURN(mJavaAgoraJavaRecordingClass);
+   AttachThreadScoped ats(g_jvm);
+  JNIEnv* env = ats.env();
+  if (!env) return;
+
+  if(!m_CBObjectMethodIDs[MID_ON_JOINCHANNEL_SUCCESS]) {
+    CM_LOG_DIR(m_logdir.c_str(), INFO, "MID_ON_JOINCHANNEL_SUCCESS not inited!");
+    return;
+  }
+  jstring jstRChannelId = env->NewStringUTF(channelId);
+  env->CallVoidMethod(mJavaAgoraJavaRecordingObject, m_CBObjectMethodIDs[MID_ON_JOINCHANNEL_SUCCESS], jstRChannelId , jlong((long)(uid)));
+  return;
+
+}
+
 JNIEXPORT jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
   g_jvm = jvm;
   return JNI_VERSION_1_4;
@@ -693,11 +703,10 @@ JNIEXPORT jboolean JNICALL Java_io_agora_recording_RecordingSDK_leaveChannel
   (JNIEnv *, jobject, jlong nativeObjectRef) {
   cout<<"java call leaveChannel"<<endl;
   jniproxy::AgoraJniProxySdk* nativeHandle = reinterpret_cast<jniproxy::AgoraJniProxySdk*>(nativeObjectRef);
-  /*if(!nativeHandle){
+  if(!nativeHandle){
     return JNI_FALSE;
   }
-  nativeHandle->leaveChannel();*/
-  g_bSignalStop = true;
+  nativeHandle->leaveChannel();
   return JNI_TRUE;
 }
 
@@ -1012,12 +1021,7 @@ JNIEXPORT jboolean JNICALL Java_io_agora_recording_RecordingSDK_createChannel(JN
   string defaultVideoBgPath;
   string defaultUserBgPath;
   int lang = 1;
-  
-  g_bSignalStop = false;
 
-  signal(SIGQUIT, signal_handler);
-  signal(SIGABRT, signal_handler);
-  signal(SIGINT, signal_handler);
   signal(SIGPIPE, SIG_IGN);
 
   //const char* appId = NULL;
@@ -1304,16 +1308,10 @@ JNIEXPORT jboolean JNICALL Java_io_agora_recording_RecordingSDK_createChannel(JN
   std::string recordingDir = jniRecorder.getRecorderProperties()->storageDir;
   cout<<"Recording directory is "<<jniRecorder.getRecorderProperties()->storageDir<<endl;
   jniRecorder.setJavaRecordingPath(env, recordingDir);
-  while (!jniRecorder.stopped() && !g_bSignalStop) {
+  while (!jniRecorder.stopped() ) {
     usleep(1*1000*1000); //1s
   }
-  if (g_bSignalStop) {
-    jniRecorder.leaveChannel();
-    jniRecorder.release();
-    cout<<"jni layer stopped!";
-  }
-  jniRecorder.stopJavaProc(env);
-  cout<<"Java_io_agora_record_AgoraJavaRecording_createChannel  end"<<endl;
+  cout<<"jni layer stopped! Java_io_agora_record_AgoraJavaRecording_createChannel  end"<<endl;
   return JNI_TRUE;
 }
 

@@ -13,6 +13,8 @@ public interface RecordingEventHandler {
 
 	void onWarning(int warn);
 
+	void onJoinChannelSuccess(String channelId, long uid);
+
 	void onUserOffline(long uid, int reason);
 
     void onUserJoined(long uid, String recordingDir);

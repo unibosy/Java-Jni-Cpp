@@ -18,9 +18,8 @@ public:
   virtual void onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code);
   virtual void onWarning(int warn);
 
-  virtual void onJoinChannelSuccess(const char * channelId, agora::linuxsdk::uid_t uid) {
-    cout<<"AgoraJniProxySdk onJoinChannelSuccess"<<endl;
-  }
+  virtual void onJoinChannelSuccess(const char * channelId, agora::linuxsdk::uid_t uid);
+
   virtual void onLeaveChannel(agora::linuxsdk::LEAVE_PATH_CODE code);
   virtual void onUserJoined(agora::linuxsdk::uid_t uid, agora::linuxsdk::UserJoinInfos &infos);
   virtual void onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk::USER_OFFLINE_REASON_TYPE reason);

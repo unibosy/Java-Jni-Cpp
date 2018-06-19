@@ -19,12 +19,15 @@ public class RecordingSDK {
 	/*
 	 * Brief: load Cpp library
 	 */
-    static {
-        System.loadLibrary("recording");
-    }
-    public RecordingSDK() {
-        recordingEventHandlers = new ArrayList<RecordingEventHandler>();
-    }
+
+	static {
+		System.loadLibrary("recording");
+	}
+
+	public RecordingSDK() {
+		recordingEventHandlers = new ArrayList<RecordingEventHandler>();
+	}
+
 
 	public void registerOberserver(RecordingEventHandler recordingEventHandler) {
 		if (!recordingEventHandlers.contains(recordingEventHandler)) {
@@ -265,5 +268,18 @@ public class RecordingSDK {
 			oberserver.recordingPathCallBack(path);
 		}
 	}
+	/*
+     * Brief: Callback when the user hase successfully joined the specified channel
+     *
+     * @param channelID    channel ID onError
+     * @param uid          User ID
+     *
+     */
+	 private void onJoinChannelSuccess(String channelId, long uid) {
+		for (RecordingEventHandler oberserver : recordingEventHandlers) {
+			oberserver.onJoinChannelSuccess(channelId, uid);
+		}
+	}
+
 
 }

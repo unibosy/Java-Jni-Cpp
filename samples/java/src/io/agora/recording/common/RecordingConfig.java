@@ -6,7 +6,37 @@ import io.agora.recording.common.Common.CHANNEL_PROFILE_TYPE;
 import io.agora.recording.common.Common.REMOTE_VIDEO_STREAM_TYPE;
 import io.agora.recording.common.Common.VIDEO_FORMAT_TYPE;
 
-public class RecordingConfig { 
+public class RecordingConfig {
+  public RecordingConfig() {
+    isAudioOnly = false;
+    isVideoOnly = false;
+    isMixingEnabled = false;
+    mixedVideoAudio = false;
+
+    mixResolution = "";
+    decryptionMode = "";
+    secret = "";
+    appliteDir = "";
+    recordFileRootDir = "";
+    cfgFilePath = "";
+    proxyServer = "";
+    defaultVideoBgPath = "";
+    defaultUserBgPath = "";
+
+    lowUdpPort = 0;//40000;
+    highUdpPort = 0;//40004;
+    idleLimitSec = 300;
+    captureInterval = 5;
+    triggerMode = 0;
+    audioIndicationInterval = 0;
+    audioProfile = 0;
+
+    decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_DEFAULT_TYPE;
+    decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_DEFAULT_TYPE;
+    channelProfile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION;
+    streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
+  }
+
   public boolean isAudioOnly;
   public boolean isVideoOnly;
   public boolean isMixingEnabled;

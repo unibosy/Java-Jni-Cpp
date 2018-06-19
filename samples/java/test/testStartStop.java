@@ -61,8 +61,7 @@ class RecordingSample implements RecordingEventHandler{
 
     public static void main(String[] args) {
         // TODO Auto-generated method stub
-        String libraryPath = "./librecording.so";
-        RecordingSDK RecordingSdk = new RecordingSDK(libraryPath);
+        RecordingSDK RecordingSdk = new RecordingSDK();
 
         RecordingSample ars = new RecordingSample(RecordingSdk);
       

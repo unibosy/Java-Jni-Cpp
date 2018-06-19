@@ -19,20 +19,12 @@ public class RecordingSDK {
 	/*
 	 * Brief: load Cpp library
 	 */
-	public RecordingSDK(String libraryPath) {
-		try {
-			this.loadLibrary(libraryPath);
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		recordingEventHandlers = new ArrayList<RecordingEventHandler>();
-	}
-
-	private void loadLibrary(String libraryPath) throws URISyntaxException {
-		URI uri = getClass().getResource(libraryPath).toURI();
-		String realPath = new File(uri).getAbsolutePath();
-		System.load(realPath);
-	}
+    static {
+        System.loadLibrary("recording");
+    }
+    public RecordingSDK() {
+        recordingEventHandlers = new ArrayList<RecordingEventHandler>();
+    }
 
 	public void registerOberserver(RecordingEventHandler recordingEventHandler) {
 		if (!recordingEventHandlers.contains(recordingEventHandler)) {

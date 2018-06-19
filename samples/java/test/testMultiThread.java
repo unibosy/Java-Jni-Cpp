@@ -67,9 +67,8 @@ public class RecordingSample implements RecordingEventHandler{
 
     public static void main(String[] args) {
         // TODO Auto-generated method stub
-        String libraryPath = "./librecording.so";
-        RecordingSDK RecordingSdk = new RecordingSDK(libraryPath);
-        RecordingSDK RecordingSdk1 = new RecordingSDK(libraryPath);
+        RecordingSDK RecordingSdk = new RecordingSDK();
+        RecordingSDK RecordingSdk1 = new RecordingSDK();
 
         RecordingSample [] ars = new RecordingSample[2];
         ars[0] = new RecordingSample(RecordingSdk);
@@ -555,5 +554,11 @@ public class RecordingSample implements RecordingEventHandler{
     public RecordingEngineProperties getProperties(long nativeHandle) {
         return RecordingSDKInstance.getProperties(nativeHandle);
     }
+
+    public void onJoinChannelSuccess(String channelId, long uid) {
+		System.out.println("RecordingSDK onJoinChannelSuccess:" + channelId+", uid:" + uid);
+    }
+
+
   
 }

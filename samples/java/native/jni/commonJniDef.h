@@ -116,9 +116,8 @@ enum CBObjectMethodId {
   MID_ON_AUDIOFRAME_RECEIVED = 4,
   MID_ON_VIDEOFRAME_RECEIVED = 5,
   MID_ON_LEAVECHANNEL = 6,
-  MID_ON_ACTIVE_SPEAKER = 7,
-   MID_ON_JOINCHANNEL_SUCCESS = 8,
-  MID_CBOBJECT_NUM = 9,
+  MID_ON_JOINCHANNEL_SUCCESS = 7,
+  MID_CBOBJECT_NUM = 8,
  
 };
 enum ClassMethodId {
@@ -135,7 +134,6 @@ static JavaObjectMethod jCBObjectMethods[] = {
   { MID_ON_AUDIOFRAME_RECEIVED, "audioFrameReceived", "(JILio/agora/recording/common/Common$AudioFrame;)V"},
   { MID_ON_VIDEOFRAME_RECEIVED, "videoFrameReceived","(JILio/agora/recording/common/Common$VideoFrame;I)V"},
   { MID_ON_LEAVECHANNEL, "onLeaveChannel", "(I)V"},
-  { MID_ON_ACTIVE_SPEAKER, "onActiveSpeaker", "(J)V"},
   { MID_ON_JOINCHANNEL_SUCCESS, "onJoinChannelSuccess", "(Ljava/lang/String;J)V"},
 };
 //video
@@ -146,7 +144,7 @@ enum VIDEOFRAME{
   MID_JPG = 3
 };
 static JavaObjectMethod jVideoFrameMethods[] = {
-  {MID_INIT, "<init>" "(Lio/agora/recording/common/Common;)V"},
+  {MID_INIT, "<init>", "(Lio/agora/recording/common/Common;)V"},
   {MID_YUV, "yuv", "Lio/agora/recording/common/Common$VideoYuvFrame;"},
   {MID_H264,"h264","Lio/agora/recording/common/Common$VideoH264Frame;"},
   {MID_JPG, "jpg", "Lio/agora/recording/common/Common$VideoJpgFrame;"}

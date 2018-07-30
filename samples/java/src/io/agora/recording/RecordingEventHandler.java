@@ -5,27 +5,25 @@ import io.agora.recording.common.Common.VideoFrame;
 
 public interface RecordingEventHandler {
 
-	void nativeObjectRef(long nativeHandle);
+    void nativeObjectRef(long nativeHandle);
 
-	void onLeaveChannel(int reason);
+    void onLeaveChannel(int reason);
 
-	void onError(int error, int stat_code);
+    void onError(int error, int stat_code);
 
-	void onWarning(int warn);
+    void onWarning(int warn);
 
-	void onJoinChannelSuccess(String channelId, long uid);
+    void onJoinChannelSuccess(String channelId, long uid);
 
-	void onUserOffline(long uid, int reason);
+    void onUserOffline(long uid, int reason);
 
     void onUserJoined(long uid, String recordingDir);
 
-    void onActiveSpeaker(long uid);
-
     void audioFrameReceived(long uid, int type, AudioFrame frame);
 
-	void videoFrameReceived(long uid, int type, VideoFrame frame, int rotation);
+    void videoFrameReceived(long uid, int type, VideoFrame frame, int rotation);
 
-	void stopCallBack();
+    void stopCallBack();
 
-	void recordingPathCallBack(String path);
+    void recordingPathCallBack(String path);
 }

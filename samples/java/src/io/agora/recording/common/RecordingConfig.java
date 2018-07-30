@@ -6,13 +6,11 @@ import io.agora.recording.common.Common.CHANNEL_PROFILE_TYPE;
 import io.agora.recording.common.Common.REMOTE_VIDEO_STREAM_TYPE;
 import io.agora.recording.common.Common.VIDEO_FORMAT_TYPE;
 
-public class RecordingConfig {
+public class RecordingConfig { 
   public RecordingConfig() {
     isAudioOnly = false;
     isVideoOnly = false;
     isMixingEnabled = false;
-    mixedVideoAudio = false;
-
     mixResolution = "";
     decryptionMode = "";
     secret = "";
@@ -20,23 +18,18 @@ public class RecordingConfig {
     recordFileRootDir = "";
     cfgFilePath = "";
     proxyServer = "";
-    defaultVideoBgPath = "";
-    defaultUserBgPath = "";
-
+    
     lowUdpPort = 0;//40000;
     highUdpPort = 0;//40004;
     idleLimitSec = 300;
     captureInterval = 5;
     triggerMode = 0;
-    audioIndicationInterval = 0;
-    audioProfile = 0;
 
     decodeVideo = VIDEO_FORMAT_TYPE.VIDEO_FORMAT_DEFAULT_TYPE;
     decodeAudio = AUDIO_FORMAT_TYPE.AUDIO_FORMAT_DEFAULT_TYPE;
     channelProfile = CHANNEL_PROFILE_TYPE.CHANNEL_PROFILE_COMMUNICATION;
     streamType = REMOTE_VIDEO_STREAM_TYPE.REMOTE_VIDEO_STREAM_HIGH;
   }
-
   public boolean isAudioOnly;
   public boolean isVideoOnly;
   public boolean isMixingEnabled;
@@ -55,14 +48,10 @@ public class RecordingConfig {
   public int highUdpPort;
   public int idleLimitSec;
   public int captureInterval;
-  public int audioIndicationInterval;
   //channelProfile:0 braodacast, 1:communicate; default is 1
   public CHANNEL_PROFILE_TYPE channelProfile;
-  //streamType:0:get low stream 1:get high stream; default is 0
+  //streamType:0:get high stream 1:get low stream; default is 0
   public REMOTE_VIDEO_STREAM_TYPE streamType;
   public int triggerMode;
   public String proxyServer; //format ipv4:port
-  public int audioProfile;
-  public String defaultVideoBgPath;
-  public String defaultUserBgPath;
 }

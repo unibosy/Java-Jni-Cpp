@@ -25,7 +25,6 @@ public:
   virtual void onUserOffline(agora::linuxsdk::uid_t uid, agora::linuxsdk::USER_OFFLINE_REASON_TYPE reason);
   virtual void audioFrameReceived(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const;
   virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
-  virtual void onActiveSpeaker(unsigned int uid);
 
   void setJobAgoraJavaRecording(jobject job){
     mJavaAgoraJavaRecordingObject = job;
@@ -52,6 +51,7 @@ public:
   //void cacheJavaCBFuncMethodIDs4YUV(JNIEnv* env, const char* className);
   jmethodID safeGetMethodID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
   jfieldID safeGetFieldID(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
+  jfieldID safeGetFieldID2(JNIEnv* env, jclass clazz, const char* name, const char* sig) const;
   jobject newGlobalJObject2(JNIEnv* env, jclass jc, jmethodID initMid) const;
 
 public:
@@ -103,11 +103,15 @@ private:
   //define java object
   //video
   jclass mJavaVideoFrameClass;
+  jobject mJavaVideoFrameObject;
   jclass mJavaVideoYuvFrameClass;
+  jobject mJavaVideoYuvFrameObject;
   
   jclass mJavaVideoJpgFrameClass;
+  jobject mJavaVideoJpgFrameObject;
   
   jclass mJavaVideoH264FrameClass;
+  jobject mJavaVideoH264FrameObject;
   
   //type
   jclass mJavaVideoFrameTypeClass;
@@ -117,6 +121,7 @@ private:
 
   //audio
   jclass mJavaAudioFrameClass;
+  jobject mJavaAudioFrameObject;
 
   //pcm field
   jfieldID mJavaAudioAacFrameFid;
@@ -124,14 +129,17 @@ private:
   //pcm
   jclass mJavaAudioPcmFrameClass;
   jmethodID mJavaAudioPcmFrameInitMtd;
+  jobject mJavaAudioPcmFrameObject;
 
   //aac
   jclass mJavaAudioAacFrameClass;
   jmethodID mJavaAudioAacFrameInitMtd;
+  jobject mJavaAudioAacFrameObject;
 
   //AudioFrameType
   jclass mJavaAudioFrameTypeClass;
   jmethodID mJavaAudioFrameTypeInitMtd;
+  jobject mJavaAudioFrameTypeObject;
   jfieldID mJavaAudioFrameTypeFid;
   jfieldID mJavaAudioFrameTypeTypeFid;
 

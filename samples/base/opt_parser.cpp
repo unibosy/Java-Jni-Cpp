@@ -8,7 +8,7 @@
 
 #if (defined(_WIN32) || defined(_WIN64)) && !defined(__GNUC__)
 enum {ERROR=-1, INFO=0, WARNING, FATAL};
-#define CM_LOG(level, fmt, ...) fprintf(stderr, #level fmt "\n", __VA_ARGS__)
+#define LOG(level, fmt, ...) fprintf(stderr, #level fmt "\n", __VA_ARGS__)
 #define strtoll _strtoi64
 #define strtoull _strtoui64
 #else
@@ -39,7 +39,7 @@ struct option {
 int getopt_long_only(int argc, char *const argv[], const char *short_opts,
     const option *long_opts, int *index) {
   if (short_opts && *short_opts != '\0') {
-    CM_LOG(ERROR, "short options have not been implemented yet!");
+    LOG(ERROR, "short options have not been implemented yet!");
     return -1;
   }
 
@@ -88,12 +88,12 @@ opt_parser::opt_parser():sequence_(0)
 {}
 bool opt_parser::insert_long_opt(internal_opt &opt, const char *long_opt) {
   if (!long_opt) {
-    CM_LOG(ERROR, "A full parameter should be supplied!");
+    LOG(ERROR, "A full parameter should be supplied!");
     return false;
   }
 
   if (long_opts_.count(long_opt) > 0) {
-    CM_LOG(ERROR, "{%s} has been occupied yet!", long_opt);
+    LOG(ERROR, "{%s} has been occupied yet!", long_opt);
     return false;
   }
   if(opt.help == NULL || !strlen(opt.help))
@@ -237,7 +237,7 @@ bool opt_parser::add_long_opt(const char *long_opt, mac_addr *store,
 bool opt_parser::parse_ipv4(const char *arg, ipv4 *ip) {
   uint8_t (&a)[4] = ip->repr;
   if (sscanf(arg, "%hhu.%hhu.%hhu.%hhu", &a[0], &a[1], &a[2], &a[3]) != 4) {
-    CM_LOG(ERROR, "Illegal IP Format: %s", arg);
+    LOG(ERROR, "Illegal IP Format: %s", arg);
     return false;
   }
 
@@ -248,7 +248,7 @@ bool opt_parser::parse_mac_addr(const char *arg, mac_addr *addr) {
   uint8_t (&b)[6] = addr->addr_bytes;
   if (sscanf(arg, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &b[0], &b[1],
         &b[2], &b[3], &b[4], &b[5]) != 6) {
-    CM_LOG(ERROR, "Illegal ethernet physical address: %s", arg);
+    LOG(ERROR, "Illegal ethernet physical address: %s", arg);
     return false;
   }
 
@@ -259,7 +259,7 @@ bool opt_parser::fill_arg(const char *opt_name, const internal_opt &opt,
     const char *opt_arg) {
 
   if (opt_arg == NULL) {
-    CM_LOG(ERROR, "No argument available for %s", opt_name);
+    LOG(ERROR, "No argument available for %s", opt_name);
     return false;
   }
 
@@ -269,7 +269,7 @@ bool opt_parser::fill_arg(const char *opt_name, const internal_opt &opt,
   case kBool: {
     unsigned long n = strtoul(opt_arg, &end_ptr, 10);
     if (*end_ptr != '\0') {
-      CM_LOG(ERROR, "Invalid integer argument: %s", opt_arg);
+      LOG(ERROR, "Invalid integer argument: %s", opt_arg);
       return false;
     }
     *opt.bool_ptr = n? true:false;
@@ -279,7 +279,7 @@ bool opt_parser::fill_arg(const char *opt_name, const internal_opt &opt,
   case kInt32:  {
     long n = strtol(opt_arg, &end_ptr, 10);
     if (*end_ptr != '\0') {
-      CM_LOG(ERROR, "Invalid integer argument: %s", opt_arg);
+      LOG(ERROR, "Invalid integer argument: %s", opt_arg);
       return false;
     }
     *opt.int32_ptr = int32_t(n);
@@ -288,7 +288,7 @@ bool opt_parser::fill_arg(const char *opt_name, const internal_opt &opt,
   case kUInt32:  {
     unsigned long n = strtoul(opt_arg, &end_ptr, 10);
     if (*end_ptr != '\0') {
-      CM_LOG(ERROR, "Invalid integer argument: %s", opt_arg);
+      LOG(ERROR, "Invalid integer argument: %s", opt_arg);
       return false;
     }
     *opt.uint32_ptr = uint32_t(n);
@@ -297,7 +297,7 @@ bool opt_parser::fill_arg(const char *opt_name, const internal_opt &opt,
   case kInt64:  {
     long long n = strtoll(opt_arg, &end_ptr, 10);
     if (*end_ptr != '\0') {
-      CM_LOG(ERROR, "Invalid integer argument: %s", opt_arg);
+      LOG(ERROR, "Invalid integer argument: %s", opt_arg);
       return false;
     }
     *opt.int64_ptr = int64_t(n);
@@ -306,7 +306,7 @@ bool opt_parser::fill_arg(const char *opt_name, const internal_opt &opt,
   case kUInt64:  {
     unsigned long long n = strtoull(opt_arg, &end_ptr, 10);
     if (*end_ptr != '\0') {
-      CM_LOG(ERROR, "Invalid integer argument: %s", opt_arg);
+      LOG(ERROR, "Invalid integer argument: %s", opt_arg);
       return false;
     }
     *opt.uint64_ptr = uint64_t(n);
@@ -315,7 +315,7 @@ bool opt_parser::fill_arg(const char *opt_name, const internal_opt &opt,
   case kDouble: {
     double n = strtod(opt_arg, &end_ptr);
     if (*end_ptr != '\0') {
-      CM_LOG(ERROR, "Invalid double argument: %s", opt_arg);
+      LOG(ERROR, "Invalid double argument: %s", opt_arg);
       return false;
     }
     *opt.double_ptr = n;
@@ -411,12 +411,12 @@ bool opt_parser::parse_opts(int argc, char* const argv[]) {
   
 
   if (index < argc) {
-    CM_LOG(ERROR, "Unrecognized option argument: %s", argv[index]);
+    LOG(ERROR, "Unrecognized option argument: %s", argv[index]);
     return false;
   }
 
   if (ret != -1) {
-    CM_LOG(ERROR, "Unregconized option argument %s", argv[index - 1]);
+    LOG(ERROR, "Unregconized option argument %s", argv[index - 1]);
     return false;
   }
 

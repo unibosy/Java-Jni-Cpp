@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <string>
-#include <syslog.h>
 
 namespace agora {
 namespace linuxsdk {
@@ -126,32 +125,6 @@ enum LANGUAGE_TYPE {
     CPP_LANG = 0,
     JAVA_LANG = 1
 };
-enum AUDIO_PROFILE_TYPE {
-    AUDIO_PROFILE_DEFAULT = 0, //use default settings.
-    AUDIO_PROFILE_HIGH_QUALITY = 1, //48khz, 128kbps, mono, music
-    AUDIO_PROFILE_HIGH_QUALITY_STEREO = 2, //48khz, 192kbps, stereo, music
-};
-
-enum agora_log_level {
-    AGORA_LOG_LEVEL_FATAL = LOG_CRIT,
-    AGORA_LOG_LEVEL_ERROR = LOG_ERR,
-    AGORA_LOG_LEVEL_WARN = LOG_WARNING,
-    AGORA_LOG_LEVEL_NOTICE = LOG_NOTICE,
-    AGORA_LOG_LEVEL_INFO = LOG_INFO,
-    AGORA_LOG_LEVEL_DEBUG = LOG_DEBUG
-};
-
-enum agora_log_module {
-    AGORA_LOG_MODULE_MEDIA_FILE = 0x1,
-    AGORA_LOG_MODULE_RECORDING_ENGINE = 0x2,
-    AGORA_LOG_MODULE_RTMP_RENDER = 0x4,
-    AGORA_LOG_MODULE_IPC = 0x8,
-    AGORA_LOG_MODULE_CORE_SERVICE_HANDLER = 0x10,
-    AGORA_LOG_MODULE_COMMON = 0x20,
-    AGORA_LOG_MODULE_ANY = ~0
-};
-
-
 class AudioPcmFrame {
     public:
     AudioPcmFrame(u64_t frame_ms, uint_t sample_rates, uint_t samples);

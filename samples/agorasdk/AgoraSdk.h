@@ -24,12 +24,6 @@ using agora::base::opt_parser;
 using agora::linuxsdk::VideoFrame;
 using agora::linuxsdk::AudioFrame;
 
-enum LAYOUT_MODE_TYPE {
-    DEFAULT_LAYOUT = 0,
-    BESTFIT_LAYOUT = 1,
-    VERTICALPRESENTATION_LAYOUT = 2,
-};
-
 
 struct MixModeSettings {
     int m_height;
@@ -61,19 +55,12 @@ class AgoraSdk : virtual public agora::recording::IRecordingEngineEventHandler {
         }
         virtual const agora::recording::RecordingEngineProperties* getRecorderProperties();
         virtual void updateStorageDir(const char* dir) { m_storage_dir = dir? dir:"./"; }
-        virtual void updateLayoutSetting(int layoutMode, int maxVertPreLayoutUid) {
-            m_layoutMode = static_cast<LAYOUT_MODE_TYPE >(layoutMode);
-            m_maxVertPreLayoutUid = maxVertPreLayoutUid;
-        }
 
         virtual int startService();
         virtual int stopService();
 
         virtual int setVideoMixingLayout(const agora::linuxsdk::VideoMixingLayout &layout);
         virtual agora::recording::RecordingConfig* getConfigInfo() { return &m_config;}
-        virtual int setUserBackground(agora::linuxsdk::uid_t uid, const char* image_path);
-        virtual void setLogLevel(agora::linuxsdk::agora_log_level level);
-        virtual void enableLogModule(uint32_t modules, bool enable);
     protected:
         virtual void onError(int error, agora::linuxsdk::STAT_CODE_TYPE stat_code) {
             onErrorImpl(error, stat_code);
@@ -102,27 +89,6 @@ class AgoraSdk : virtual public agora::recording::IRecordingEngineEventHandler {
         virtual void videoFrameReceived(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const {
             videoFrameReceivedImpl(uid, frame);
         }
-        virtual void onActiveSpeaker(uid_t uid) {
-            onActiveSpeakerImpl(uid);
-        }
-    private:
-        void adjustDefaultVideoLayout(agora::linuxsdk::VideoMixingLayout::Region * regionList);
-        void adjustBestFitVideoLayout(agora::linuxsdk::VideoMixingLayout::Region * regionList);
-        void adjustVerticalPresentationLayout(unsigned int maxResolutionUid, agora::linuxsdk::VideoMixingLayout::Region * regionList);
-
-        void adjustVideo5Layout(unsigned int maxResolutionUid, agora::linuxsdk::VideoMixingLayout::Region * regionList);
-        void adjustVideo7Layout(unsigned int maxResolutionUid, agora::linuxsdk::VideoMixingLayout::Region * regionList);
-        void adjustVideo9Layout(unsigned int maxResolutionUid, agora::linuxsdk::VideoMixingLayout::Region * regionList);
-        void adjustVideo17Layout(unsigned int maxResolutionUid, agora::linuxsdk::VideoMixingLayout::Region * regionList);
-
-        void changeToVideo7Layout(unsigned int maxResolutionUid, agora::linuxsdk::VideoMixingLayout::Region * regionList);
-        void changeToVideo9Layout(unsigned int maxResolutionUid, agora::linuxsdk::VideoMixingLayout::Region * regionList);
-        void changeToVideo17Layout(unsigned int maxResolutionUid, agora::linuxsdk::VideoMixingLayout::Region * regionList);
-
-        void adjustBestFitLayout_2(agora::linuxsdk::VideoMixingLayout::Region * regionList);
-        void adjustBestFitLayout_Square(agora::linuxsdk::VideoMixingLayout::Region * regionList, int nSquare);
-        void adjustBestFitLayout_17(agora::linuxsdk::VideoMixingLayout::Region * regionList);
-        void setMaxResolutionUid(int number, unsigned int maxResolutionUid, agora::linuxsdk::VideoMixingLayout::Region * regionList, double weight_ratio);
 
 
     protected:
@@ -137,7 +103,6 @@ class AgoraSdk : virtual public agora::recording::IRecordingEngineEventHandler {
 
         void audioFrameReceivedImpl(unsigned int uid, const agora::linuxsdk::AudioFrame *frame) const;
         void videoFrameReceivedImpl(unsigned int uid, const agora::linuxsdk::VideoFrame *frame) const;
-        void onActiveSpeakerImpl(uid_t uid);
 
     protected:
         atomic_bool_t m_stopped;
@@ -147,11 +112,6 @@ class AgoraSdk : virtual public agora::recording::IRecordingEngineEventHandler {
         MixModeSettings m_mixRes;
         agora::recording::RecordingConfig m_config;
         agora::recording::IRecordingEngine *m_engine;
-        agora::linuxsdk::agora_log_level m_level;
-        uint32_t m_logModules;
-        LAYOUT_MODE_TYPE m_layoutMode;
-        int m_maxVertPreLayoutUid;
-
 };
 
 

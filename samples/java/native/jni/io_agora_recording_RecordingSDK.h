@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     io_agora_recording_RecordingSDK
  * Method:    createChannel
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILio/agora/recording/common/RecordingConfig;II)Z
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILio/agora/recording/common/RecordingConfig;)Z
  */
 JNIEXPORT jboolean JNICALL Java_io_agora_recording_RecordingSDK_createChannel
-  (JNIEnv *, jobject, jstring, jstring, jstring, jint, jobject, jint, jint);
+  (JNIEnv *, jobject, jstring, jstring, jstring, jint, jobject);
 
 /*
  * Class:     io_agora_recording_RecordingSDK
@@ -54,30 +54,6 @@ JNIEXPORT jint JNICALL Java_io_agora_recording_RecordingSDK_stopService
  */
 JNIEXPORT jobject JNICALL Java_io_agora_recording_RecordingSDK_getProperties
   (JNIEnv *, jobject, jlong);
-
-/*
- * Class:     io_agora_recording_RecordingSDK
- * Method:    setUserBackground
- * Signature: (JILjava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_io_agora_recording_RecordingSDK_setUserBackground
-  (JNIEnv *, jobject, jlong, jint, jstring);
-
-/*
- * Class:     io_agora_recording_RecordingSDK
- * Method:    setLogLevel
- * Signature: (JI)V
- */
-JNIEXPORT void JNICALL Java_io_agora_recording_RecordingSDK_setLogLevel
-  (JNIEnv *, jobject, jlong, jint);
-
-/*
- * Class:     io_agora_recording_RecordingSDK
- * Method:    enableLogModule
- * Signature: (JII)V
- */
-JNIEXPORT void JNICALL Java_io_agora_recording_RecordingSDK_enableLogModule
-  (JNIEnv *, jobject, jlong, jint, jint);
 
 #ifdef __cplusplus
 }

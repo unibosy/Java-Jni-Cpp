@@ -473,15 +473,11 @@ class RecordingSample implements RecordingEventHandler{
         config.lowUdpPort = lowUdpPort;
         config.highUdpPort = highUdpPort;
         config.captureInterval = captureInterval;
-        config.audioIndicationInterval = audioIndicationInterval;
         config.decodeAudio = AUDIO_FORMAT_TYPE.values()[getAudioFrame];
         config.decodeVideo = VIDEO_FORMAT_TYPE.values()[getVideoFrame];
         config.streamType = REMOTE_VIDEO_STREAM_TYPE.values()[streamType];
         config.triggerMode = triggerMode;
         config.proxyServer = proxyServer;
-        config.audioProfile = audioProfile;
-        config.defaultVideoBgPath = defaultVideoBgPath;
-        config.defaultUserBgPath = defaultUserBgPath;
 
 		/*
 		 * change log_config Facility per your specific purpose like
@@ -509,7 +505,7 @@ class RecordingSample implements RecordingEventHandler{
 			this.kbps = Integer.valueOf(sourceStrArray[3]).intValue();
 		}
 		// run jni event loop , or start a new thread to do it
-		RecordingSDKInstance.createChannel(appId, channelKey, name, uid, config, logLevel, logModule);
+		RecordingSDKInstance.createChannel(appId, channelKey, name, uid, config);
 		System.out.println("jni layer has been exited...");
 	}
 
@@ -527,6 +523,9 @@ class RecordingSample implements RecordingEventHandler{
 
     public RecordingEngineProperties getProperties(long nativeHandle) {
         return RecordingSDKInstance.getProperties(nativeHandle);
+    }
+    public void onJoinChannelSuccess(String channelId, long uid) {
+        System.out.println("onJoinChannelSuccess, channelId:"+channelId+",uid:"+uid);
     }
   
 }

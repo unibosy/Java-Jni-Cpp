@@ -1311,6 +1311,7 @@ JNIEXPORT jboolean JNICALL Java_io_agora_recording_RecordingSDK_createChannel(JN
   while (!jniRecorder.stopped() ) {
     usleep(1*1000*1000); //1s
   }
+  jniRecorder.stopJavaProc(env);
   cout<<"jni layer stopped! Java_io_agora_record_AgoraJavaRecording_createChannel  end"<<endl;
   return JNI_TRUE;
 }

@@ -27,7 +27,10 @@ import io.agora.recording.common.RecordingEngineProperties;
 import io.agora.recording.RecordingSDK;
 import io.agora.recording.RecordingEventHandler;
 
-public class RecordingSample implements RecordingEventHandler {
+
+import java.util.Scanner;
+
+class RecordingSample implements RecordingEventHandler{
 	// java run status flag
 	private boolean isMixMode = false;
 	private int width = 0;
@@ -36,22 +39,68 @@ public class RecordingSample implements RecordingEventHandler {
 	private int kbps = 0;
 	private String storageDir = "./";
 	private long aCount = 0;
+	private long count = 0;
 	private long size = 0;
+    private boolean stopped = false;
 	private CHANNEL_PROFILE_TYPE profile_type;
 	Vector<Long> m_peers = new Vector<Long>();
 	private long mNativeHandle = 0;
 	private RecordingSDK RecordingSDKInstance = null;
 
-	public RecordingSample(RecordingSDK recording) {
-		this.RecordingSDKInstance = recording;
-		RecordingSDKInstance.registerOberserver(this);
-	}
+    public RecordingSample(RecordingSDK recording) {
+        this.RecordingSDKInstance = recording;
+        RecordingSDKInstance.registerOberserver(this);
+    }
+
+    private static void Help(){
+        System.out.println("Type \"start\" to start recording!(Only valid when \"triggerMode=1\")");
+        System.out.println("Type \"stop\" to stop recording!(Only valid when \"triggerMode=1\")");
+        System.out.println("Type \"getprop\" to call getProperties api!");
+        System.out.println("Type \"quit\" to leave recording channel!");
+    }
 
     public static void main(String[] args) {
-        //should config -Djava.library.path to load library
+        // TODO Auto-generated method stub
         RecordingSDK RecordingSdk = new RecordingSDK();
+
         RecordingSample ars = new RecordingSample(RecordingSdk);
-        ars.createChannel(args);
+      
+        new Thread() {
+            @Override
+            public void run() {
+                ars.createChannel(args);
+            }
+        }.start();
+
+
+       Scanner scn=new Scanner(System.in);
+        while(true) {
+            String input = scn.nextLine();
+            if(ars.stopped){
+                System.out.println("Jni layer has been exited,now exiting Java...!");
+                break;
+            }
+            if(input.equals("quit")){
+                ars.leaveChannel(ars.mNativeHandle);
+            }else if(input.equals("start")){
+                ars.startService(ars.mNativeHandle);
+            }else if(input.equals("stop")){
+                ars.stopService(ars.mNativeHandle);
+            }else if(input.equals("getprop")){
+                ars.getProperties(ars.mNativeHandle);
+            }else if(input.equals("help")){
+                Help();      
+            }else{
+                System.out.println("Undefined command:"+input+"  Try \"help\"");
+            }
+            try{
+                Thread.currentThread().sleep(1000);//sleep 1s
+            }catch(InterruptedException ie){
+                System.out.println("exception throwed!");
+            }
+        }
+        System.out.println("exit java process...");
+        
         ars.unRegister();
     }
 
@@ -72,16 +121,13 @@ public class RecordingSample implements RecordingEventHandler {
 	}
 
 	public void onError(int error, int stat_code) {
+        stopped =true;
 		System.out.println("RecordingSDK onError,error:" + error + ",stat code:" + stat_code);
 	}
 
-    public void onWarning(int warn) {
-        System.out.println("RecordingSDK onWarning,warn:" + warn);
-    }
-
-    public void onJoinChannelSuccess(String channelId, long uid) {
-        System.out.println("RecordingSDK joinChannel success, channelId:" + channelId +", uid:" + uid);
-    }
+	public void onWarning(int warn) {
+		System.out.println("RecordingSDK onWarning,warn:" + warn);
+	}
 
 	public void onUserOffline(long uid, int reason) {
 		System.out.println("RecordingSDK onUserOffline uid:" + uid + ",offline reason:" + reason);
@@ -98,6 +144,10 @@ public class RecordingSample implements RecordingEventHandler {
 		// When the user joined, we can re-layout the canvas
 		SetVideoMixingLayout();
 	}
+
+    public void onActiveSpeaker(long uid) {
+        System.out.println("User:"+uid+"is speaking");
+    }
 
 	public void audioFrameReceived(long uid, int type, AudioFrame frame) {
 		// System.out.println("java demo
@@ -145,6 +195,7 @@ public class RecordingSample implements RecordingEventHandler {
 	 * Brief: Callback when JNI layer exited
 	 */
 	public void stopCallBack() {
+        stopped =true;
 		System.out.println("java demo receive stop from JNI ");
 	}
 
@@ -268,6 +319,8 @@ public class RecordingSample implements RecordingEventHandler {
         String recordFileRootDir = "";
         String cfgFilePath = "";
         String proxyServer = "";
+        String defaultVideoBgPath = "";
+        String defaultUserBgPath = "";
 
 
 		int lowUdpPort = 0;// 40000;
@@ -284,10 +337,16 @@ public class RecordingSample implements RecordingEventHandler {
         int captureInterval = 5;
         int triggerMode = 0;
 
+        int audioIndicationInterval = 0;
+        int logLevel = 6;
+        int logModule = 0xFF;
+
         int width = 0;
         int height = 0;
 		int fps = 0;
         int kbps = 0;
+        int count = 0;
+        int audioProfile = 0;
 
 		// paser command line parameters
 		if (args.length % 2 != 0) {
@@ -328,11 +387,19 @@ public class RecordingSample implements RecordingEventHandler {
 		Object CfgFilePath = map.get("--cfgFilePath");
 		Object StreamType = map.get("--streamType");
 		Object TriggerMode = map.get("--triggerMode");
-		Object ProxyServer = map.get("--proxyServer");
+
+        Object ProxyServer = map.get("--proxyServer");
+        Object AudioProfile = map.get("--audioProfile");
+        Object DefaultVideoBg = map.get("--defaultVideoBg");
+        Object DefaultUserBg = map.get("--defaultUserBg");
+        Object LogLevel = map.get("--logLevel");
+        Object LogModule = map.get("--logModule");
+        Object AudioIndicationInterval = map.get("--audioIndicationInterval");
+
 
 		if (Appid == null || Uid == null || Channel == null || AppliteDir == null) {
 			// print usage
-            String usage = "java RecordingSDK --appId STRING --uid UINTEGER32 --channel STRING --appliteDir STRING --channelKey STRING --channelProfile UINTEGER32 --isAudioOnly --isVideoOnly --isMixingEnabled --mixResolution STRING --mixedVideoAudio --decryptionMode STRING --secret STRING --idle INTEGER32 --recordFileRootDir STRING --lowUdpPort INTEGER32 --highUdpPort INTEGER32 --getAudioFrame UINTEGER32 --getVideoFrame UINTEGER32 --captureInterval INTEGER32 --cfgFilePath STRING --streamType UINTEGER32 --triggerMode INTEGER32 \r\n --appId     (App Id/must) \r\n --uid     (User Id default is 0/must)  \r\n --channel     (Channel Id/must) \r\n --appliteDir     (directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Server_SDK_for_Linux_FULL/bin/' folder/must) \r\n --channelKey     (channelKey/option)\r\n --channelProfile     (channel_profile:(0:COMMUNICATION),(1:broadcast) default is 0/option)  \r\n --isAudioOnly     (Default 0:A/V, 1:AudioOnly (0:1)/option) \r\n --isVideoOnly     (Default 0:A/V, 1:VideoOnly (0:1)/option)\r\n --isMixingEnabled     (Mixing Enable? (0:1)/option)\r\n --mixResolution     (change default resolution for vdieo mix mode/option)                 \r\n --mixedVideoAudio     (mixVideoAudio:(0:seperated Audio,Video) (1:mixed Audio & Video), default is 0 /option)                 \r\n --decryptionMode     (decryption Mode, default is NULL/option)                 \r\n --secret     (input secret when enable decryptionMode/option)                 \r\n --idle     (Default 300s, should be above 3s/option)                 \r\n --recordFileRootDir     (recording file root dir/option)                 \r\n --lowUdpPort     (default is random value/option)                 \r\n --highUdpPort     (default is random value/option)                 \r\n --getAudioFrame     (default 0 (0:save as file, 1:aac frame, 2:pcm frame, 3:mixed pcm frame) (Can't combine with isMixingEnabled) /option)                 \r\n --getVideoFrame     (default 0 (0:save as file, 1:h.264, 2:yuv, 3:jpg buffer, 4:jpg file, 5:jpg file and video file) (Can't combine with isMixingEnabled) /option)              \r\n --captureInterval     (default 5 (Video snapshot interval (second)))                 \r\n --cfgFilePath     (config file path / option)                 \r\n --streamType     (remote video stream type(0:STREAM_HIGH,1:STREAM_LOW), default is 0/option)  \r\n --triggerMode     (triggerMode:(0: automatically mode, 1: manually mode) default is 0/option) \r\n --proxyServer    (proxyServer:format ip:port, eg,\"127.0.0.1:1080\"/option) \r\n";      
+            String usage = "java RecordingSDK --appId STRING --uid UINTEGER32 --channel STRING --appliteDir STRING --channelKey STRING --channelProfile UINTEGER32 --isAudioOnly --isVideoOnly --isMixingEnabled --mixResolution STRING --mixedVideoAudio --decryptionMode STRING --secret STRING --idle INTEGER32 --recordFileRootDir STRING --lowUdpPort INTEGER32 --highUdpPort INTEGER32 --getAudioFrame UINTEGER32 --getVideoFrame UINTEGER32 --captureInterval INTEGER32 --cfgFilePath STRING --streamType UINTEGER32 --triggerMode INTEGER32 \r\n --appId     (App Id/must) \r\n --uid     (User Id default is 0/must)  \r\n --channel     (Channel Id/must) \r\n --appliteDir     (directory of app lite 'AgoraCoreService', Must pointer to 'Agora_Server_SDK_for_Linux_FULL/bin/' folder/must) \r\n --channelKey     (channelKey/option)\r\n --channelProfile     (channel_profile:(0:COMMUNICATION),(1:broadcast) default is 0/option)  \r\n --isAudioOnly     (Default 0:A/V, 1:AudioOnly (0:1)/option) \r\n --isVideoOnly     (Default 0:A/V, 1:VideoOnly (0:1)/option)\r\n --isMixingEnabled     (Mixing Enable? (0:1)/option)\r\n --mixResolution     (change default resolution for vdieo mix mode/option)                 \r\n --mixedVideoAudio     (mixVideoAudio:(0:seperated Audio,Video) (1:mixed Audio & Video), default is 0 /option)                 \r\n --decryptionMode     (decryption Mode, default is NULL/option)                 \r\n --secret     (input secret when enable decryptionMode/option)                 \r\n --idle     (Default 300s, should be above 3s/option)                 \r\n --recordFileRootDir     (recording file root dir/option)                 \r\n --lowUdpPort     (default is random value/option)                 \r\n --highUdpPort     (default is random value/option)                 \r\n --getAudioFrame     (default 0 (0:save as file, 1:aac frame, 2:pcm frame, 3:mixed pcm frame) (Can't combine with isMixingEnabled) /option)                 \r\n --getVideoFrame     (default 0 (0:save as file, 1:h.264, 2:yuv, 3:jpg buffer, 4:jpg file, 5:jpg file and video file) (Can't combine with isMixingEnabled) /option)              \r\n --captureInterval     (default 5 (Video snapshot interval (second)))                 \r\n --cfgFilePath     (config file path / option)                 \r\n --streamType     (remote video stream type(0:STREAM_HIGH,1:STREAM_LOW), default is 0/option)  \r\n --triggerMode     (triggerMode:(0: automatically mode, 1: manually mode) default is 0/option) \r\n --proxyServer     proxyServer:format ip:port, eg,\"127.0.0.1:1080\"/option \r\n --defaultVideoBg    (default user background image path/option) \r\n --defaultUserBg (default user background image path/option))  \r\n --audioProfile (audio profile(0: standard single channel, 1: high quality single channel, 2: high quality two channels) defualt is 0/option)   \r\n --logLevel (log level default INFO/option) \r\n --logModule (log modules. default ALL/option) \r\n --audioIndicationInterval(0: no indication, audio indication interval(ms))efault is 0/option)";      
             System.out.println("Usage:" + usage);
             return;
         }
@@ -378,9 +445,17 @@ public class RecordingSample implements RecordingEventHandler {
             streamType = Integer.parseInt(String.valueOf(StreamType));
         if (CaptureInterval != null)
             captureInterval = Integer.parseInt(String.valueOf(CaptureInterval));
+        if(AudioIndicationInterval != null) audioIndicationInterval = Integer.parseInt(String.valueOf(AudioIndicationInterval));
         if(TriggerMode != null) triggerMode = Integer.parseInt(String.valueOf(TriggerMode));
         if(ProxyServer != null) proxyServer = String.valueOf(ProxyServer);
+        if(AudioProfile != null) audioProfile = Integer.parseInt(String.valueOf(AudioProfile));
+        if(DefaultVideoBg != null) defaultVideoBgPath = String.valueOf(DefaultVideoBg);
+        if(DefaultUserBg != null) defaultUserBgPath = String.valueOf(DefaultUserBg);
+        if(LogLevel != null) logLevel = Integer.parseInt(String.valueOf(LogLevel));
+        if(LogModule != null) logModule = Integer.parseInt(String.valueOf(LogModule));
 
+        if(audioProfile > 2) audioProfile = 2;
+        if(audioProfile < 0) audioProfile = 0;
 
         RecordingConfig config = new RecordingConfig();
         config.channelProfile = CHANNEL_PROFILE_TYPE.values()[channelProfile];
@@ -413,6 +488,8 @@ public class RecordingSample implements RecordingEventHandler {
 
         System.out.println(System.getProperty("java.library.path"));
 
+        if(logLevel < 2) logLevel = 2;
+        if(logLevel > 7) logLevel = 7;
 
 		this.isMixMode = isMixingEnabled;
 		this.profile_type = CHANNEL_PROFILE_TYPE.values()[channelProfile];
@@ -432,12 +509,14 @@ public class RecordingSample implements RecordingEventHandler {
 		System.out.println("jni layer has been exited...");
 	}
 
-    public boolean leaveChannel(long nativeHandle) { 
+    public boolean leaveChannel(long nativeHandle) {
         return RecordingSDKInstance.leaveChannel(nativeHandle);
     }
+
     public int startService(long nativeHandle) {
         return RecordingSDKInstance.startService(nativeHandle);
     }
+
     public int stopService(long nativeHandle) {
         return RecordingSDKInstance.stopService(nativeHandle);
     }
@@ -445,6 +524,8 @@ public class RecordingSample implements RecordingEventHandler {
     public RecordingEngineProperties getProperties(long nativeHandle) {
         return RecordingSDKInstance.getProperties(nativeHandle);
     }
-
+    public void onJoinChannelSuccess(String channelId, long uid) {
+        System.out.println("onJoinChannelSuccess, channelId:"+channelId+",uid:"+uid);
+    }
   
 }
